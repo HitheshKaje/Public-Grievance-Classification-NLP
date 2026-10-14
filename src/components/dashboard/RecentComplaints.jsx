@@ -50,55 +50,63 @@ export default function RecentComplaints({ complaints = [], onSelectComplaint })
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100 text-xs">
-            {displayComplaints.map((item) => (
-              <tr
-                key={item.id}
-                className="hover:bg-slate-50/80 transition-colors cursor-pointer group"
-                onClick={() => onSelectComplaint && onSelectComplaint(item)}
-              >
-                <td className="py-3.5 px-5 font-mono font-medium text-slate-700 whitespace-nowrap">
-                  {item.id}
-                </td>
-                <td className="py-3.5 px-5 font-medium text-slate-900 max-w-xs md:max-w-md truncate">
-                  {item.text}
-                </td>
-                <td className="py-3.5 px-5 whitespace-nowrap">
-                  <CategoryBadge category={item.category} />
-                </td>
-                <td className="py-3.5 px-5 whitespace-nowrap">
-                  <ConfidenceBadge confidence={item.confidence} />
-                </td>
-                <td className="py-3.5 px-5 text-slate-500 whitespace-nowrap">
-                  {item.date}
-                </td>
-                <td className="py-3.5 px-5 whitespace-nowrap">
-                  <StatusBadge status={item.status} />
-                </td>
-                <td className="py-3.5 px-5 text-right whitespace-nowrap">
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      onSelectComplaint && onSelectComplaint(item);
-                    }}
-                    className="p-1.5 rounded-lg text-slate-400 hover:text-blue-600 hover:bg-blue-50 transition-colors inline-flex items-center"
-                    title="View Full Details"
-                  >
-                    <Eye className="w-4 h-4" />
-                  </button>
+            {displayComplaints.length > 0 ? (
+              displayComplaints.map((item) => (
+                <tr
+                  key={item.id}
+                  className="hover:bg-slate-50/80 transition-colors cursor-pointer group"
+                  onClick={() => onSelectComplaint && onSelectComplaint(item)}
+                >
+                  <td className="py-3.5 px-5 font-mono font-medium text-slate-700 whitespace-nowrap">
+                    {item.id.slice(-6)}
+                  </td>
+                  <td className="py-3.5 px-5 font-medium text-slate-900 max-w-xs md:max-w-md truncate">
+                    {item.text}
+                  </td>
+                  <td className="py-3.5 px-5 whitespace-nowrap">
+                    <CategoryBadge category={item.category || "Unclassified"} />
+                  </td>
+                  <td className="py-3.5 px-5 whitespace-nowrap">
+                    <ConfidenceBadge confidence={item.confidence} />
+                  </td>
+                  <td className="py-3.5 px-5 text-slate-500 whitespace-nowrap">
+                    {new Date(item.created_at || item.date).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}
+                  </td>
+                  <td className="py-3.5 px-5 whitespace-nowrap">
+                    <StatusBadge status={item.status} />
+                  </td>
+                  <td className="py-3.5 px-5 text-right whitespace-nowrap">
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onSelectComplaint && onSelectComplaint(item);
+                      }}
+                      className="p-1.5 rounded-lg text-slate-400 hover:text-blue-600 hover:bg-blue-50 transition-colors inline-flex items-center"
+                      title="View Full Details"
+                    >
+                      <Eye className="w-4 h-4" />
+                    </button>
+                  </td>
+                </tr>
+              ))
+            ) : (
+              <tr>
+                <td colSpan="7" className="py-8 text-center text-slate-500">
+                  No complaints found
                 </td>
               </tr>
-            ))}
+            )}
           </tbody>
         </table>
       </div>
 
       <div className="p-3.5 bg-slate-50/50 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
-        <span>Showing 5 most recent grievances</span>
+        <span>Showing {displayComplaints.length} most recent grievances</span>
         <Link
           to="/complaints"
           className="font-medium text-blue-600 hover:text-blue-700"
         >
-          View all 1,245 complaints &rarr;
+          View all complaints &rarr;
         </Link>
       </div>
     </div>
