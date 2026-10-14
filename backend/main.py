@@ -186,3 +186,21 @@ async def create_complaint(complaint: ComplaintCreate):
     result = await db.complaints.insert_one(doc)
     doc["id"] = str(result.inserted_id)
     return format_complaint(doc)
+
+from pydantic import BaseModel
+class StatusUpdate(BaseModel):
+    status: str
+
+@app.patch("/api/complaints/{id}/status")
+async def update_complaint_status(id: str, update: StatusUpdate):
+    db = get_db()
+    try:
+        result = await db.complaints.update_one(
+            {"_id": ObjectId(id)},
+            {"$set": {"status": update.status}}
+        )
+        if result.matched_count == 0:
+            raise HTTPException(status_code=404, detail="Complaint not found")
+        return {"message": "Status updated successfully"}
+    except Exception as e:
+        raise HTTPException(status_code=400, detail="Invalid request")

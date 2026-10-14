@@ -60,13 +60,13 @@ export default function ComplaintTable({
                 className="hover:bg-slate-50/80 transition-colors cursor-pointer group"
               >
                 <td className="py-3.5 px-5 font-mono font-medium text-slate-700 whitespace-nowrap">
-                  {item.id}
+                  {item.id.slice(-6).toUpperCase()}
                 </td>
                 <td className="py-3.5 px-5 font-medium text-slate-900 max-w-xs md:max-w-md lg:max-w-lg truncate">
                   {item.text}
                 </td>
                 <td className="py-3.5 px-5 whitespace-nowrap">
-                  <CategoryBadge category={item.category} />
+                  <CategoryBadge category={item.category || 'Unclassified'} />
                 </td>
                 <td className="py-3.5 px-5 whitespace-nowrap">
                   <ConfidenceBadge confidence={item.confidence} />
@@ -75,7 +75,7 @@ export default function ComplaintTable({
                   <StatusBadge status={item.status} />
                 </td>
                 <td className="py-3.5 px-5 text-slate-500 whitespace-nowrap">
-                  {item.date}
+                  {new Date(item.created_at || item.date).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}
                 </td>
                 <td className="py-3.5 px-5 text-right whitespace-nowrap">
                   <button

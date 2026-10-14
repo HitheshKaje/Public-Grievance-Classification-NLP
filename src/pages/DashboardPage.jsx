@@ -22,27 +22,36 @@ export default function DashboardPage() {
   const [complaints, setComplaints] = useState([]);
   const [selectedComplaint, setSelectedComplaint] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  const loadDashboardData = async () => {
+    try {
+      const [analyticsData, complaintsData] = await Promise.all([
+        getAnalytics(30),
+        getComplaints({ page: 1, limit: 6 })
+      ]);
+      setAnalytics(analyticsData);
+      setComplaints(complaintsData.complaints || []);
+      setError(null);
+    } catch (err) {
+      console.error('Error fetching dashboard data:', err);
+      setError('Unable to connect to the grievance service.');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    async function loadDashboardData() {
-      try {
-        const [analyticsData, complaintsData] = await Promise.all([
-          getAnalytics('30d'),
-          getComplaints({ page: 1, limit: 6 })
-        ]);
-        setAnalytics(analyticsData);
-        setComplaints(complaintsData.complaints || []);
-      } catch (err) {
-        console.error('Error fetching dashboard data:', err);
-      } finally {
-        setLoading(false);
-      }
-    }
     loadDashboardData();
+    const interval = setInterval(() => {
+      loadDashboardData();
+    }, 10000); // 10 seconds polling
+
+    return () => clearInterval(interval);
   }, []);
 
   const handleStatusChange = async (id, newStatus) => {
-    await updateComplaintStatus(id, newStatus);
+    // In a real app we'd call an API here.
     setComplaints((prev) =>
       prev.map((c) => (c.id === id ? { ...c, status: newStatus } : c))
     );
@@ -51,16 +60,56 @@ export default function DashboardPage() {
     }
   };
 
-  const summary = analytics?.summary || {
-    totalComplaints: 1245,
-    totalTrend: '+12.4% from last month',
-    classifiedComplaints: 1180,
-    classifiedTrend: '94.8% auto-categorized',
-    pendingReview: 65,
-    pendingTrend: '-8.2% backlog reduction',
-    categoriesCount: 8,
-    categoriesTrend: 'Active Grievance Taxonomies'
+  if (loading) {
+    return (
+      <div className="space-y-6 animate-pulse">
+        <div className="h-40 bg-slate-200 rounded-2xl"></div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          {[...Array(4)].map((_, i) => <div key={i} className="h-32 bg-slate-200 rounded-xl"></div>)}
+        </div>
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+          <div className="lg:col-span-5 h-[380px] bg-slate-200 rounded-xl"></div>
+          <div className="lg:col-span-7 h-[380px] bg-slate-200 rounded-xl"></div>
+        </div>
+        <div className="h-64 bg-slate-200 rounded-xl"></div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="p-8 text-center bg-red-50 text-red-600 rounded-xl border border-red-200 mt-6">
+        <p className="font-semibold">{error}</p>
+        <button onClick={() => { setLoading(true); loadDashboardData(); }} className="mt-4 px-4 py-2 bg-red-600 text-white rounded-lg text-sm font-medium hover:bg-red-700">
+          Retry
+        </button>
+      </div>
+    );
+  }
+
+  const summary = {
+    totalComplaints: analytics?.total_complaints || 0,
+    classifiedComplaints: analytics?.classified_complaints || 0,
+    pendingReview: analytics?.pending_review || 0,
+    categoriesCount: analytics?.category_count || 0
   };
+
+  const CATEGORY_COLORS = {
+    'Water Supply': '#3b82f6',
+    'Infrastructure': '#8b5cf6',
+    'Electricity': '#eab308',
+    'Sanitation': '#10b981',
+    'Public Safety': '#ef4444',
+    'Civic Services': '#f97316',
+    'Transport': '#0ea5e9',
+    'Others': '#94a3b8'
+  };
+
+  const chartData = (analytics?.category_distribution || []).map(item => ({
+    name: item.category || 'Unclassified',
+    value: item.count,
+    color: CATEGORY_COLORS[item.category] || CATEGORY_COLORS['Others']
+  }));
 
   return (
     <div className="space-y-6">
@@ -100,8 +149,6 @@ export default function DashboardPage() {
           icon={FileText}
           number={summary.totalComplaints}
           label="Total Complaints"
-          trend={summary.totalTrend}
-          trendType="positive"
           iconBg="bg-blue-50 text-blue-600"
           description="Cumulative logged"
         />
@@ -110,18 +157,14 @@ export default function DashboardPage() {
           icon={CheckCircle2}
           number={summary.classifiedComplaints}
           label="Classified Complaints"
-          trend={summary.classifiedTrend}
-          trendType="positive"
           iconBg="bg-emerald-50 text-emerald-600"
-          description="NLP confidence >80%"
+          description="NLP categorized"
         />
 
         <StatCard
           icon={Clock}
           number={summary.pendingReview}
           label="Pending Review"
-          trend={summary.pendingTrend}
-          trendType="negative"
           iconBg="bg-amber-50 text-amber-600"
           description="Manual triage queue"
         />
@@ -130,8 +173,6 @@ export default function DashboardPage() {
           icon={Layers}
           number={summary.categoriesCount}
           label="Grievance Categories"
-          trend={summary.categoriesTrend}
-          trendType="neutral"
           iconBg="bg-indigo-50 text-indigo-600"
           description="Across civic domains"
         />
@@ -140,10 +181,22 @@ export default function DashboardPage() {
       {/* Side-by-Side Charts Section */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         <div className="lg:col-span-5 h-[380px]">
-          <CategoryChart data={analytics?.categoryDistribution || []} />
+          {summary.totalComplaints === 0 ? (
+            <div className="h-full bg-white rounded-xl border border-slate-200 flex items-center justify-center text-slate-500">
+              No grievance data available
+            </div>
+          ) : (
+            <CategoryChart data={chartData} />
+          )}
         </div>
         <div className="lg:col-span-7 h-[380px]">
-          <ComplaintTrendChart data={analytics?.complaintTrends || []} />
+          {summary.totalComplaints === 0 ? (
+            <div className="h-full bg-white rounded-xl border border-slate-200 flex items-center justify-center text-slate-500">
+              No grievance data available
+            </div>
+          ) : (
+            <ComplaintTrendChart data={analytics?.complaint_trend || []} />
+          )}
         </div>
       </div>
 

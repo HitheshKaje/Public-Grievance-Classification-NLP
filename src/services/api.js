@@ -154,3 +154,26 @@ export async function submitNewComplaint(complaint) {
   }
   return await response.json();
 }
+
+/**
+ * Update complaint status
+ * @param {string} id 
+ * @param {string} newStatus 
+ */
+export async function updateComplaintStatus(id, newStatus) {
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 10000);
+
+  const response = await fetch(`${API_BASE_URL}/complaints/${id}/status`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ status: newStatus }),
+    signal: controller.signal
+  });
+  clearTimeout(timeoutId);
+
+  if (!response.ok) {
+    throw new Error(`HTTP error ${response.status}`);
+  }
+  return await response.json();
+}

@@ -26,7 +26,7 @@ export default function ComplaintDetailModal({ complaint, isOpen, onClose, onSta
     }
   };
 
-  const confidencePct = Math.round(complaint.confidence * 100);
+  const confidencePct = complaint.confidence ? Math.round(complaint.confidence * 100) : 'N/A';
 
   return (
     <div className="fixed inset-0 z-50 overflow-y-auto">
@@ -94,7 +94,7 @@ export default function ComplaintDetailModal({ complaint, isOpen, onClose, onSta
                 <div className="bg-white p-3 rounded-lg border border-blue-100/80">
                   <span className="text-[11px] text-slate-500 font-medium">Predicted Category</span>
                   <div className="mt-1 flex items-center gap-2">
-                    <CategoryBadge category={complaint.category} />
+                    <CategoryBadge category={complaint.category || 'Unclassified'} />
                   </div>
                 </div>
 
@@ -102,7 +102,7 @@ export default function ComplaintDetailModal({ complaint, isOpen, onClose, onSta
                   <span className="text-[11px] text-slate-500 font-medium">Model Confidence</span>
                   <div className="mt-1 flex items-center justify-between">
                     <span className="text-sm font-bold text-slate-900 font-mono">
-                      {confidencePct}%
+                      {confidencePct}{complaint.confidence ? '%' : ''}
                     </span>
                     <ConfidenceBadge confidence={complaint.confidence} />
                   </div>
@@ -134,7 +134,7 @@ export default function ComplaintDetailModal({ complaint, isOpen, onClose, onSta
                   <Calendar className="w-3.5 h-3.5" />
                   <span>Submission Date</span>
                 </div>
-                <span className="font-medium text-slate-800">{complaint.date}</span>
+                <span className="font-medium text-slate-800">{new Date(complaint.created_at || complaint.date).toLocaleDateString()}</span>
               </div>
 
               <div className="p-3 bg-slate-50 rounded-lg border border-slate-200 col-span-2 sm:col-span-1">

@@ -25,18 +25,12 @@ export default function ComplaintTrendChart({ data = [] }) {
       return (
         <div className="bg-slate-900 text-white px-3 py-2 rounded-lg text-xs shadow-lg border border-slate-700 space-y-1">
           <p className="font-semibold text-slate-200 border-b border-slate-700 pb-1">
-            {label}, 2026
+            {label}
           </p>
           <div className="flex items-center justify-between gap-4 text-blue-400">
             <span>Total Inflow:</span>
             <span className="font-bold text-white">{payload[0]?.value}</span>
           </div>
-          {payload[1] && (
-            <div className="flex items-center justify-between gap-4 text-emerald-400">
-              <span>Auto-Classified:</span>
-              <span className="font-bold text-white">{payload[1]?.value}</span>
-            </div>
-          )}
         </div>
       );
     }
@@ -104,22 +98,12 @@ export default function ComplaintTrendChart({ data = [] }) {
             <Tooltip content={<CustomTooltip />} />
             <Area
               type="monotone"
-              dataKey="complaints"
+              dataKey="count"
               name="Total Complaints"
               stroke="#2563EB"
               strokeWidth={2}
               fillOpacity={1}
               fill="url(#colorComplaints)"
-            />
-            <Area
-              type="monotone"
-              dataKey="classified"
-              name="Auto Classified"
-              stroke="#10B981"
-              strokeWidth={1.5}
-              strokeDasharray="4 4"
-              fillOpacity={1}
-              fill="url(#colorClassified)"
             />
           </AreaChart>
         </ResponsiveContainer>
@@ -129,10 +113,6 @@ export default function ComplaintTrendChart({ data = [] }) {
         <div className="flex items-center gap-2">
           <span className="w-3 h-0.5 bg-blue-600 rounded-full" />
           <span className="text-slate-600 font-medium">Total Complaints</span>
-        </div>
-        <div className="flex items-center gap-2">
-          <span className="w-3 h-0.5 bg-emerald-500 rounded-full border-dashed" />
-          <span className="text-slate-600 font-medium">Auto-Classified</span>
         </div>
       </div>
     </div>

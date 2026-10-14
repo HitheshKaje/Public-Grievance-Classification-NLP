@@ -102,10 +102,10 @@ export default function ComplaintsPage() {
     const rows = data.complaints.map((c) => [
       c.id,
       `"${c.text.replace(/"/g, '""')}"`,
-      c.category,
-      `${Math.round(c.confidence * 100)}%`,
+      c.category || 'Unclassified',
+      c.confidence ? `${Math.round(c.confidence * 100)}%` : 'N/A',
       c.status,
-      c.date,
+      new Date(c.created_at || c.date).toLocaleDateString(),
       c.department || 'N/A'
     ]);
     const csvContent = 'data:text/csv;charset=utf-8,' + [headers.join(','), ...rows.map((e) => e.join(','))].join('\n');
