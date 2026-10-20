@@ -9,7 +9,7 @@ export default function AdminLayout({ children, activeTab, onSelectTab }) {
   const activeTitle = activeItem ? activeItem.label : "Overview";
 
   return (
-    <div className="min-h-screen bg-slate-50 flex">
+    <div className="min-h-screen bg-[#f3f6fa] flex">
       {/* Sidebar Navigation */}
       <Sidebar
         activeTab={activeTab}
@@ -25,7 +25,7 @@ export default function AdminLayout({ children, activeTab, onSelectTab }) {
           activeTabTitle={activeTitle}
         />
 
-        <main className="flex-1 p-4 sm:p-6 lg:p-8 max-w-7xl w-full mx-auto">
+        <main className="flex-1 px-6 pb-8 pt-2 max-w-[1600px] w-full">
           {children}
         </main>
       </div>
