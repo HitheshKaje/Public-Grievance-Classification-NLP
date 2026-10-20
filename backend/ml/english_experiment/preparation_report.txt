@@ -1,0 +1,91 @@
+================================================================================
+PREPARATION REPORT: ENGLISH DATASET SPLIT & BASELINE EXPERIMENT SETUP
+================================================================================
+Experiment Directory: D:\PublicGravianceClassification\backend\ml\english_experiment\
+Source Dataset: D:\PublicGravianceClassification\backend\ml\dataset\english\english_master_dataset_candidate_2100.csv
+Classification Target: 7-Class Department Classification
+Input Feature: complaint_text
+Target Label: department
+Total Dataset Records: 2,100
+================================================================================
+
+1. DATASET INSPECTION SUMMARY (STEP 1):
+--------------------------------------
+  - Row Count: Exactly 2,100 records (plus header) -> PASS
+  - Schema: Exactly 9 columns in expected order -> PASS
+  - Null / Missing Values: 0 missing or empty values across all columns -> PASS
+  - ID Integrity: Unique EN0001 - EN2100, 0 duplicates, complaint_id == source_id -> PASS
+  - Target Label: 'department' across 7 balanced classes (300 records each) -> PASS
+  - Input Feature: 'complaint_text' (length 20-60 words, mean 45.14 words) -> PASS
+
+2. LEAKAGE-AWARE PARTITIONING METHODOLOGY (STEP 2):
+--------------------------------------------------
+  - Grouping Strategy: High-similarity Template Component Grouping.
+  - Rationale: During synthetic generation of the 6 expansion departments, combinatorial
+    slot filling produced 4,286 record pairs with token Jaccard similarity between 0.60 and 0.70.
+    A naive random split would place highly similar template instances into both train and test,
+    causing artificial metric inflation (test leakage).
+  - Implementation: Built a similarity graph connecting all record pairs with Jaccard >= 0.60.
+    Identified connected components and partitioned entire template components together.
+  - Water Supply Handling: Because Water Supply pilot/batch records exhibit natural vocabulary diversity
+    with 0 pairs >= 0.60, records were stratified evenly across all 7 problem types.
+  - Result: Zero pairs with Jaccard >= 0.60 cross any partition boundary.
+
+3. SPLIT SUMMARY & CLASS DISTRIBUTION:
+-------------------------------------
+  Overall Counts:
+    * Train:      1450 records (69.05%) [Target ~ 70% / 1,470]
+    * Validation: 327 records (15.57%) [Target ~ 15% / 315]
+    * Test:       323 records (15.38%) [Target ~ 15% / 315]
+    * Total:      2100 records (100.00%)
+
+  Department Distribution Across Partitions (Target: ~210 / ~45 / ~45 per department):
+  Department                           | Train   | Val     | Test    | Total  
+  ------------------------------------------------------------------------
+  Electricity                          | 204     | 50      | 46      | 300    
+  Public Education                     | 206     | 47      | 47      | 300    
+  Public Healthcare                    | 207     | 45      | 48      | 300    
+  Roads and Infrastructure             | 209     | 46      | 45      | 300    
+  Sanitation and Garbage Collection    | 208     | 47      | 45      | 300    
+  Street Lighting                      | 200     | 50      | 50      | 300    
+  Water Supply                         | 216     | 42      | 42      | 300    
+  ------------------------------------------------------------------------
+  TOTAL                                | 1450    | 327     | 323     | 2100
+
+4. DATA LEAKAGE & CROSS-PARTITION SIMILARITY AUDIT:
+---------------------------------------------------
+  - Cross-Partition ID Overlap: Exactly 0 IDs shared across partitions (100% disjoint) -> PASS
+  - Cross-Partition Exact Duplicates: Exactly 0 -> PASS
+  - Cross-Partition Pairs with Jaccard >= 0.70: Exactly 0 -> PASS
+  - Cross-Partition Pairs with Jaccard >= 0.60: Exactly 0 -> PASS
+  - Maximum Cross-Partition Similarities:
+      * Train vs Validation: Max Jaccard = 0.596 -> PASS (Zero leakage >= 0.60)
+      * Train vs Test:       Max Jaccard = 0.596 -> PASS (Zero leakage >= 0.60)
+      * Validation vs Test:  Max Jaccard = 0.589 -> PASS (Zero leakage >= 0.60)
+
+5. GENERATED ARTIFACTS IN EXPERIMENT DIRECTORY (STEP 3):
+-------------------------------------------------------
+  - train.csv: 1,450 rows, contains all 9 original metadata columns.
+  - validation.csv: 327 rows, contains all 9 original metadata columns.
+  - test.csv: 323 rows, contains all 9 original metadata columns.
+  - split_manifest.csv: 2,100 rows (complaint_id, source_id, department, problem_type, assigned_split).
+  - preparation_report.txt: This documentation file.
+  - baseline_tfidf_experiment.py: Ready-to-run TF-IDF baseline script (scikit-learn).
+
+6. BASELINE EXPERIMENT PLAN (STEP 4):
+------------------------------------
+  - Pipeline Architecture: Standard Scikit-Learn TF-IDF + Linear Classifier Pipeline.
+  - Feature Extraction: TfidfVectorizer(max_features=5000, ngram_range=(1, 2), stop_words='english')
+  - Classification Models:
+      * Baseline Model 1: Logistic Regression (L2 regularization, multi_class='multinomial')
+      * Baseline Model 2: Linear Support Vector Classifier (LinearSVC, loss='squared_hinge')
+  - Evaluation Metrics: Accuracy, Macro Precision, Macro Recall, Macro F1-score, Confusion Matrix.
+  - Training Protocol: Fit vectorizer and model strictly on train.csv; evaluate on validation.csv
+    for hyperparameter tuning, and reserve test.csv for final unseen baseline benchmarking.
+
+7. STATUS & NEXT STEPS (STEP 5):
+--------------------------------
+  - The data partitions and split manifest have been generated and validated.
+  - Baseline script is prepared and verified for syntax correctness.
+  - Final production training is ON HOLD pending user confirmation.
+================================================================================
