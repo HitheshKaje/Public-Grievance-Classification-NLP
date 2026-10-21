@@ -80,7 +80,7 @@ dumps/
 backups/
 
 # Datasets & Data files
-data/
+/data/
 dataset/
 datasets/
 raw_data/
