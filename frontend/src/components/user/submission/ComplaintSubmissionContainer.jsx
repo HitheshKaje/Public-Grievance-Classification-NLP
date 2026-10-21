@@ -3,6 +3,7 @@ import SubmissionMethodSelector from './SubmissionMethodSelector';
 import WriteComplaintForm from './WriteComplaintForm';
 import PdfComplaintUpload from './PdfComplaintUpload';
 import ImageComplaintUpload from './ImageComplaintUpload';
+import VoiceComplaintUpload from './VoiceComplaintUpload';
 import ComplaintReviewStep from './ComplaintReviewStep';
 import ComplaintConfirmationView from './ComplaintConfirmationView';
 
@@ -15,11 +16,14 @@ const INITIAL_FORM_DATA = {
   email: '',
   pdfFile: null,
   imageFile: null,
+  audioFile: null,
+  audioBlob: null,
+  audioDuration: 0,
   attachments: []
 };
 
 export default function ComplaintSubmissionContainer({ onNavigateTab }) {
-  const [method, setMethod] = useState('write'); // 'write' | 'pdf' | 'image'
+  const [method, setMethod] = useState('write'); // 'write' | 'pdf' | 'image' | 'voice'
   const [currentLanguage, setCurrentLanguage] = useState('en'); // 'en' | 'kn' | 'hi'
   const [step, setStep] = useState('fill'); // 'fill' | 'review' | 'confirmed'
   const [formData, setFormData] = useState(INITIAL_FORM_DATA);
@@ -35,13 +39,15 @@ export default function ComplaintSubmissionContainer({ onNavigateTab }) {
 
   const handleMethodChange = (newMethod) => {
     setMethod(newMethod);
-    // If switching methods, clear specific files to avoid mixing up primary payload
+    // Clear other primary files when switching methods
     if (newMethod === 'write') {
-      setFormData((prev) => ({ ...prev, pdfFile: null, imageFile: null }));
+      setFormData((prev) => ({ ...prev, pdfFile: null, imageFile: null, audioFile: null, audioBlob: null }));
     } else if (newMethod === 'pdf') {
-      setFormData((prev) => ({ ...prev, imageFile: null }));
+      setFormData((prev) => ({ ...prev, imageFile: null, audioFile: null, audioBlob: null }));
     } else if (newMethod === 'image') {
-      setFormData((prev) => ({ ...prev, pdfFile: null }));
+      setFormData((prev) => ({ ...prev, pdfFile: null, audioFile: null, audioBlob: null }));
+    } else if (newMethod === 'voice') {
+      setFormData((prev) => ({ ...prev, pdfFile: null, imageFile: null }));
     }
   };
 
@@ -111,6 +117,14 @@ export default function ComplaintSubmissionContainer({ onNavigateTab }) {
 
               {method === 'image' && (
                 <ImageComplaintUpload
+                  formData={formData}
+                  onUpdateFormData={handleUpdateFormData}
+                  onProceedToReview={() => setStep('review')}
+                />
+              )}
+
+              {method === 'voice' && (
+                <VoiceComplaintUpload
                   formData={formData}
                   onUpdateFormData={handleUpdateFormData}
                   onProceedToReview={() => setStep('review')}

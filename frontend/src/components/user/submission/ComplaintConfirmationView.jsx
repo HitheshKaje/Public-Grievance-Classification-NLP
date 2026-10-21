@@ -62,7 +62,13 @@ export default function ComplaintConfirmationView({
           <div>
             <span className="text-slate-400 block text-[11px] font-medium">Filing Channel</span>
             <span className="font-semibold text-slate-800 capitalize">
-              {method === 'write' ? 'Direct Form Entry' : method === 'pdf' ? 'PDF Document Upload' : 'Photo Evidence Upload'}
+              {method === 'write'
+                ? 'Direct Form Entry'
+                : method === 'pdf'
+                ? 'PDF Document Upload'
+                : method === 'voice'
+                ? 'Voice Grievance Recording'
+                : 'Photo Evidence Upload'}
             </span>
           </div>
 

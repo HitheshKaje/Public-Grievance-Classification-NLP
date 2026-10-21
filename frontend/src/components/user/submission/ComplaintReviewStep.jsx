@@ -1,7 +1,8 @@
 import React from 'react';
 import { 
   ArrowLeft, Send, CheckCircle2, FileText, Image as ImageIcon, 
-  MapPin, User, Phone, Mail, Paperclip, AlertTriangle, ShieldCheck
+  MapPin, User, Phone, Mail, Paperclip, AlertTriangle, ShieldCheck,
+  Volume2, FileAudio
 } from 'lucide-react';
 
 function formatBytes(bytes) {
@@ -14,14 +15,15 @@ function formatBytes(bytes) {
 
 export default function ComplaintReviewStep({
   formData,
-  method, // 'write' | 'pdf' | 'image'
+  method, // 'write' | 'pdf' | 'image' | 'voice'
   onBackToEdit,
   onSubmitFinal
 }) {
   const methodLabels = {
     write: { label: 'Direct Written Complaint', color: 'bg-blue-50 text-blue-700 border-blue-200' },
     pdf: { label: 'PDF Document Complaint', color: 'bg-rose-50 text-rose-700 border-rose-200' },
-    image: { label: 'Photographic Evidence Complaint', color: 'bg-emerald-50 text-emerald-700 border-emerald-200' }
+    image: { label: 'Photographic Evidence Complaint', color: 'bg-emerald-50 text-emerald-700 border-emerald-200' },
+    voice: { label: 'Voice Grievance Recording', color: 'bg-violet-50 text-violet-700 border-violet-200' }
   };
 
   const badge = methodLabels[method] || methodLabels.write;
@@ -101,10 +103,20 @@ export default function ComplaintReviewStep({
               </div>
             </div>
           )}
+
+          {/* Special Honest Note for Voice Speech-to-Text */}
+          {method === 'voice' && (
+            <div className="mt-3 p-3 bg-violet-50/70 border border-violet-200/70 rounded-xl text-xs text-violet-900 flex items-start gap-2">
+              <Volume2 className="h-4 w-4 text-violet-600 flex-shrink-0 mt-0.5" />
+              <div>
+                <strong className="font-semibold">Speech-to-Text Pipeline Status:</strong> The recorded audio will be transcribed into complaint text by the automated speech recognition (ASR) engine and evaluated by the NLP model. No fabricated transcript is displayed.
+              </div>
+            </div>
+          )}
         </div>
 
-        {/* Primary Attached File (for PDF or Image methods) */}
-        {(formData.pdfFile || formData.imageFile) && (
+        {/* Primary Attached File (for PDF, Image, or Voice methods) */}
+        {(formData.pdfFile || formData.imageFile || formData.audioFile || formData.audioBlob) && (
           <div className="p-4 sm:p-5">
             <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider block mb-2">
               Primary Document / Evidence
@@ -131,6 +143,30 @@ export default function ComplaintReviewStep({
                   <p className="text-xs font-semibold text-slate-800 truncate">{formData.imageFile.name}</p>
                   <p className="text-[11px] text-slate-500">{formatBytes(formData.imageFile.size)} &bull; Photographic Proof</p>
                 </div>
+              </div>
+            )}
+
+            {(formData.audioFile || formData.audioBlob) && (
+              <div className="p-3.5 bg-violet-50/50 border border-violet-200/80 rounded-xl space-y-2.5">
+                <div className="flex items-center gap-3">
+                  <div className="w-9 h-9 rounded-lg bg-violet-100 flex items-center justify-center text-violet-600 flex-shrink-0">
+                    <FileAudio className="h-5 w-5" />
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-xs font-semibold text-slate-800 truncate">
+                      {formData.audioFile?.name || 'Grievance Voice Recording'}
+                    </p>
+                    <p className="text-[11px] text-slate-500">
+                      {formData.audioFile?.size ? formatBytes(formData.audioFile.size) : 'Recorded Audio Note'} &bull; Audio Grievance
+                    </p>
+                  </div>
+                </div>
+                {/* Audio playback control */}
+                <audio
+                  controls
+                  src={URL.createObjectURL(formData.audioFile || formData.audioBlob)}
+                  className="w-full h-9 rounded-lg"
+                />
               </div>
             )}
           </div>

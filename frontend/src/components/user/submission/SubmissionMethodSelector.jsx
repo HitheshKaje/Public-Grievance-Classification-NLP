@@ -1,7 +1,10 @@
 import React from 'react';
-import { PenTool, FileText, Camera, Globe2, Sparkles } from 'lucide-react';
+import { PenTool, FileText, Camera, Mic, Globe2, Sparkles } from 'lucide-react';
 
-export default function SubmissionMethodSelector({ selectedMethod, onSelectMethod, selectedLanguage, onSelectLanguage }) {
+export default function SubmissionMethodSelector({ selectedMethod, onSelectMethod, selectedLanguage, onSelectLanguage, currentLanguage }) {
+  const activeLang = selectedLanguage || currentLanguage || 'en';
+  const handleLang = onSelectLanguage || (() => {});
+
   const methods = [
     {
       id: 'write',
@@ -36,6 +39,17 @@ export default function SubmissionMethodSelector({ selectedMethod, onSelectMetho
       activeClass: 'border-emerald-600 bg-emerald-50/40 ring-2 ring-emerald-500/20',
       iconClass: 'bg-emerald-100 text-emerald-600',
     },
+    {
+      id: 'voice',
+      title: 'Voice Grievance',
+      description: 'Record or upload an audio complaint. Transcribed & classified by NLP.',
+      icon: Mic,
+      badge: 'Speech / Audio',
+      color: 'violet',
+      borderClass: 'hover:border-violet-300',
+      activeClass: 'border-violet-600 bg-violet-50/40 ring-2 ring-violet-500/20',
+      iconClass: 'bg-violet-100 text-violet-600',
+    },
   ];
 
   const languages = [
@@ -55,12 +69,12 @@ export default function SubmissionMethodSelector({ selectedMethod, onSelectMetho
 
         <div className="flex items-center gap-1.5 flex-wrap">
           {languages.map((lang) => {
-            const isSelected = selectedLanguage === lang.id;
+            const isSelected = activeLang === lang.id;
             return (
               <button
                 key={lang.id}
                 type="button"
-                onClick={() => onSelectLanguage(lang.id)}
+                onClick={() => handleLang(lang.id)}
                 className={`px-3 py-1 rounded-full text-xs font-medium transition-all flex items-center gap-1.5 cursor-pointer ${
                   isSelected
                     ? 'bg-blue-600 text-white shadow-xs'
@@ -79,8 +93,8 @@ export default function SubmissionMethodSelector({ selectedMethod, onSelectMetho
         </div>
       </div>
 
-      {/* Method Selection 3-Card Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-3.5">
+      {/* Method Selection 4-Card Grid */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5">
         {methods.map((method) => {
           const Icon = method.icon;
           const isSelected = selectedMethod === method.id;
