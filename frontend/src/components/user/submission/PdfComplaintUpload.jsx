@@ -111,28 +111,7 @@ export default function PdfComplaintUpload({ formData, onUpdateFormData, onProce
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-5">
-      {/* Workflow & Processing Pipeline Info Box */}
-      <div className="p-4 bg-sky-50/70 border border-sky-200/80 rounded-xl space-y-2 text-xs text-sky-900">
-        <div className="flex items-start gap-2">
-          <Info className="h-4 w-4 text-sky-600 flex-shrink-0 mt-0.5" />
-          <div className="space-y-1">
-            <p className="font-semibold text-sky-950">PDF Document Ingestion Pipeline Notice</p>
-            <p className="text-sky-800 leading-relaxed">
-              When submitted, your document is sent to the backend pipeline for automated text extraction.
-              Scanned or photographed documents require OCR processing if they do not contain selectable text.
-            </p>
-            <div className="flex items-center gap-1.5 text-[11px] font-mono text-sky-700 pt-1">
-              <span className="bg-white/80 px-2 py-0.5 rounded border border-sky-200">PDF Upload</span>
-              <span>&rarr;</span>
-              <span className="bg-white/80 px-2 py-0.5 rounded border border-sky-200">Text & OCR Ingestion</span>
-              <span>&rarr;</span>
-              <span className="bg-white/80 px-2 py-0.5 rounded border border-sky-200">NLP Classifier</span>
-            </div>
-          </div>
-        </div>
-      </div>
-
+    <form onSubmit={handleSubmit} className="space-y-4">
       {/* PDF Dropzone Area */}
       <div>
         <label className="text-xs font-semibold text-slate-700 block mb-1.5">
@@ -256,15 +235,6 @@ export default function PdfComplaintUpload({ formData, onUpdateFormData, onProce
         )}
       </div>
 
-      {/* Honest OCR / Scanned Notice */}
-      <div className="p-3 bg-amber-50/70 border border-amber-200/70 rounded-xl flex items-start gap-2 text-xs text-amber-900">
-        <ShieldAlert className="h-4 w-4 text-amber-600 flex-shrink-0 mt-0.5" />
-        <p className="leading-relaxed">
-          <strong className="font-semibold">Text Extraction Note:</strong> Text extraction occurs during backend processing. 
-          To ensure accurate automatic routing, provide a concise summary or title below describing the primary issue.
-        </p>
-      </div>
-
       {/* Complaint Title */}
       <div>
         <label className="text-xs font-semibold text-slate-700 block mb-1">
@@ -345,7 +315,7 @@ export default function PdfComplaintUpload({ formData, onUpdateFormData, onProce
       {/* Contact Details */}
       <div className="p-4 rounded-xl border border-slate-100 bg-slate-50/60 space-y-3">
         <span className="text-xs font-semibold text-slate-800 block">
-          Citizen Contact Details (For Reference Tracking)
+          Citizen Contact Details
         </span>
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
           <div>

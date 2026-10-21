@@ -246,26 +246,7 @@ export default function VoiceComplaintUpload({ formData, onUpdateFormData, onPro
   const hasAudioSaved = Boolean(formData.audioFile || formData.audioBlob);
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-5">
-      {/* Voice Complaint Architecture Info */}
-      <div className="p-3.5 bg-violet-50/70 border border-violet-200/80 rounded-xl flex items-start gap-2.5 text-xs text-violet-950">
-        <Volume2 className="h-4 w-4 text-violet-600 flex-shrink-0 mt-0.5" />
-        <div className="space-y-1">
-          <p className="font-semibold">Speech-to-Text & Automated NLP Classification</p>
-          <p className="leading-relaxed text-violet-900">
-            Voice complaints enable effortless filing for all citizens. 
-            Your voice recording is transcribed by the Speech-to-Text engine into complaint text, which our NLP model evaluates to route directly to the responsible municipal department.
-          </p>
-          <div className="flex items-center gap-1.5 text-[11px] font-mono text-violet-700 pt-1">
-            <span className="bg-white/80 px-2 py-0.5 rounded border border-violet-200">Voice Note</span>
-            <span>&rarr;</span>
-            <span className="bg-white/80 px-2 py-0.5 rounded border border-violet-200">Speech-to-Text (ASR)</span>
-            <span>&rarr;</span>
-            <span className="bg-white/80 px-2 py-0.5 rounded border border-violet-200">NLP Classifier</span>
-          </div>
-        </div>
-      </div>
-
+    <form onSubmit={handleSubmit} className="space-y-4">
       {/* Voice Mode Selector: Mic Recording vs File Upload */}
       <div className="flex items-center justify-between border-b border-slate-100 pb-2">
         <label className="text-xs font-semibold text-slate-700">
@@ -596,7 +577,7 @@ export default function VoiceComplaintUpload({ formData, onUpdateFormData, onPro
       {/* Citizen Contact Details */}
       <div className="p-4 rounded-xl border border-slate-100 bg-slate-50/60 space-y-3">
         <span className="text-xs font-semibold text-slate-800 block">
-          Citizen Contact Details (For SMS & Tracking Updates)
+          Citizen Contact Details
         </span>
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
           <div>

@@ -54,14 +54,11 @@ export default function ComplaintSubmissionContainer({ onNavigateTab }) {
   return (
     <div className="space-y-5">
       {/* Step Header / Title Bar */}
-      <div className="bg-white rounded-2xl border border-slate-100 p-6 shadow-sm flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+      <div className="bg-white rounded-2xl border border-slate-100 p-5 shadow-sm flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
           <h2 className="text-base font-bold text-slate-800">
             Submit a Public Grievance
           </h2>
-          <p className="text-xs text-slate-500 mt-1">
-            Choose your preferred submission format. Our AI model will automatically analyze and route your grievance.
-          </p>
         </div>
 
         {/* Step Indicator */}

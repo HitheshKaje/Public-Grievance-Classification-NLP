@@ -43,16 +43,7 @@ export default function WriteComplaintForm({ formData, onUpdateFormData, onProce
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-5">
-      {/* NLP Notice */}
-      <div className="p-3.5 bg-blue-50/70 border border-blue-200/80 rounded-xl flex items-start gap-2.5 text-xs text-blue-900">
-        <Info className="h-4 w-4 text-blue-600 flex-shrink-0 mt-0.5" />
-        <p className="leading-relaxed">
-          <strong className="font-semibold">Automated AI Routing:</strong> You do not need to manually select a government department. 
-          Our Natural Language Processing (NLP) model will analyze your complaint text and assign it to the responsible department.
-        </p>
-      </div>
-
+    <form onSubmit={handleSubmit} className="space-y-4">
       {/* Complaint Title */}
       <div>
         <label className="text-xs font-semibold text-slate-700 block mb-1">
@@ -148,7 +139,7 @@ export default function WriteComplaintForm({ formData, onUpdateFormData, onProce
       {/* Contact Details (Optional / Updates) */}
       <div className="p-4 rounded-xl border border-slate-100 bg-slate-50/60 space-y-3">
         <span className="text-xs font-semibold text-slate-800 block">
-          Citizen Contact Details (For SMS / Email Status Updates)
+          Citizen Contact Details
         </span>
 
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">

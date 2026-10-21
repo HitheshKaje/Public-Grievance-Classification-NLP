@@ -131,19 +131,7 @@ export default function ImageComplaintUpload({ formData, onUpdateFormData, onPro
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-5">
-      {/* Important NLP Text Explanation Alert */}
-      <div className="p-3.5 bg-blue-50/70 border border-blue-200/80 rounded-xl flex items-start gap-2.5 text-xs text-blue-900">
-        <Info className="h-4 w-4 text-blue-600 flex-shrink-0 mt-0.5" />
-        <div className="space-y-1">
-          <p className="font-semibold text-blue-950">Visual Evidence & NLP Routing Requirement</p>
-          <p className="leading-relaxed">
-            Uploaded photographs serve as factual visual evidence for inspecting officers. 
-            Because our automated routing uses <strong>NLP text classification</strong>, a written description of the problem is required to direct your complaint to the correct department.
-          </p>
-        </div>
-      </div>
-
+    <form onSubmit={handleSubmit} className="space-y-4">
       {/* Primary Image Upload Area */}
       <div>
         <div className="flex items-center justify-between mb-1.5">
@@ -328,9 +316,6 @@ export default function ImageComplaintUpload({ formData, onUpdateFormData, onPro
         <div className="flex items-center justify-between mb-1">
           <label className="text-xs font-semibold text-slate-700">
             Complaint Description <span className="text-rose-500">*</span>
-            <span className="text-[11px] font-normal text-slate-500 ml-1.5">
-              (Required for NLP classification)
-            </span>
           </label>
           <span className={`text-[11px] font-mono ${
             (formData.description?.length || 0) < 20 ? 'text-amber-600' : 'text-slate-400'
@@ -394,7 +379,7 @@ export default function ImageComplaintUpload({ formData, onUpdateFormData, onPro
       {/* Citizen Contact Details */}
       <div className="p-4 rounded-xl border border-slate-100 bg-slate-50/60 space-y-3">
         <span className="text-xs font-semibold text-slate-800 block">
-          Citizen Contact Details (For SMS & Tracking Updates)
+          Citizen Contact Details
         </span>
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
           <div>
