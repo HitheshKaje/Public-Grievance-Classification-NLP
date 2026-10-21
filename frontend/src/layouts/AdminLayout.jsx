@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import Sidebar, { SIDEBAR_ITEMS } from '../components/layout/Sidebar';
 import Header from '../components/layout/Header';
 
-export default function AdminLayout({ children, activeTab, onSelectTab, onSwitchRole }) {
+export default function AdminLayout({ children, activeTab, onSelectTab, onSelectPortal, currentPortal = 'admin' }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   const activeItem = SIDEBAR_ITEMS.find(item => item.id === activeTab);
@@ -23,7 +23,8 @@ export default function AdminLayout({ children, activeTab, onSelectTab, onSwitch
         <Header
           onOpenSidebar={() => setSidebarOpen(true)}
           activeTabTitle={activeTitle}
-          onSwitchRole={onSwitchRole}
+          onSelectPortal={onSelectPortal}
+          currentPortal={currentPortal}
         />
 
         <main className="flex-1 px-6 pb-8 pt-2 max-w-[1600px] w-full">

@@ -1,41 +1,61 @@
 import React, { useState } from 'react';
+import OfficerLayout from './layouts/OfficerLayout';
+import OfficerDashboard from './pages/OfficerDashboard';
 import UserLayout from './layouts/UserLayout';
 import UserDashboard from './pages/UserDashboard';
 import AdminLayout from './layouts/AdminLayout';
 import AdminDashboard from './pages/AdminDashboard';
 
 export default function App() {
-  // 'user' (Citizen Dashboard) or 'admin' (Admin Dashboard)
-  const [currentPortal, setCurrentPortal] = useState('user');
+  // 'officer' (Department Officer), 'user' (Citizen), or 'admin' (Admin)
+  const [currentPortal, setCurrentPortal] = useState('officer');
+  const [officerTab, setOfficerTab] = useState('dashboard');
   const [userTab, setUserTab] = useState('dashboard');
   const [adminTab, setAdminTab] = useState('overview');
-
-  const togglePortal = () => {
-    setCurrentPortal(prev => (prev === 'user' ? 'admin' : 'user'));
-  };
 
   if (currentPortal === 'admin') {
     return (
       <AdminLayout
         activeTab={adminTab}
         onSelectTab={setAdminTab}
-        onSwitchRole={togglePortal}
+        onSelectPortal={setCurrentPortal}
+        currentPortal={currentPortal}
       >
         <AdminDashboard activeTab={adminTab} />
       </AdminLayout>
     );
   }
 
-  return (
-    <UserLayout
-      activeTab={userTab}
-      onSelectTab={setUserTab}
-      onSwitchRole={togglePortal}
-    >
-      <UserDashboard
+  if (currentPortal === 'user') {
+    return (
+      <UserLayout
         activeTab={userTab}
-        onNavigateTab={setUserTab}
+        onSelectTab={setUserTab}
+        onSelectPortal={setCurrentPortal}
+        currentPortal={currentPortal}
+      >
+        <UserDashboard
+          activeTab={userTab}
+          onNavigateTab={setUserTab}
+        />
+      </UserLayout>
+    );
+  }
+
+  // Default: Officer Dashboard
+  return (
+    <OfficerLayout
+      activeTab={officerTab}
+      onSelectTab={setOfficerTab}
+      onSelectPortal={setCurrentPortal}
+      currentPortal={currentPortal}
+      departmentName="Water Supply Department"
+    >
+      <OfficerDashboard
+        activeTab={officerTab}
+        onNavigateTab={setOfficerTab}
+        departmentName="Water Supply Department"
       />
-    </UserLayout>
+    </OfficerLayout>
   );
 }

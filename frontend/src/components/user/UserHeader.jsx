@@ -1,7 +1,8 @@
 import React from 'react';
-import { Menu, Bell, User as UserIcon, ChevronDown, ArrowLeftRight } from 'lucide-react';
+import { Menu, Bell, User as UserIcon, ChevronDown } from 'lucide-react';
+import PortalSwitcher from '../common/PortalSwitcher';
 
-export default function UserHeader({ onOpenSidebar, onSwitchRole }) {
+export default function UserHeader({ onOpenSidebar, onSelectPortal, currentPortal = 'user' }) {
   return (
     <header className="h-16 px-6 lg:px-8 bg-transparent flex items-center justify-between">
       {/* Left: Mobile menu & Welcome Title */}
@@ -25,19 +26,14 @@ export default function UserHeader({ onOpenSidebar, onSwitchRole }) {
         </div>
       </div>
 
-      {/* Right: Role Switcher, Notifications, User Profile */}
+      {/* Right: Switcher, Notifications, User Profile */}
       <div className="flex items-center gap-4">
-        {/* Switch to Admin Dashboard Pill */}
-        {onSwitchRole && (
-          <button
-            type="button"
-            onClick={onSwitchRole}
-            className="hidden sm:flex items-center gap-1.5 text-[11px] font-semibold text-blue-700 bg-blue-50 hover:bg-blue-100 border border-blue-200/80 px-3 py-1.5 rounded-full transition-colors shadow-sm"
-            title="Switch to Administrator Dashboard"
-          >
-            <ArrowLeftRight className="h-3 w-3" />
-            <span>Admin Portal</span>
-          </button>
+        {/* Portal Role Switcher */}
+        {onSelectPortal && (
+          <PortalSwitcher
+            currentPortal={currentPortal}
+            onSelectPortal={onSelectPortal}
+          />
         )}
 
         {/* Notification Bell with red badge */}
