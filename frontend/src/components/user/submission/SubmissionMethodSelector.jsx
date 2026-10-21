@@ -104,34 +104,25 @@ export default function SubmissionMethodSelector({ selectedMethod, onSelectMetho
               key={method.id}
               type="button"
               onClick={() => onSelectMethod(method.id)}
-              className={`p-4 rounded-xl border text-left transition-all cursor-pointer flex flex-col justify-between ${
+              className={`p-3.5 rounded-xl border text-left transition-all cursor-pointer flex flex-col justify-between ${
                 isSelected
                   ? method.activeClass
                   : `border-slate-200/80 bg-white ${method.borderClass} hover:shadow-xs`
               }`}
             >
-              <div>
-                <div className="flex items-center justify-between mb-3">
-                  <div className={`h-9 w-9 rounded-lg ${method.iconClass} flex items-center justify-center`}>
-                    <Icon className="h-4.5 w-4.5 stroke-[2]" />
-                  </div>
-                  <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${
-                    isSelected ? 'bg-blue-600 text-white' : 'bg-slate-100 text-slate-500'
-                  }`}>
-                    {method.badge}
-                  </span>
+              <div className="flex items-center justify-between mb-2.5">
+                <div className={`h-8 w-8 rounded-lg ${method.iconClass} flex items-center justify-center`}>
+                  <Icon className="h-4 w-4 stroke-[2]" />
                 </div>
-
-                <h3 className="text-xs font-bold text-slate-800">{method.title}</h3>
-                <p className="text-[11px] text-slate-500 mt-1 leading-relaxed">
-                  {method.description}
-                </p>
+                <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${
+                  isSelected ? 'bg-blue-600 text-white' : 'bg-slate-100 text-slate-500'
+                }`}>
+                  {method.badge}
+                </span>
               </div>
 
-              <div className="mt-4 pt-2 border-t border-slate-100 flex items-center justify-between text-[11px]">
-                <span className={`font-semibold ${isSelected ? 'text-blue-600' : 'text-slate-400'}`}>
-                  {isSelected ? 'Selected' : 'Click to select'}
-                </span>
+              <div className="flex items-center justify-between">
+                <h3 className="text-xs font-bold text-slate-800">{method.title}</h3>
                 <span className={`h-2 w-2 rounded-full ${isSelected ? 'bg-blue-600 ring-2 ring-blue-200' : 'bg-slate-300'}`} />
               </div>
             </button>

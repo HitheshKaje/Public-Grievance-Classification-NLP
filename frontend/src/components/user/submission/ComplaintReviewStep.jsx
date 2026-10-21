@@ -35,15 +35,12 @@ export default function ComplaintReviewStep({
         <div>
           <div className="flex items-center gap-2">
             <span className="text-xs font-bold text-slate-800 uppercase tracking-wider">
-              Step 2 of 2 &bull; Pre-Submission Review
+              Review Grievance Details
             </span>
             <span className={`px-2 py-0.5 rounded-full text-[10px] font-medium border ${badge.color}`}>
               {badge.label}
             </span>
           </div>
-          <p className="text-xs text-slate-500 mt-1">
-            Please verify all grievance details before final submission. You can click 'Edit Details' below to make corrections.
-          </p>
         </div>
 
         <button
@@ -92,26 +89,6 @@ export default function ComplaintReviewStep({
             <p className="text-xs text-slate-400 italic">
               No written description provided. Details are contained within the attached primary document.
             </p>
-          )}
-
-          {/* Special Honest Note for PDF extracted text */}
-          {method === 'pdf' && (
-            <div className="mt-3 p-3 bg-amber-50/70 border border-amber-200/70 rounded-xl text-xs text-amber-900 flex items-start gap-2">
-              <AlertTriangle className="h-4 w-4 text-amber-600 flex-shrink-0 mt-0.5" />
-              <div>
-                <strong className="font-semibold">Text Extraction Status:</strong> Document text will be extracted via the backend ingestion pipeline upon official submission. No synthetic text is displayed.
-              </div>
-            </div>
-          )}
-
-          {/* Special Honest Note for Voice Speech-to-Text */}
-          {method === 'voice' && (
-            <div className="mt-3 p-3 bg-violet-50/70 border border-violet-200/70 rounded-xl text-xs text-violet-900 flex items-start gap-2">
-              <Volume2 className="h-4 w-4 text-violet-600 flex-shrink-0 mt-0.5" />
-              <div>
-                <strong className="font-semibold">Speech-to-Text Pipeline Status:</strong> The recorded audio will be transcribed into complaint text by the automated speech recognition (ASR) engine and evaluated by the NLP model. No fabricated transcript is displayed.
-              </div>
-            </div>
           )}
         </div>
 
@@ -213,15 +190,6 @@ export default function ComplaintReviewStep({
             </div>
           </div>
         </div>
-      </div>
-
-      {/* NLP Notice */}
-      <div className="p-3.5 bg-blue-50/70 border border-blue-200/80 rounded-xl flex items-start gap-2.5 text-xs text-blue-900">
-        <ShieldCheck className="h-4 w-4 text-blue-600 flex-shrink-0 mt-0.5" />
-        <p className="leading-relaxed">
-          Upon submitting, your grievance will be enqueued for <strong>NLP Department Classification</strong>. 
-          No manual department routing is required. The system will assign your complaint to the relevant municipal authority.
-        </p>
       </div>
 
       {/* Navigation Buttons */}
