@@ -299,4 +299,74 @@ export async function forwardComplaintWithWorkOrder(complaintId, workOrderData) 
   }
 }
 
+const USER_COMPLAINTS_KEY = 'pgms_citizen_submitted_ids';
+
+/**
+ * Retrieves the list of Complaint IDs submitted by this citizen in the current browser.
+ */
+export function getLocalUserComplaintIds() {
+  try {
+    const raw = localStorage.getItem(USER_COMPLAINTS_KEY);
+    return raw ? JSON.parse(raw) : [];
+  } catch (e) {
+    console.error('Failed to read local citizen complaints:', e);
+    return [];
+  }
+}
+
+/**
+ * Persists a newly submitted Complaint ID to local storage and broadcasts an event for live dashboard updates.
+ */
+export function saveLocalUserComplaintId(complaintId) {
+  if (!complaintId || typeof complaintId !== 'string') return;
+  const cleanId = complaintId.trim();
+  if (!cleanId) return;
+
+  try {
+    const existing = getLocalUserComplaintIds();
+    if (!existing.includes(cleanId)) {
+      const updated = [cleanId, ...existing];
+      localStorage.setItem(USER_COMPLAINTS_KEY, JSON.stringify(updated));
+    }
+    // Dispatch custom event for real-time listener components
+    window.dispatchEvent(
+      new CustomEvent('pgms_complaint_submitted', {
+        detail: { complaintId: cleanId }
+      })
+    );
+  } catch (e) {
+    console.error('Failed to save citizen complaint ID locally:', e);
+  }
+}
+
+/**
+ * Fetches real-time citizen dashboard statistics and processing counts from the backend MongoDB API.
+ */
+export async function fetchUserStats({ complaintIds = '', citizenId = '', phone = '' } = {}) {
+  try {
+    const params = new URLSearchParams();
+    if (complaintIds && complaintIds.trim()) {
+      params.append('complaint_ids', complaintIds.trim());
+    }
+    if (citizenId && citizenId.trim()) {
+      params.append('citizen_id', citizenId.trim());
+    }
+    if (phone && phone.trim()) {
+      params.append('phone', phone.trim());
+    }
+
+    const queryString = params.toString();
+    const url = `${API_BASE_URL}/user/stats${queryString ? `?${queryString}` : ''}`;
+    const response = await fetch(url);
+    if (!response.ok) {
+      throw new Error(`Failed to load citizen stats (HTTP ${response.status})`);
+    }
+    return await response.json();
+  } catch (error) {
+    console.error('Error fetching citizen stats:', error);
+    throw error;
+  }
+}
+
+
 

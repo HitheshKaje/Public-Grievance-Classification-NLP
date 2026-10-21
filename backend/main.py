@@ -481,6 +481,85 @@ async def get_officer_stats(department: str = "All"):
         "recent_updates": [format_complaint(doc) for doc in recent_docs]
     }
 
+@app.get("/api/user/stats")
+async def get_user_stats(
+    complaint_ids: Optional[str] = None,
+    citizen_id: Optional[str] = None,
+    phone: Optional[str] = None
+):
+    """
+    Computes live grievance counts and processing status for the Citizen / User Dashboard.
+    Supports filtering by citizen's submitted complaint IDs, citizen_id, or phone.
+    If no filter provided, returns the global citizen statistics from MongoDB.
+    """
+    db = get_db()
+    query_filter = {}
+
+    if complaint_ids and complaint_ids.strip():
+        ids = [i.strip() for i in complaint_ids.split(",") if i.strip()]
+        if ids:
+            query_filter = {
+                "$or": [
+                    {"complaint_id": {"$in": ids}},
+                    {"complaint_id": {"$in": [i.upper() for i in ids]}}
+                ]
+            }
+    elif citizen_id and citizen_id.strip():
+        query_filter = {"citizen_id": citizen_id.strip()}
+    elif phone and phone.strip():
+        query_filter = {"phone": phone.strip()}
+
+    # Total complaints count for this citizen
+    total_count = await db.complaints.count_documents(query_filter)
+
+    # In Progress / In Processing
+    in_prog_query = {"status": {"$in": ["In Progress", "Processing", "In-Progress"]}}
+    if query_filter:
+        in_prog_filter = {"$and": [query_filter, in_prog_query]}
+    else:
+        in_prog_filter = in_prog_query
+    in_progress_count = await db.complaints.count_documents(in_prog_filter)
+
+    # Pending
+    pending_query = {"status": "Pending"}
+    pending_filter = {"$and": [query_filter, pending_query]} if query_filter else pending_query
+    pending_count = await db.complaints.count_documents(pending_filter)
+
+    # Resolved
+    resolved_query = {"status": "Resolved"}
+    resolved_filter = {"$and": [query_filter, resolved_query]} if query_filter else resolved_query
+    resolved_count = await db.complaints.count_documents(resolved_filter)
+
+    # Rejected
+    rejected_query = {"status": "Rejected"}
+    rejected_filter = {"$and": [query_filter, rejected_query]} if query_filter else rejected_query
+    rejected_count = await db.complaints.count_documents(rejected_filter)
+
+    # Recent complaints for citizen
+    recent_cursor = db.complaints.find(query_filter).sort([("created_at", -1)]).limit(10)
+    recent_docs = await recent_cursor.to_list(length=10)
+
+    # Also compute global system counts for fallback context
+    system_total = await db.complaints.count_documents({})
+    system_in_progress = await db.complaints.count_documents({"status": {"$in": ["In Progress", "Processing", "In-Progress"]}})
+    system_pending = await db.complaints.count_documents({"status": "Pending"})
+    system_resolved = await db.complaints.count_documents({"status": "Resolved"})
+    system_rejected = await db.complaints.count_documents({"status": "Rejected"})
+
+    return {
+        "filtered": bool(query_filter),
+        "total": total_count if query_filter else system_total,
+        "in_progress": in_progress_count if query_filter else system_in_progress,
+        "in_processing": in_progress_count if query_filter else system_in_progress,
+        "pending": pending_count if query_filter else system_pending,
+        "resolved": resolved_count if query_filter else system_resolved,
+        "rejected": rejected_count if query_filter else system_rejected,
+        "system_total": system_total,
+        "system_in_progress": system_in_progress,
+        "recent_complaints": [format_complaint(doc) for doc in recent_docs]
+    }
+
+
 @app.patch("/api/complaints/{id}/status")
 async def update_complaint_status(id: str, update: StatusUpdate):
     """

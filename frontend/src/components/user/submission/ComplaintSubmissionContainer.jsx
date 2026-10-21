@@ -6,7 +6,7 @@ import ImageComplaintUpload from './ImageComplaintUpload';
 import VoiceComplaintUpload from './VoiceComplaintUpload';
 import ComplaintReviewStep from './ComplaintReviewStep';
 import ComplaintConfirmationView from './ComplaintConfirmationView';
-import { submitGrievance } from '../../../services/complaintService';
+import { submitGrievance, saveLocalUserComplaintId } from '../../../services/complaintService';
 
 const INITIAL_FORM_DATA = {
   title: '',
@@ -49,6 +49,9 @@ export default function ComplaintSubmissionContainer({ onNavigateTab, onTrackGri
     try {
       const response = await submitGrievance(formData, method);
       const complaintData = response.complaint || response;
+      if (complaintData?.complaint_id) {
+        saveLocalUserComplaintId(complaintData.complaint_id);
+      }
       setSubmittedComplaint(complaintData);
       setStep('confirmed');
     } catch (err) {
