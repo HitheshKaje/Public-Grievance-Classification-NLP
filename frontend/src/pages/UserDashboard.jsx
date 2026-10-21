@@ -20,7 +20,7 @@ export default function UserDashboard({ activeTab = 'dashboard', onNavigateTab }
 
   // If sub-view is selected from sidebar:
   if (activeTab === 'submit') {
-    return <ComplaintSubmissionContainer onNavigateTab={onNavigateTab} />;
+    return <ComplaintSubmissionContainer onNavigateTab={onNavigateTab} onTrackGrievance={handleTrack} />;
   }
 
   if (activeTab === 'my_complaints') {

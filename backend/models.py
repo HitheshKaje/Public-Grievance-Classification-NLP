@@ -2,6 +2,44 @@ from pydantic import BaseModel, Field
 from typing import Optional, List
 from datetime import datetime
 
+class FileReference(BaseModel):
+    filename: str
+    path: str
+    size: Optional[int] = None
+    content_type: Optional[str] = None
+
+class CitizenComplaintCreate(BaseModel):
+    title: str
+    description: str
+    location: str
+    citizen_name: Optional[str] = None
+    phone: Optional[str] = None
+    email: Optional[str] = None
+    citizen_id: Optional[str] = None
+    method: Optional[str] = "write"
+    file_references: Optional[List[FileReference]] = []
+
+class CitizenComplaintResponse(BaseModel):
+    id: str = Field(alias="_id")
+    complaint_id: str
+    citizen_id: Optional[str] = None
+    title: str
+    description: str
+    location: str
+    file_references: List[dict] = []
+    predicted_category: Optional[str] = None
+    assigned_department: Optional[str] = None
+    status: str = "Pending"
+    forwarding_status: str = "Not Forwarded"
+    created_at: datetime
+    citizen_name: Optional[str] = None
+    phone: Optional[str] = None
+    email: Optional[str] = None
+    method: Optional[str] = None
+
+    class Config:
+        populate_by_name = True
+
 class ComplaintBase(BaseModel):
     text: str
     category: Optional[str] = None

@@ -17,7 +17,9 @@ export default function ComplaintReviewStep({
   formData,
   method, // 'write' | 'pdf' | 'image' | 'voice'
   onBackToEdit,
-  onSubmitFinal
+  onSubmitFinal,
+  isSubmitting = false,
+  submitError = null
 }) {
   const methodLabels = {
     write: { label: 'Direct Written Complaint', color: 'bg-blue-50 text-blue-700 border-blue-200' },
@@ -30,6 +32,17 @@ export default function ComplaintReviewStep({
 
   return (
     <div className="space-y-6">
+      {/* Submission Error Alert */}
+      {submitError && (
+        <div className="p-4 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 flex items-start gap-3 text-xs animate-in fade-in">
+          <AlertTriangle className="h-5 w-5 text-rose-600 flex-shrink-0 mt-0.5" />
+          <div className="space-y-1">
+            <p className="font-semibold text-rose-900">Submission Failed</p>
+            <p className="text-rose-700 leading-relaxed">{submitError}</p>
+          </div>
+        </div>
+      )}
+
       {/* Review Header Banner */}
       <div className="p-4 rounded-xl bg-slate-50 border border-slate-200/80 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
         <div>
@@ -45,8 +58,9 @@ export default function ComplaintReviewStep({
 
         <button
           type="button"
+          disabled={isSubmitting}
           onClick={onBackToEdit}
-          className="px-3 py-1.5 text-xs text-slate-600 hover:text-blue-600 hover:bg-white rounded-lg border border-slate-200 flex items-center gap-1.5 transition-colors cursor-pointer self-start sm:self-center"
+          className="px-3 py-1.5 text-xs text-slate-600 hover:text-blue-600 hover:bg-white rounded-lg border border-slate-200 flex items-center gap-1.5 transition-colors cursor-pointer self-start sm:self-center disabled:opacity-50 disabled:cursor-not-allowed"
         >
           <ArrowLeft className="h-3.5 w-3.5" />
           <span>Edit Details</span>
@@ -196,8 +210,9 @@ export default function ComplaintReviewStep({
       <div className="flex items-center justify-between pt-2">
         <button
           type="button"
+          disabled={isSubmitting}
           onClick={onBackToEdit}
-          className="px-5 py-2.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-xs font-semibold text-slate-700 flex items-center gap-2 transition-colors cursor-pointer"
+          className="px-5 py-2.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-xs font-semibold text-slate-700 flex items-center gap-2 transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
         >
           <ArrowLeft className="h-4 w-4" />
           <span>Back to Edit</span>
@@ -205,11 +220,23 @@ export default function ComplaintReviewStep({
 
         <button
           type="button"
+          disabled={isSubmitting}
           onClick={onSubmitFinal}
-          className="bg-[#1e6bf3] hover:bg-blue-700 text-white rounded-xl px-7 py-2.5 flex items-center gap-2 text-xs font-semibold shadow-md shadow-blue-600/25 transition-all cursor-pointer"
+          className={`bg-[#1e6bf3] hover:bg-blue-700 text-white rounded-xl px-7 py-2.5 flex items-center gap-2 text-xs font-semibold shadow-md shadow-blue-600/25 transition-all ${
+            isSubmitting ? 'opacity-70 cursor-not-allowed' : 'cursor-pointer'
+          }`}
         >
-          <Send className="h-4 w-4" />
-          <span>Submit Complaint</span>
+          {isSubmitting ? (
+            <>
+              <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+              <span>Submitting Complaint...</span>
+            </>
+          ) : (
+            <>
+              <Send className="h-4 w-4" />
+              <span>Submit Complaint</span>
+            </>
+          )}
         </button>
       </div>
     </div>

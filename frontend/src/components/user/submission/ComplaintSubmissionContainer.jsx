@@ -6,6 +6,7 @@ import ImageComplaintUpload from './ImageComplaintUpload';
 import VoiceComplaintUpload from './VoiceComplaintUpload';
 import ComplaintReviewStep from './ComplaintReviewStep';
 import ComplaintConfirmationView from './ComplaintConfirmationView';
+import { submitGrievance } from '../../../services/complaintService';
 
 const INITIAL_FORM_DATA = {
   title: '',
@@ -22,11 +23,14 @@ const INITIAL_FORM_DATA = {
   attachments: []
 };
 
-export default function ComplaintSubmissionContainer({ onNavigateTab }) {
+export default function ComplaintSubmissionContainer({ onNavigateTab, onTrackGrievance }) {
   const [method, setMethod] = useState('write'); // 'write' | 'pdf' | 'image' | 'voice'
   const [currentLanguage, setCurrentLanguage] = useState('en'); // 'en' | 'kn' | 'hi'
   const [step, setStep] = useState('fill'); // 'fill' | 'review' | 'confirmed'
   const [formData, setFormData] = useState(INITIAL_FORM_DATA);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState(null);
+  const [submittedComplaint, setSubmittedComplaint] = useState(null);
 
   const handleUpdateFormData = (updates) => {
     setFormData((prev) => ({ ...prev, ...updates }));
@@ -34,7 +38,26 @@ export default function ComplaintSubmissionContainer({ onNavigateTab }) {
 
   const handleResetForm = () => {
     setFormData(INITIAL_FORM_DATA);
+    setSubmitError(null);
+    setSubmittedComplaint(null);
     setStep('fill');
+  };
+
+  const handleSubmitFinal = async () => {
+    setIsSubmitting(true);
+    setSubmitError(null);
+    try {
+      const response = await submitGrievance(formData, method);
+      const complaintData = response.complaint || response;
+      setSubmittedComplaint(complaintData);
+      setStep('confirmed');
+    } catch (err) {
+      setSubmitError(
+        err.message || 'Failed to submit grievance. Please verify server connection and try again.'
+      );
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const handleMethodChange = (newMethod) => {
@@ -136,7 +159,9 @@ export default function ComplaintSubmissionContainer({ onNavigateTab }) {
             formData={formData}
             method={method}
             onBackToEdit={() => setStep('fill')}
-            onSubmitFinal={() => setStep('confirmed')}
+            onSubmitFinal={handleSubmitFinal}
+            isSubmitting={isSubmitting}
+            submitError={submitError}
           />
         )}
 
@@ -144,8 +169,10 @@ export default function ComplaintSubmissionContainer({ onNavigateTab }) {
           <ComplaintConfirmationView
             formData={formData}
             method={method}
+            submittedComplaint={submittedComplaint}
             onSubmitAnother={handleResetForm}
             onReturnToDashboard={() => onNavigateTab && onNavigateTab('dashboard')}
+            onTrackGrievance={onTrackGrievance}
           />
         )}
       </div>
