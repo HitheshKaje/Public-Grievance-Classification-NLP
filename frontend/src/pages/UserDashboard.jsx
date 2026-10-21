@@ -7,6 +7,8 @@ import ComplaintStatusCard from '../components/user/ComplaintStatusCard';
 import UserQuickActionsCard from '../components/user/UserQuickActionsCard';
 import CommonCategoriesCard from '../components/user/CommonCategoriesCard';
 import EmptyState from '../components/common/EmptyState';
+import ComplaintSubmissionContainer from '../components/user/submission/ComplaintSubmissionContainer';
+import UserTrackingView from '../components/user/UserTrackingView';
 
 export default function UserDashboard({ activeTab = 'dashboard', onNavigateTab }) {
   const [trackedId, setTrackedId] = useState(null);
@@ -18,23 +20,7 @@ export default function UserDashboard({ activeTab = 'dashboard', onNavigateTab }
 
   // If sub-view is selected from sidebar:
   if (activeTab === 'submit') {
-    return (
-      <div className="space-y-5">
-        <div className="bg-white rounded-2xl border border-slate-100 p-6 shadow-sm">
-          <h2 className="text-base font-bold text-slate-800">Submit a New Grievance</h2>
-          <p className="text-xs text-slate-500 mt-1">
-            Fill in the details below to submit your public complaint for automated classification.
-          </p>
-        </div>
-        <div className="bg-white rounded-2xl border border-slate-100 p-8 shadow-sm">
-          <EmptyState
-            title="Complaint Intake Channel"
-            description="The citizen complaint submission intake form will connect to the live FastAPI submission endpoint."
-            compact={false}
-          />
-        </div>
-      </div>
-    );
+    return <ComplaintSubmissionContainer onNavigateTab={onNavigateTab} />;
   }
 
   if (activeTab === 'my_complaints') {
@@ -52,18 +38,7 @@ export default function UserDashboard({ activeTab = 'dashboard', onNavigateTab }
   }
 
   if (activeTab === 'track') {
-    return (
-      <div className="space-y-5">
-        <TrackComplaintCard onTrack={handleTrack} />
-        <div className="bg-white rounded-2xl border border-slate-100 p-8 shadow-sm">
-          <EmptyState
-            title={trackedId ? `Tracking status for ${trackedId}` : "No complaint tracked yet"}
-            description="Enter a valid grievance reference ID above to query live status from MongoDB."
-            compact={false}
-          />
-        </div>
-      </div>
-    );
+    return <UserTrackingView initialTrackedId={trackedId} />;
   }
 
   if (['profile', 'support'].includes(activeTab)) {
