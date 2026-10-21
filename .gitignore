@@ -7,16 +7,23 @@ yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
+node_modules/
 node_modules
+dist/
 dist
 dist-ssr
 *.local
+.vite/
+coverage/
 
 # Editor directories and files
+.vscode/
 .vscode/*
 !.vscode/extensions.json
+.idea/
 .idea
 .DS_Store
+Thumbs.db
 *.suo
 *.ntvs*
 *.njsproj
@@ -44,6 +51,8 @@ wheels/
 .installed.cfg
 *.egg
 .pytest_cache/
+.mypy_cache/
+.ruff_cache/
 
 # Virtual Environments
 .venv/
@@ -57,7 +66,18 @@ venv.bak/
 .env
 .env.*
 !.env.example
+!.env.sample
 backend/.env
+
+# Uploads & Private Data
+backend/uploads/
+
+# Local Database Dumps & Backups
+*.dump
+*.sql
+*.dump.gz
+dumps/
+backups/
 
 # Datasets & Data files
 data/
@@ -78,6 +98,7 @@ backend/ml/dataset/
 models/
 checkpoint/
 checkpoints/
+*.keras
 *.pkl
 *.pickle
 *.joblib
@@ -91,6 +112,12 @@ checkpoints/
 *.weights
 backend/ml/models/*
 !backend/ml/models/.gitkeep
+
+# Temporary & Experiment Outputs
+*.tmp
+*.temp
+tmp/
+temp/
 
 # Compressed / Archive Files
 *.zip

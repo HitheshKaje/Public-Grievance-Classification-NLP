@@ -98,3 +98,205 @@ export async function trackGrievance(complaintId) {
     throw error;
   }
 }
+
+/**
+ * Fetches real-time officer statistics and recent updates from MongoDB.
+ */
+export async function fetchOfficerStats(department = 'All') {
+  try {
+    const params = new URLSearchParams();
+    if (department) params.append('department', department);
+    const response = await fetch(`${API_BASE_URL}/officer/stats?${params.toString()}`);
+    if (!response.ok) {
+      throw new Error(`Failed to load officer stats (HTTP ${response.status})`);
+    }
+    return await response.json();
+  } catch (error) {
+    console.error('Error fetching officer stats:', error);
+    throw error;
+  }
+}
+
+/**
+ * Fetches complaints with search, status, and department filters.
+ */
+export async function fetchComplaints({
+  search = '',
+  category = 'All',
+  status = 'All',
+  department = 'All',
+  sortBy = 'newest',
+  page = 1,
+  limit = 10
+} = {}) {
+  try {
+    const params = new URLSearchParams();
+    if (search) params.append('search', search);
+    if (category) params.append('category', category);
+    if (status) params.append('status', status);
+    if (department) params.append('department', department);
+    if (sortBy) params.append('sortBy', sortBy);
+    if (page) params.append('page', page);
+    if (limit) params.append('limit', limit);
+
+    const response = await fetch(`${API_BASE_URL}/complaints?${params.toString()}`);
+    if (!response.ok) {
+      throw new Error(`Failed to load complaints (HTTP ${response.status})`);
+    }
+    return await response.json();
+  } catch (error) {
+    console.error('Error fetching complaints:', error);
+    throw error;
+  }
+}
+
+/**
+ * Updates a complaint's status in MongoDB (e.g., 'Pending', 'In Progress', 'Resolved').
+ */
+export async function updateComplaintStatus(complaintId, status, remarks = '') {
+  try {
+    const response = await fetch(`${API_BASE_URL}/complaints/${encodeURIComponent(complaintId)}/status`, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ status, remarks })
+    });
+
+    const data = await response.json().catch(() => null);
+    if (!response.ok) {
+      throw new Error(data?.detail || `Failed to update status (HTTP ${response.status})`);
+    }
+    return data;
+  } catch (error) {
+    console.error('Error updating complaint status:', error);
+    throw error;
+  }
+}
+
+/**
+ * Assigns or forwards a complaint to a specific department in MongoDB.
+ */
+export async function assignComplaint(complaintId, department, forwardingStatus = 'Forwarded') {
+  try {
+    const response = await fetch(`${API_BASE_URL}/complaints/${encodeURIComponent(complaintId)}/assign`, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ department, forwarding_status: forwardingStatus })
+    });
+
+    const data = await response.json().catch(() => null);
+    if (!response.ok) {
+      throw new Error(data?.detail || `Failed to assign complaint (HTTP ${response.status})`);
+    }
+    return data;
+  } catch (error) {
+    console.error('Error assigning complaint:', error);
+    throw error;
+  }
+}
+
+/**
+ * Fetches real-time Admin Dashboard statistics, flow counts, and activity logs from MongoDB.
+ */
+export async function fetchAdminStats() {
+  try {
+    const response = await fetch(`${API_BASE_URL}/admin/stats`);
+    if (!response.ok) {
+      throw new Error(`Failed to load admin stats (HTTP ${response.status})`);
+    }
+    return await response.json();
+  } catch (error) {
+    console.error('Error fetching admin stats:', error);
+    throw error;
+  }
+}
+
+/**
+ * Fetches registered officers list from MongoDB.
+ */
+export async function fetchOfficers(department = '') {
+  try {
+    const params = new URLSearchParams();
+    if (department && department !== 'All') params.append('department', department);
+    const response = await fetch(`${API_BASE_URL}/officers?${params.toString()}`);
+    if (!response.ok) {
+      throw new Error(`Failed to load officers (HTTP ${response.status})`);
+    }
+    return await response.json();
+  } catch (error) {
+    console.error('Error fetching officers:', error);
+    throw error;
+  }
+}
+
+/**
+ * Registers a new officer in MongoDB from the Admin Panel.
+ */
+export async function createOfficer(officerData) {
+  try {
+    const response = await fetch(`${API_BASE_URL}/officers`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(officerData)
+    });
+
+    const data = await response.json().catch(() => null);
+    if (!response.ok) {
+      throw new Error(data?.detail || `Failed to create officer (HTTP ${response.status})`);
+    }
+    return data;
+  } catch (error) {
+    console.error('Error registering officer:', error);
+    throw error;
+  }
+}
+
+/**
+ * Deletes an officer from MongoDB.
+ */
+export async function deleteOfficer(officerId) {
+  try {
+    const response = await fetch(`${API_BASE_URL}/officers/${encodeURIComponent(officerId)}`, {
+      method: 'DELETE'
+    });
+    const data = await response.json().catch(() => null);
+    if (!response.ok) {
+      throw new Error(data?.detail || `Failed to delete officer (HTTP ${response.status})`);
+    }
+    return data;
+  } catch (error) {
+    console.error('Error deleting officer:', error);
+    throw error;
+  }
+}
+
+/**
+ * Converts a complaint into a formal Government Work Order & Dispatch document and forwards it to the department officer.
+ */
+export async function forwardComplaintWithWorkOrder(complaintId, workOrderData) {
+  try {
+    const response = await fetch(`${API_BASE_URL}/complaints/${encodeURIComponent(complaintId)}/forward`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(workOrderData)
+    });
+
+    const data = await response.json().catch(() => null);
+    if (!response.ok) {
+      throw new Error(data?.detail || `Failed to forward complaint (HTTP ${response.status})`);
+    }
+    return data;
+  } catch (error) {
+    console.error('Error forwarding complaint with work order:', error);
+    throw error;
+  }
+}
+
+

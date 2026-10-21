@@ -1,12 +1,39 @@
 import React from 'react';
 import { BarChart2 } from 'lucide-react';
 
-export default function OfficerWorkloadCard() {
+export default function OfficerWorkloadCard({
+  stats = {
+    pending: 0,
+    in_progress: 0,
+    resolved: 0,
+    overdue: 0,
+    total_assigned: 0
+  }
+}) {
+  const pending = stats.pending || 0;
+  const inProgress = stats.in_progress || 0;
+  const resolved = stats.resolved || 0;
+  const overdue = stats.overdue || 0;
+  const total = pending + inProgress + resolved;
+
+  // Donut circumference for r=40 is ~251.32
+  const CIRCUMFERENCE = 251.32;
+
+  // Calculate segment lengths
+  const pPending = total > 0 ? (pending / total) * CIRCUMFERENCE : 0;
+  const pProgress = total > 0 ? (inProgress / total) * CIRCUMFERENCE : 0;
+  const pResolved = total > 0 ? (resolved / total) * CIRCUMFERENCE : 0;
+
+  // Offsets
+  const offsetPending = 0;
+  const offsetProgress = -pPending;
+  const offsetResolved = -(pPending + pProgress);
+
   const workloadStats = [
-    { label: 'Assigned', color: 'bg-blue-600', textColor: 'text-slate-700' },
-    { label: 'In Progress', color: 'bg-amber-500', textColor: 'text-slate-700' },
-    { label: 'Resolved', color: 'bg-emerald-500', textColor: 'text-slate-700' },
-    { label: 'Overdue', color: 'bg-rose-500', textColor: 'text-slate-700' },
+    { label: 'Assigned / Pending', value: pending, color: 'bg-blue-600', textColor: 'text-slate-700' },
+    { label: 'In Progress', value: inProgress, color: 'bg-amber-500', textColor: 'text-slate-700' },
+    { label: 'Resolved', value: resolved, color: 'bg-emerald-500', textColor: 'text-slate-700' },
+    { label: 'Overdue (SLA > 3d)', value: overdue, color: 'bg-rose-500', textColor: 'text-slate-700' },
   ];
 
   return (
@@ -34,10 +61,53 @@ export default function OfficerWorkloadCard() {
                 strokeWidth="11"
                 fill="none"
               />
+              {total > 0 && (
+                <>
+                  {/* Pending segment (Blue) */}
+                  <circle
+                    cx="50"
+                    cy="50"
+                    r="40"
+                    stroke="#2563eb"
+                    strokeWidth="11"
+                    strokeDasharray={`${pPending} ${CIRCUMFERENCE}`}
+                    strokeDashoffset={offsetPending}
+                    fill="none"
+                    strokeLinecap="round"
+                    className="transition-all duration-500"
+                  />
+                  {/* In Progress segment (Amber) */}
+                  <circle
+                    cx="50"
+                    cy="50"
+                    r="40"
+                    stroke="#f59e0b"
+                    strokeWidth="11"
+                    strokeDasharray={`${pProgress} ${CIRCUMFERENCE}`}
+                    strokeDashoffset={offsetProgress}
+                    fill="none"
+                    strokeLinecap="round"
+                    className="transition-all duration-500"
+                  />
+                  {/* Resolved segment (Emerald) */}
+                  <circle
+                    cx="50"
+                    cy="50"
+                    r="40"
+                    stroke="#10b981"
+                    strokeWidth="11"
+                    strokeDasharray={`${pResolved} ${CIRCUMFERENCE}`}
+                    strokeDashoffset={offsetResolved}
+                    fill="none"
+                    strokeLinecap="round"
+                    className="transition-all duration-500"
+                  />
+                </>
+              )}
             </svg>
             <div className="absolute inset-0 flex flex-col items-center justify-center">
-              <span className="text-xl font-bold text-slate-800 leading-none">
-                —
+              <span className="text-xl font-bold text-slate-800 leading-none font-mono">
+                {total}
               </span>
             </div>
           </div>
@@ -54,7 +124,9 @@ export default function OfficerWorkloadCard() {
                 <span className={`h-2.5 w-2.5 rounded-full ${item.color}`} />
                 <span className="text-slate-700 font-medium">{item.label}</span>
               </div>
-              <span className="font-bold text-slate-800 font-mono">—</span>
+              <span className="font-bold text-slate-800 font-mono">
+                {item.value}
+              </span>
             </div>
           ))}
         </div>

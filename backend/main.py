@@ -7,6 +7,7 @@ from datetime import datetime, timedelta
 from typing import List, Optional, Union
 from bson import ObjectId
 from pymongo.errors import DuplicateKeyError
+from pydantic import BaseModel
 
 from fastapi import FastAPI, HTTPException, Query, Request, UploadFile, File, Form, status
 from fastapi.middleware.cors import CORSMiddleware
@@ -16,7 +17,8 @@ from database import get_db, init_db
 from models import (
     ComplaintCreate, ComplaintResponse, ClassifyRequest, ClassifyResponse, 
     AnalyticsResponse, CategoryDistribution, ComplaintTrend,
-    CitizenComplaintCreate, CitizenComplaintResponse
+    CitizenComplaintCreate, CitizenComplaintResponse,
+    OfficerCreate, OfficerResponse, ComplaintForwardRequest
 )
 
 logger = logging.getLogger("uvicorn")
@@ -244,24 +246,59 @@ async def get_complaints(
     search: str = "",
     category: str = "All",
     status: str = "All",
+    department: str = "All",
     sortBy: str = "newest",
     page: int = 1,
-    limit: int = 8
+    limit: int = 10
 ):
     db = get_db()
-    query = {}
+    and_conditions = []
+
     if search:
-        query["$or"] = [
-            {"complaint_id": {"$regex": search, "$options": "i"}},
-            {"title": {"$regex": search, "$options": "i"}},
-            {"text": {"$regex": search, "$options": "i"}},
-            {"location": {"$regex": search, "$options": "i"}},
-            {"category": {"$regex": search, "$options": "i"}}
-        ]
+        and_conditions.append({
+            "$or": [
+                {"complaint_id": {"$regex": search, "$options": "i"}},
+                {"title": {"$regex": search, "$options": "i"}},
+                {"text": {"$regex": search, "$options": "i"}},
+                {"description": {"$regex": search, "$options": "i"}},
+                {"location": {"$regex": search, "$options": "i"}},
+                {"category": {"$regex": search, "$options": "i"}},
+                {"predicted_category": {"$regex": search, "$options": "i"}},
+                {"department": {"$regex": search, "$options": "i"}},
+                {"assigned_department": {"$regex": search, "$options": "i"}}
+            ]
+        })
+
     if category and category != "All":
-        query["category"] = category
+        and_conditions.append({
+            "$or": [
+                {"category": category},
+                {"predicted_category": category}
+            ]
+        })
+
     if status and status != "All":
-        query["status"] = status
+        and_conditions.append({"status": status})
+
+    if department and department != "All":
+        if department.lower() == "unassigned":
+            and_conditions.append({
+                "$or": [
+                    {"assigned_department": None},
+                    {"assigned_department": ""},
+                    {"department": None},
+                    {"department": ""}
+                ]
+            })
+        else:
+            and_conditions.append({
+                "$or": [
+                    {"assigned_department": department},
+                    {"department": department}
+                ]
+            })
+
+    query = {"$and": and_conditions} if and_conditions else {}
 
     total = await db.complaints.count_documents(query)
 
@@ -363,21 +400,396 @@ async def classify_complaint(request: ClassifyRequest):
     # Requirement 10: Keep NLP classification separate for now.
     raise HTTPException(status_code=503, detail="Classification model is not available yet.")
 
-from pydantic import BaseModel
 class StatusUpdate(BaseModel):
     status: str
+    remarks: Optional[str] = None
+
+class AssignUpdate(BaseModel):
+    department: str
+    forwarding_status: Optional[str] = "Forwarded"
+
+@app.get("/api/officer/stats")
+async def get_officer_stats(department: str = "All"):
+    """
+    Computes real-time departmental and officer statistics from MongoDB.
+    """
+    db = get_db()
+    dept_filter = {}
+    if department and department != "All":
+        dept_filter = {
+            "$or": [
+                {"department": department},
+                {"assigned_department": department}
+            ]
+        }
+
+    # Total assigned in this department (or overall if All)
+    total_assigned = await db.complaints.count_documents(dept_filter)
+
+    # In Progress
+    in_prog_filter = {"status": "In Progress"}
+    if dept_filter:
+        in_prog_filter = {"$and": [dept_filter, {"status": "In Progress"}]}
+    in_progress = await db.complaints.count_documents(in_prog_filter)
+
+    # Resolved
+    res_filter = {"status": "Resolved"}
+    if dept_filter:
+        res_filter = {"$and": [dept_filter, {"status": "Resolved"}]}
+    resolved = await db.complaints.count_documents(res_filter)
+
+    # Overdue (not resolved and older than 3 days)
+    overdue_cutoff = datetime.utcnow() - timedelta(days=3)
+    overdue_cond = {
+        "status": {"$ne": "Resolved"},
+        "created_at": {"$lt": overdue_cutoff}
+    }
+    overdue_filter = {"$and": [dept_filter, overdue_cond]} if dept_filter else overdue_cond
+    overdue = await db.complaints.count_documents(overdue_filter)
+
+    # Pending
+    pending_cond = {"status": "Pending"}
+    pending_filter = {"$and": [dept_filter, pending_cond]} if dept_filter else pending_cond
+    pending = await db.complaints.count_documents(pending_filter)
+
+    # Total system complaints & unassigned count for reference
+    total_system = await db.complaints.count_documents({})
+    unassigned_count = await db.complaints.count_documents({
+        "$or": [
+            {"assigned_department": None},
+            {"assigned_department": ""},
+            {"department": None},
+            {"department": ""}
+        ]
+    })
+
+    # Recent updates (latest 5 complaints matching filter or all)
+    recent_query = dept_filter if dept_filter and total_assigned > 0 else {}
+    recent_cursor = db.complaints.find(recent_query).sort([("created_at", -1)]).limit(5)
+    recent_docs = await recent_cursor.to_list(length=5)
+
+    return {
+        "department": department,
+        "total_assigned": total_assigned if total_assigned > 0 else total_system,
+        "department_count": total_assigned,
+        "in_progress": in_progress,
+        "resolved": resolved,
+        "overdue": overdue,
+        "pending": pending,
+        "total_system": total_system,
+        "unassigned_count": unassigned_count,
+        "recent_updates": [format_complaint(doc) for doc in recent_docs]
+    }
 
 @app.patch("/api/complaints/{id}/status")
 async def update_complaint_status(id: str, update: StatusUpdate):
+    """
+    Updates the complaint status and optional remarks in MongoDB.
+    """
     db = get_db()
     query = [{"complaint_id": id}, {"complaint_id": id.upper()}]
     if ObjectId.is_valid(id):
         query.append({"_id": ObjectId(id)})
 
+    update_doc = {
+        "status": update.status,
+        "updated_at": datetime.utcnow()
+    }
+    if update.remarks:
+        update_doc["remarks"] = update.remarks
+
     result = await db.complaints.update_one(
         {"$or": query},
-        {"$set": {"status": update.status}}
+        {"$set": update_doc}
     )
     if result.matched_count == 0:
         raise HTTPException(status_code=404, detail="Complaint not found")
-    return {"message": "Status updated successfully"}
+
+    updated_record = await db.complaints.find_one({"$or": query})
+    return {
+        "message": f"Complaint status updated to {update.status}",
+        "status": update.status,
+        "complaint": format_complaint(updated_record)
+    }
+
+@app.patch("/api/complaints/{id}/assign")
+async def assign_complaint(id: str, update: AssignUpdate):
+    """
+    Assigns or forwards a complaint to a department in MongoDB.
+    """
+    db = get_db()
+    query = [{"complaint_id": id}, {"complaint_id": id.upper()}]
+    if ObjectId.is_valid(id):
+        query.append({"_id": ObjectId(id)})
+
+    update_doc = {
+        "assigned_department": update.department,
+        "department": update.department,
+        "forwarding_status": update.forwarding_status or "Forwarded",
+        "updated_at": datetime.utcnow()
+    }
+
+    result = await db.complaints.update_one(
+        {"$or": query},
+        {"$set": update_doc}
+    )
+    if result.matched_count == 0:
+        raise HTTPException(status_code=404, detail="Complaint not found")
+
+    updated_record = await db.complaints.find_one({"$or": query})
+    return {
+        "message": f"Complaint assigned to {update.department}",
+        "complaint": format_complaint(updated_record)
+    }
+
+# ==========================================
+# ADMIN DASHBOARD & WORK ORDER ENDPOINTS
+# ==========================================
+
+@app.get("/api/admin/stats")
+async def get_admin_stats():
+    """
+    Returns real-time dashboard statistics from MongoDB for the Admin Dashboard.
+    """
+    db = get_db()
+
+    total_complaints = await db.complaints.count_documents({})
+    awaiting_review = await db.complaints.count_documents({"forwarding_status": "Not Forwarded"})
+    ready_forwarding = await db.complaints.count_documents({"status": "Pending"})
+    forwarded = await db.complaints.count_documents({"forwarding_status": "Forwarded"})
+    resolved = await db.complaints.count_documents({"status": "Resolved"})
+    in_progress = await db.complaints.count_documents({"status": "In Progress"})
+    total_officers = await db.officers.count_documents({})
+
+    # Flow step counts
+    # Step 1: Received
+    received_count = total_complaints
+    # Step 2: Classification (categorized or classified)
+    classified_count = await db.complaints.count_documents({
+        "$or": [
+            {"predicted_category": {"$ne": None}},
+            {"category": {"$ne": None}}
+        ]
+    })
+    # Step 3: Structure / Review
+    structure_count = awaiting_review
+    # Step 4: Forward
+    forward_count = forwarded
+    # Step 5: Completed
+    completed_count = resolved
+
+    # Department breakdown
+    standard_departments = [
+        {"id": "water", "name": "Water Supply Department", "count": 0},
+        {"id": "electricity", "name": "Power & Electricity Board", "count": 0},
+        {"id": "roads", "name": "Public Works Department", "count": 0},
+        {"id": "lighting", "name": "Municipal Lighting Division", "count": 0},
+        {"id": "health", "name": "Health & Sanitation Department", "count": 0},
+        {"id": "education", "name": "Department of Public Instruction", "count": 0},
+        {"id": "sanitation", "name": "Solid Waste Management", "count": 0},
+        {"id": "admin", "name": "General Civic Administration", "count": 0}
+    ]
+
+    for dept in standard_departments:
+        dept_name = dept["name"]
+        cnt = await db.complaints.count_documents({
+            "$or": [
+                {"assigned_department": dept_name},
+                {"department": dept_name}
+            ]
+        })
+        dept["count"] = cnt
+
+    # Recent activity logs from MongoDB
+    recent_docs = await db.complaints.find({}).sort([("created_at", -1)]).limit(6).to_list(length=6)
+    recent_activity = []
+    for doc in recent_docs:
+        action_text = "Grievance Dispatched to Department" if doc.get("forwarding_status") == "Forwarded" else "Grievance Ingested into Queue"
+        recent_activity.append({
+            "id": str(doc.get("_id", "")),
+            "complaint_id": doc.get("complaint_id", ""),
+            "title": doc.get("title", "Public Grievance"),
+            "action": action_text,
+            "status": doc.get("status", "Pending"),
+            "forwarding_status": doc.get("forwarding_status", "Not Forwarded"),
+            "department": doc.get("assigned_department") or doc.get("department") or "Unassigned",
+            "timestamp": doc.get("created_at")
+        })
+
+    return {
+        "total_complaints": total_complaints,
+        "awaiting_review": awaiting_review,
+        "ready_forwarding": ready_forwarding,
+        "forwarded": forwarded,
+        "resolved": resolved,
+        "in_progress": in_progress,
+        "total_officers": total_officers,
+        "flow_counts": {
+            "received": received_count,
+            "classification": classified_count,
+            "structure": structure_count,
+            "forward": forward_count,
+            "completed": completed_count
+        },
+        "department_distribution": standard_departments,
+        "recent_activity": recent_activity
+    }
+
+# ==========================================
+# OFFICER DIRECTORY & MANAGEMENT ENDPOINTS
+# ==========================================
+
+def format_officer(doc: dict) -> dict:
+    if not doc:
+        return doc
+    doc["id"] = str(doc.get("_id", ""))
+    doc["_id"] = str(doc.get("_id", ""))
+    return doc
+
+@app.get("/api/officers")
+async def get_officers(department: Optional[str] = None):
+    """
+    Returns all registered department officers from MongoDB.
+    """
+    db = get_db()
+    query = {}
+    if department and department != "All":
+        query["department"] = department
+
+    cursor = db.officers.find(query).sort([("created_at", -1)])
+    officers = await cursor.to_list(length=100)
+    return {"officers": [format_officer(o) for o in officers], "total": len(officers)}
+
+@app.post("/api/officers")
+async def create_officer(officer: OfficerCreate):
+    """
+    Creates a new officer record in MongoDB from the Admin Panel.
+    """
+    db = get_db()
+    
+    # Generate unique officer ID if not provided
+    officer_id = officer.officer_id
+    if not officer_id:
+        dept_abbr = "".join([w[0] for w in officer.department.split() if w]).upper()[:3] or "OFF"
+        rand_suffix = "".join(secrets.choice(string.digits) for _ in range(3))
+        officer_id = f"OFF-{dept_abbr}-{rand_suffix}"
+
+    doc = {
+        "officer_id": officer_id,
+        "name": officer.name.strip(),
+        "department": officer.department.strip(),
+        "designation": (officer.designation or "Nodal Officer").strip(),
+        "email": (officer.email or "").strip(),
+        "phone": (officer.phone or "").strip(),
+        "zone": (officer.zone or "Headquarters").strip(),
+        "status": "Active",
+        "created_at": datetime.utcnow()
+    }
+
+    try:
+        result = await db.officers.insert_one(doc)
+        doc["_id"] = result.inserted_id
+        return {
+            "success": True,
+            "message": "Officer registered successfully in MongoDB.",
+            "officer": format_officer(doc)
+        }
+    except DuplicateKeyError:
+        raise HTTPException(
+            status_code=400,
+            detail=f"An officer with ID '{officer_id}' already exists."
+        )
+
+@app.delete("/api/officers/{id}")
+async def delete_officer(id: str):
+    """
+    Deletes an officer record from MongoDB.
+    """
+    db = get_db()
+    query = [{"officer_id": id}, {"officer_id": id.upper()}]
+    if ObjectId.is_valid(id):
+        query.append({"_id": ObjectId(id)})
+
+    result = await db.officers.delete_one({"$or": query})
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Officer not found")
+    return {"success": True, "message": "Officer removed from directory"}
+
+# ==========================================
+# CONVERT TO DOCUMENT STRUCTURE & FORWARD
+# ==========================================
+
+@app.post("/api/complaints/{id}/forward")
+async def forward_complaint_with_document(id: str, request: ComplaintForwardRequest):
+    """
+    Converts citizen complaint into a formal Government Work Order & Dispatch Notice,
+    saves the document structure in MongoDB, and forwards to the department officer.
+    """
+    db = get_db()
+    query = [{"complaint_id": id}, {"complaint_id": id.upper()}]
+    if ObjectId.is_valid(id):
+        query.append({"_id": ObjectId(id)})
+
+    complaint = await db.complaints.find_one({"$or": query})
+    if not complaint:
+        raise HTTPException(status_code=404, detail="Complaint not found")
+
+    complaint_ref = complaint.get("complaint_id", id)
+    today_str = datetime.utcnow().strftime("%Y%m%d")
+    rand_wo = "".join(secrets.choice(string.ascii_uppercase + string.digits) for _ in range(6))
+    work_order_id = f"PGMS-WO-{today_str}-{rand_wo}"
+
+    # Generate formal document structure
+    directives_text = request.directives
+    if not directives_text or not directives_text.strip():
+        location_info = complaint.get("location") or "the reported location"
+        directives_text = (
+            f"Depute a specialized field inspection team immediately to {location_info}. "
+            f"Examine technical feasibility, carry out necessary corrective infrastructure works, "
+            f"and furnish a signed completion certificate with geofenced photographic proof."
+        )
+
+    work_order_doc = {
+        "work_order_id": work_order_id,
+        "complaint_id": complaint_ref,
+        "title": complaint.get("title", "Public Grievance"),
+        "citizen_name": complaint.get("citizen_name") or "Registered Citizen",
+        "contact_phone": complaint.get("phone") or "N/A",
+        "contact_email": complaint.get("email") or "N/A",
+        "incident_location": complaint.get("location") or "Unspecified Location",
+        "assigned_department": request.department,
+        "assigned_officer": request.officer_name or "Departmental Nodal Desk",
+        "officer_id": request.officer_id or "OFF-GEN-001",
+        "priority": request.priority or "Normal",
+        "action_directives": directives_text.strip(),
+        "resolution_deadline": request.deadline or "48 hours",
+        "dispatched_at": datetime.utcnow().isoformat(),
+        "dispatched_by": "System Administrator",
+        "official_seal": "VERIFIED & ISSUED UNDER PUBLIC GRIEVANCE REDRESSAL ACT"
+    }
+
+    # Update MongoDB
+    update_data = {
+        "forwarding_status": "Forwarded",
+        "status": "In Progress",
+        "assigned_department": request.department,
+        "department": request.department,
+        "assigned_officer": request.officer_name,
+        "work_order": work_order_doc,
+        "updated_at": datetime.utcnow()
+    }
+
+    await db.complaints.update_one(
+        {"$or": query},
+        {"$set": update_data}
+    )
+
+    updated_complaint = await db.complaints.find_one({"$or": query})
+    return {
+        "success": True,
+        "message": f"Complaint converted to Work Order #{work_order_id} and forwarded to {request.department}.",
+        "work_order": work_order_doc,
+        "complaint": format_complaint(updated_complaint)
+    }
+
+

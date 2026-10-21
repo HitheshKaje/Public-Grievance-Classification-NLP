@@ -46,7 +46,11 @@ export default function App() {
         onSelectPortal={handleSelectPortal}
         currentPortal={currentPortal}
       >
-        <AdminDashboard activeTab={adminTab} />
+        <AdminDashboard 
+          activeTab={adminTab} 
+          onNavigateTab={setAdminTab}
+          onSelectPortal={handleSelectPortal}
+        />
       </AdminLayout>
     );
   }

@@ -99,3 +99,33 @@ class Category(BaseModel):
     description: Optional[str] = None
     priority: Optional[str] = None
     keywords: Optional[List[str]] = None
+
+class OfficerCreate(BaseModel):
+    name: str
+    department: str
+    designation: Optional[str] = "Nodal Officer"
+    email: Optional[str] = None
+    phone: Optional[str] = None
+    zone: Optional[str] = None
+    officer_id: Optional[str] = None
+
+class OfficerResponse(BaseModel):
+    id: Optional[str] = None
+    officer_id: str
+    name: str
+    department: str
+    designation: Optional[str] = None
+    email: Optional[str] = None
+    phone: Optional[str] = None
+    zone: Optional[str] = None
+    status: Optional[str] = "Active"
+    created_at: Optional[datetime] = None
+
+class ComplaintForwardRequest(BaseModel):
+    department: str
+    officer_name: Optional[str] = None
+    officer_id: Optional[str] = None
+    priority: Optional[str] = "Normal"
+    directives: Optional[str] = None
+    deadline: Optional[str] = "48 hours"
+
