@@ -1,7 +1,7 @@
 import React from 'react';
-import { Home, Search, Bell, ChevronDown } from 'lucide-react';
+import { Home, Search, Bell, ChevronDown, ArrowLeftRight } from 'lucide-react';
 
-export default function Header({ onOpenSidebar, activeTabTitle = "Overview" }) {
+export default function Header({ onOpenSidebar, activeTabTitle = "Overview", onSwitchRole }) {
   return (
     <header className="h-16 px-6 lg:px-8 bg-transparent flex items-center justify-between">
       {/* Left: Breadcrumbs & Page Title */}
@@ -16,10 +16,23 @@ export default function Header({ onOpenSidebar, activeTabTitle = "Overview" }) {
         </h1>
       </div>
 
-      {/* Right: Search, Notification Bell, User Profile */}
-      <div className="flex items-center gap-4">
+      {/* Right: Switcher, Search, Notification Bell, User Profile */}
+      <div className="flex items-center gap-3 sm:gap-4">
+        {/* Switch to Citizen Portal */}
+        {onSwitchRole && (
+          <button
+            type="button"
+            onClick={onSwitchRole}
+            className="flex items-center gap-1.5 text-[11px] font-semibold text-emerald-700 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200/80 px-3 py-1.5 rounded-full transition-colors shadow-sm"
+            title="Switch to Citizen Dashboard"
+          >
+            <ArrowLeftRight className="h-3 w-3" />
+            <span>Citizen Portal</span>
+          </button>
+        )}
+
         {/* Search Input */}
-        <div className="relative hidden md:block w-64 lg:w-72">
+        <div className="relative hidden md:block w-60 lg:w-72">
           <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
           <input
             type="text"
