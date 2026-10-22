@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { 
   ArrowLeft, Send, CheckCircle2, FileText, Image as ImageIcon, 
   MapPin, User, Phone, Mail, Paperclip, AlertTriangle, ShieldCheck,
@@ -21,6 +21,13 @@ export default function ComplaintReviewStep({
   isSubmitting = false,
   submitError = null
 }) {
+  const audioPlaybackUrl = useMemo(() => {
+    const audioSource = formData.audioFile || formData.audioBlob;
+    if (audioSource instanceof Blob || audioSource instanceof File) {
+      return URL.createObjectURL(audioSource);
+    }
+    return null;
+  }, [formData.audioFile, formData.audioBlob]);
   const methodLabels = {
     write: { label: 'Direct Written Complaint', color: 'bg-blue-50 text-blue-700 border-blue-200' },
     pdf: { label: 'PDF Document Complaint', color: 'bg-rose-50 text-rose-700 border-rose-200' },
@@ -153,11 +160,13 @@ export default function ComplaintReviewStep({
                   </div>
                 </div>
                 {/* Audio playback control */}
-                <audio
-                  controls
-                  src={URL.createObjectURL(formData.audioFile || formData.audioBlob)}
-                  className="w-full h-9 rounded-lg"
-                />
+                {audioPlaybackUrl && (
+                  <audio
+                    controls
+                    src={audioPlaybackUrl}
+                    className="w-full h-9 rounded-lg"
+                  />
+                )}
               </div>
             )}
           </div>

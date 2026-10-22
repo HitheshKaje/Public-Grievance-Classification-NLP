@@ -34,49 +34,132 @@ export default function VoiceComplaintUpload({ formData, onUpdateFormData, onPro
   const [audioUrl, setAudioUrl] = useState(null);
   const [speechTranscript, setSpeechTranscript] = useState('');
   
+  // Real-time Mic Level & Diagnostics
+  const [micLevel, setMicLevel] = useState(0);
+  const [isMicSilent, setIsMicSilent] = useState(false);
+  const [waveBars, setWaveBars] = useState([10, 15, 10, 20, 15, 10, 25, 15, 10, 20, 15, 10]);
+  const [volumeBoost, setVolumeBoost] = useState(1); // 1 = 1x, 1.5 = 1.5x, 2 = 2x, 3 = 3x
+  
   // General validation & upload errors
   const [uploadError, setUploadError] = useState('');
   const [errors, setErrors] = useState({});
 
-  // Refs for MediaRecorder & Timer
+  // Refs for MediaRecorder & Timer & Web Audio
   const mediaRecorderRef = useRef(null);
   const audioChunksRef = useRef([]);
   const timerIntervalRef = useRef(null);
+  const durationRef = useRef(0);
   const fileInputRef = useRef(null);
   const speechRecognitionRef = useRef(null);
+  
+  // Web Audio Refs for live analysis & boost
+  const audioContextRef = useRef(null);
+  const analyserRef = useRef(null);
+  const animFrameRef = useRef(null);
+  const streamRef = useRef(null);
+  const audioElRef = useRef(null);
+  const playbackCtxRef = useRef(null);
+  const gainNodeRef = useRef(null);
+  const sourceNodeRef = useRef(null);
+  const currentUrlRef = useRef(null);
 
-  // Sync existing audio from formData if available
+  // Sync existing audio from formData if available safely
   useEffect(() => {
-    if (formData.audioFile instanceof File) {
-      const url = URL.createObjectURL(formData.audioFile);
-      setAudioUrl(url);
-      return () => URL.revokeObjectURL(url);
-    } else if (formData.audioBlob instanceof Blob) {
-      const url = URL.createObjectURL(formData.audioBlob);
-      setAudioUrl(url);
-      return () => URL.revokeObjectURL(url);
+    let newUrl = null;
+    const source = formData.audioFile || formData.audioBlob;
+    if (source instanceof File || source instanceof Blob) {
+      newUrl = URL.createObjectURL(source);
+      setAudioUrl(newUrl);
+      currentUrlRef.current = newUrl;
     }
+    return () => {
+      if (newUrl) {
+        URL.revokeObjectURL(newUrl);
+      }
+    };
   }, [formData.audioFile, formData.audioBlob]);
 
-  // Clean up timer on unmount
+  // Clean up timer & audio contexts on unmount
   useEffect(() => {
     return () => {
       if (timerIntervalRef.current) clearInterval(timerIntervalRef.current);
+      if (animFrameRef.current) cancelAnimationFrame(animFrameRef.current);
       if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
         mediaRecorderRef.current.stop();
       }
+      if (streamRef.current) {
+        streamRef.current.getTracks().forEach((t) => t.stop());
+      }
+      if (audioContextRef.current && audioContextRef.current.state !== 'closed') {
+        audioContextRef.current.close().catch(() => {});
+      }
+      if (playbackCtxRef.current && playbackCtxRef.current.state !== 'closed') {
+        playbackCtxRef.current.close().catch(() => {});
+      }
       if (speechRecognitionRef.current) {
-        speechRecognitionRef.current.stop();
+        try { speechRecognitionRef.current.stop(); } catch {}
       }
     };
   }, []);
+
+  // Speaker Diagnostic Test Tone (Verify device volume & speakers work)
+  const testSpeakerTone = () => {
+    try {
+      const AudioCtx = window.AudioContext || window.webkitAudioContext;
+      const ctx = new AudioCtx();
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(523.25, ctx.currentTime); // C5
+      osc.frequency.setValueAtTime(659.25, ctx.currentTime + 0.12); // E5
+      osc.frequency.setValueAtTime(783.99, ctx.currentTime + 0.24); // G5
+      gain.gain.setValueAtTime(0.25, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.55);
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start();
+      osc.stop(ctx.currentTime + 0.55);
+    } catch (e) {
+      console.warn('Speaker test error:', e);
+    }
+  };
+
+  // Playback Volume Booster using Web Audio Gain Node
+  const setGainBoost = (multiplier) => {
+    setVolumeBoost(multiplier);
+    if (!audioElRef.current) return;
+    try {
+      if (!playbackCtxRef.current) {
+        const AudioCtx = window.AudioContext || window.webkitAudioContext;
+        const pCtx = new AudioCtx();
+        playbackCtxRef.current = pCtx;
+        const gain = pCtx.createGain();
+        gainNodeRef.current = gain;
+        const src = pCtx.createMediaElementSource(audioElRef.current);
+        sourceNodeRef.current = src;
+        src.connect(gain);
+        gain.connect(pCtx.destination);
+      }
+      if (playbackCtxRef.current.state === 'suspended') {
+        playbackCtxRef.current.resume();
+      }
+      if (gainNodeRef.current) {
+        gainNodeRef.current.gain.value = multiplier;
+      }
+    } catch (e) {
+      console.warn('Audio booster notice:', e);
+    }
+  };
 
   // START RECORDING
   const startRecording = async () => {
     setUploadError('');
     audioChunksRef.current = [];
     setRecordingDuration(0);
+    durationRef.current = 0;
     setSpeechTranscript('');
+    setIsMicSilent(false);
+    setMicLevel(0);
 
     try {
       if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
@@ -84,8 +167,85 @@ export default function VoiceComplaintUpload({ formData, onUpdateFormData, onPro
         return;
       }
 
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      const mediaRecorder = new MediaRecorder(stream);
+      // Explicit audio constraints with autoGainControl to amplify quiet mics!
+      const stream = await navigator.mediaDevices.getUserMedia({
+        audio: {
+          echoCancellation: true,
+          noiseSuppression: true,
+          autoGainControl: true, // Crucial for auto-boosting low Windows mic levels!
+          channelCount: 1,
+          sampleRate: 44100
+        }
+      });
+      streamRef.current = stream;
+
+      // Setup Live AudioContext for real-time VU meter
+      try {
+        const AudioCtx = window.AudioContext || window.webkitAudioContext;
+        const aCtx = new AudioCtx();
+        if (aCtx.state === 'suspended') {
+          await aCtx.resume();
+        }
+        audioContextRef.current = aCtx;
+        const source = aCtx.createMediaStreamSource(stream);
+        const analyser = aCtx.createAnalyser();
+        analyser.fftSize = 64;
+        source.connect(analyser);
+        analyserRef.current = analyser;
+
+        const dataArr = new Uint8Array(analyser.frequencyBinCount);
+        let lowVolumeTicks = 0;
+
+        const updateMeter = () => {
+          if (!analyserRef.current) return;
+          analyserRef.current.getByteFrequencyData(dataArr);
+          let sum = 0;
+          for (let i = 0; i < dataArr.length; i++) {
+            sum += dataArr[i];
+          }
+          const avg = sum / dataArr.length;
+          const pct = Math.min(100, Math.round((avg / 128) * 100));
+          setMicLevel(pct);
+
+          // Calculate 12 equalizer bars from frequency bands
+          const step = Math.floor(dataArr.length / 12) || 1;
+          const bars = [];
+          for (let b = 0; b < 12; b++) {
+            const val = dataArr[b * step] || 0;
+            bars.push(Math.max(15, Math.min(100, Math.round((val / 255) * 100))));
+          }
+          setWaveBars(bars);
+
+          // Detect silence if recording has run for > 2 seconds
+          if (durationRef.current >= 2) {
+            if (pct < 4) {
+              lowVolumeTicks++;
+              if (lowVolumeTicks > 45) {
+                setIsMicSilent(true);
+              }
+            } else {
+              lowVolumeTicks = 0;
+              setIsMicSilent(false);
+            }
+          }
+
+          animFrameRef.current = requestAnimationFrame(updateMeter);
+        };
+        animFrameRef.current = requestAnimationFrame(updateMeter);
+      } catch (err) {
+        console.warn('Realtime analyser init skipped:', err);
+      }
+
+      // Check supported MediaRecorder mimeType
+      const mimeTypes = [
+        'audio/webm;codecs=opus',
+        'audio/webm',
+        'audio/ogg;codecs=opus',
+        'audio/mp4'
+      ];
+      const selectedMime = mimeTypes.find(t => MediaRecorder.isTypeSupported(t)) || '';
+      const recorderOptions = selectedMime ? { mimeType: selectedMime } : {};
+      const mediaRecorder = new MediaRecorder(stream, recorderOptions);
       mediaRecorderRef.current = mediaRecorder;
 
       mediaRecorder.ondataavailable = (event) => {
@@ -95,16 +255,23 @@ export default function VoiceComplaintUpload({ formData, onUpdateFormData, onPro
       };
 
       mediaRecorder.onstop = () => {
-        const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
-        const file = new File([audioBlob], `grievance_voice_${Date.now()}.webm`, { type: 'audio/webm' });
+        if (animFrameRef.current) cancelAnimationFrame(animFrameRef.current);
+        if (audioContextRef.current && audioContextRef.current.state !== 'closed') {
+          audioContextRef.current.close().catch(() => {});
+        }
+
+        const actualMime = mediaRecorder.mimeType || selectedMime || 'audio/webm';
+        const audioBlob = new Blob(audioChunksRef.current, { type: actualMime });
+        const ext = actualMime.includes('ogg') ? 'ogg' : actualMime.includes('mp4') ? 'mp4' : 'webm';
+        const file = new File([audioBlob], `grievance_voice_${Date.now()}.${ext}`, { type: actualMime });
         
         onUpdateFormData({ 
           audioFile: file, 
           audioBlob: audioBlob,
-          audioDuration: recordingDuration 
+          audioDuration: durationRef.current 
         });
 
-        // Stop all audio tracks to release microphone
+        // Release mic stream
         stream.getTracks().forEach((track) => track.stop());
       };
 
@@ -112,8 +279,9 @@ export default function VoiceComplaintUpload({ formData, onUpdateFormData, onPro
       setIsRecording(true);
       setIsPaused(false);
 
-      // Start duration counter
+      // Start duration counter using ref for reliable closure access
       timerIntervalRef.current = setInterval(() => {
+        durationRef.current += 1;
         setRecordingDuration((prev) => prev + 1);
       }, 1000);
 
@@ -132,26 +300,20 @@ export default function VoiceComplaintUpload({ formData, onUpdateFormData, onPro
               transcript += event.results[i][0].transcript + ' ';
             }
             setSpeechTranscript(transcript.trim());
-            // Prepopulate description if empty
             if (!formData.description) {
               onUpdateFormData({ description: transcript.trim() });
             }
           };
 
-          recognition.onerror = () => {
-            // Speech recognition failure shouldn't disrupt audio recording
-          };
-
+          recognition.onerror = () => {};
           recognition.start();
           speechRecognitionRef.current = recognition;
-        } catch {
-          // Ignore speech recognition errors
-        }
+        } catch {}
       }
 
     } catch (err) {
       console.error('Microphone error:', err);
-      setUploadError('Microphone access was denied or not found. Please check browser permissions.');
+      setUploadError('Microphone access was denied or not found. Please check browser permissions and Windows microphone settings.');
     }
   };
 
@@ -161,14 +323,13 @@ export default function VoiceComplaintUpload({ formData, onUpdateFormData, onPro
       mediaRecorderRef.current.stop();
     }
     if (speechRecognitionRef.current) {
-      try {
-        speechRecognitionRef.current.stop();
-      } catch {
-        // Ignore
-      }
+      try { speechRecognitionRef.current.stop(); } catch {}
     }
     if (timerIntervalRef.current) {
       clearInterval(timerIntervalRef.current);
+    }
+    if (animFrameRef.current) {
+      cancelAnimationFrame(animFrameRef.current);
     }
     setIsRecording(false);
     setIsPaused(false);
@@ -179,7 +340,10 @@ export default function VoiceComplaintUpload({ formData, onUpdateFormData, onPro
     stopRecording();
     setAudioUrl(null);
     setRecordingDuration(0);
+    durationRef.current = 0;
     setSpeechTranscript('');
+    setIsMicSilent(false);
+    setMicLevel(0);
     onUpdateFormData({ audioFile: null, audioBlob: null, audioDuration: 0 });
     if (fileInputRef.current) fileInputRef.current.value = '';
   };
@@ -306,12 +470,22 @@ export default function VoiceComplaintUpload({ formData, onUpdateFormData, onPro
               </button>
             </div>
           ) : isRecording ? (
-            /* Active Recording In Progress Box */
+            /* Active Recording In Progress Box with REAL Audio Visualizer */
             <div className="border-2 border-rose-400 bg-rose-50/30 rounded-2xl p-6 text-center space-y-4">
-              <div className="flex items-center justify-center gap-2">
-                <span className="w-3 h-3 rounded-full bg-rose-600 animate-ping" />
-                <span className="text-xs font-bold text-rose-700 uppercase tracking-wider">
-                  Recording In Progress
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <span className="w-3 h-3 rounded-full bg-rose-600 animate-ping" />
+                  <span className="text-xs font-bold text-rose-700 uppercase tracking-wider">
+                    Recording In Progress
+                  </span>
+                </div>
+                <span className={`text-[11px] font-semibold px-2 py-0.5 rounded-full flex items-center gap-1.5 ${
+                  isMicSilent 
+                    ? 'bg-amber-100 text-amber-800 border border-amber-300' 
+                    : 'bg-emerald-100 text-emerald-800 border border-emerald-300'
+                }`}>
+                  <span className={`w-2 h-2 rounded-full ${isMicSilent ? 'bg-amber-500' : 'bg-emerald-500 animate-pulse'}`} />
+                  <span>{isMicSilent ? 'Low / Silent Mic' : `Sound Detected (${micLevel}%)`}</span>
                 </span>
               </div>
 
@@ -320,16 +494,45 @@ export default function VoiceComplaintUpload({ formData, onUpdateFormData, onPro
                 {formatTimer(recordingDuration)}
               </div>
 
-              {/* Soundwave Simulation Animation */}
-              <div className="flex items-center justify-center gap-1 h-8">
-                {[40, 75, 55, 90, 60, 100, 70, 45, 85, 65, 95, 50].map((h, i) => (
+              {/* Real-time Frequency Soundwave */}
+              <div className="flex items-center justify-center gap-1.5 h-10 bg-white/70 py-2 px-4 rounded-xl border border-rose-100 max-w-sm mx-auto">
+                {waveBars.map((heightPct, i) => (
                   <span
                     key={i}
-                    className="w-1 bg-violet-500 rounded-full animate-pulse"
-                    style={{ height: `${h}%`, animationDelay: `${i * 75}ms` }}
+                    className="w-1.5 bg-violet-600 rounded-full transition-all duration-75"
+                    style={{ height: `${Math.max(15, heightPct)}%` }}
                   />
                 ))}
               </div>
+
+              {/* Live Mic VU Volume Level Bar */}
+              <div className="max-w-xs mx-auto space-y-1">
+                <div className="flex justify-between text-[10px] font-bold text-slate-500 uppercase">
+                  <span>Mic Input Level</span>
+                  <span className={micLevel > 5 ? 'text-emerald-600' : 'text-amber-600'}>{micLevel}%</span>
+                </div>
+                <div className="w-full h-2 bg-slate-200 rounded-full overflow-hidden">
+                  <div 
+                    className={`h-full transition-all duration-75 ${
+                      micLevel > 15 ? 'bg-emerald-500' : micLevel > 4 ? 'bg-amber-500' : 'bg-rose-500'
+                    }`}
+                    style={{ width: `${Math.max(2, micLevel)}%` }}
+                  />
+                </div>
+              </div>
+
+              {/* Silence Alert Warning */}
+              {isMicSilent && (
+                <div className="p-2.5 bg-amber-50 border border-amber-200 rounded-xl text-[11px] text-amber-900 max-w-md mx-auto text-left flex items-start gap-2">
+                  <AlertCircle className="h-4 w-4 text-amber-600 flex-shrink-0 mt-0.5" />
+                  <div>
+                    <span className="font-bold block">No audio sound detected from microphone!</span>
+                    <span className="text-[10px] text-amber-800">
+                      Please check that your physical microphone mute switch is OFF and verify Windows microphone volume in Sound Settings.
+                    </span>
+                  </div>
+                </div>
+              )}
 
               {/* Live Speech Recognition Draft (if active) */}
               {speechTranscript && (
@@ -350,7 +553,7 @@ export default function VoiceComplaintUpload({ formData, onUpdateFormData, onPro
               </button>
             </div>
           ) : (
-            /* Audio Recorded Preview Card */
+            /* Audio Recorded Preview Card with Volume Booster */
             <div className="bg-white border border-slate-200 rounded-2xl p-4 shadow-sm space-y-3">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2.5">
@@ -363,7 +566,7 @@ export default function VoiceComplaintUpload({ formData, onUpdateFormData, onPro
                     </span>
                     <span className="text-[11px] text-slate-500 flex items-center gap-1.5">
                       <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600" />
-                      <span>Ready for Speech-to-Text processing</span>
+                      <span>Ready for playback & submission ({recordingDuration}s)</span>
                     </span>
                   </div>
                 </div>
@@ -388,10 +591,48 @@ export default function VoiceComplaintUpload({ formData, onUpdateFormData, onPro
                 </div>
               </div>
 
-              {/* Standard HTML5 Audio Player */}
+              {/* HTML5 Audio Player */}
               {audioUrl && (
-                <div className="pt-1">
-                  <audio controls src={audioUrl} className="w-full h-10 rounded-lg" />
+                <div className="pt-1 space-y-2">
+                  <audio 
+                    ref={audioElRef}
+                    controls 
+                    src={audioUrl} 
+                    className="w-full h-10 rounded-lg" 
+                  />
+
+                  {/* Volume Booster & Speaker Diagnostic Tool */}
+                  <div className="p-2.5 rounded-xl bg-slate-50 border border-slate-200 flex flex-wrap items-center justify-between gap-2 text-xs">
+                    <div className="flex items-center gap-1.5 text-slate-700 font-medium text-[11px]">
+                      <Volume2 className="h-3.5 w-3.5 text-violet-600" />
+                      <span>Sound Booster:</span>
+                      <div className="inline-flex rounded-lg border border-slate-200 bg-white p-0.5">
+                        {[1, 1.5, 2, 3].map((mult) => (
+                          <button
+                            key={mult}
+                            type="button"
+                            onClick={() => setGainBoost(mult)}
+                            className={`px-2 py-0.5 rounded text-[10px] font-bold cursor-pointer transition-colors ${
+                              volumeBoost === mult
+                                ? 'bg-violet-600 text-white shadow-xs'
+                                : 'text-slate-600 hover:text-slate-900'
+                            }`}
+                          >
+                            {mult === 1 ? '1x Normal' : `${mult}x`}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={testSpeakerTone}
+                      className="px-2.5 py-1 text-[10px] font-semibold text-blue-700 bg-blue-50 hover:bg-blue-100 rounded-lg border border-blue-200 flex items-center gap-1 cursor-pointer transition-colors"
+                      title="Play a test tone to confirm your speakers/headphones are working"
+                    >
+                      <span>🔊 Test Speakers</span>
+                    </button>
+                  </div>
                 </div>
               )}
             </div>
@@ -474,8 +715,18 @@ export default function VoiceComplaintUpload({ formData, onUpdateFormData, onPro
               </div>
 
               {audioUrl && (
-                <div className="pt-1">
+                <div className="pt-1 space-y-2">
                   <audio controls src={audioUrl} className="w-full h-10 rounded-lg" />
+                  <div className="flex items-center justify-between text-xs text-slate-500 pt-1">
+                    <span className="text-[11px]">Audio file attached</span>
+                    <button
+                      type="button"
+                      onClick={testSpeakerTone}
+                      className="px-2.5 py-0.5 text-[10px] font-semibold text-blue-700 bg-blue-50 hover:bg-blue-100 rounded-lg border border-blue-200 cursor-pointer"
+                    >
+                      🔊 Test Speakers
+                    </button>
+                  </div>
                 </div>
               )}
             </div>
