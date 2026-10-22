@@ -657,27 +657,41 @@ async def get_admin_stats():
     # Step 5: Completed
     completed_count = resolved
 
-    # Department breakdown
-    standard_departments = [
-        {"id": "water", "name": "Water Supply Department", "count": 0},
-        {"id": "electricity", "name": "Power & Electricity Board", "count": 0},
-        {"id": "roads", "name": "Public Works Department", "count": 0},
-        {"id": "lighting", "name": "Municipal Lighting Division", "count": 0},
-        {"id": "health", "name": "Health & Sanitation Department", "count": 0},
-        {"id": "education", "name": "Department of Public Instruction", "count": 0},
-        {"id": "sanitation", "name": "Solid Waste Management", "count": 0},
-        {"id": "admin", "name": "General Civic Administration", "count": 0}
+    # Dynamic department distribution from genuine complaints in MongoDB
+    pipeline = [
+        {
+            "$match": {
+                "$or": [
+                    {"assigned_department": {"$nin": [None, "", "Unassigned"]}},
+                    {"department": {"$nin": [None, "", "Unassigned"]}}
+                ]
+            }
+        },
+        {
+            "$project": {
+                "dept": {
+                    "$ifNull": ["$assigned_department", "$department"]
+                }
+            }
+        },
+        {
+            "$group": {
+                "_id": "$dept",
+                "count": {"$sum": 1}
+            }
+        },
+        {"$sort": {"count": -1}}
     ]
-
-    for dept in standard_departments:
-        dept_name = dept["name"]
-        cnt = await db.complaints.count_documents({
-            "$or": [
-                {"assigned_department": dept_name},
-                {"department": dept_name}
-            ]
-        })
-        dept["count"] = cnt
+    cursor = db.complaints.aggregate(pipeline)
+    department_distribution = []
+    async for doc in cursor:
+        dept_name = doc["_id"]
+        if dept_name and dept_name.strip() and dept_name != "Unassigned":
+            department_distribution.append({
+                "id": dept_name.lower().replace(" ", "_"),
+                "name": dept_name,
+                "count": doc["count"]
+            })
 
     # Recent activity logs from MongoDB
     recent_docs = await db.complaints.find({}).sort([("created_at", -1)]).limit(6).to_list(length=6)
@@ -710,7 +724,7 @@ async def get_admin_stats():
             "forward": forward_count,
             "completed": completed_count
         },
-        "department_distribution": standard_departments,
+        "department_distribution": department_distribution,
         "recent_activity": recent_activity
     }
 

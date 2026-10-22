@@ -51,14 +51,6 @@ export default function StatCard({
           </div>
         </div>
       </div>
-
-      {/* Mini Bar Chart Graphic (Sparkline) */}
-      <div className="flex items-end gap-1 h-7 opacity-75 pr-1">
-        <div className={`w-1 rounded-sm ${style.barColor} h-2.5`} />
-        <div className={`w-1 rounded-sm ${style.barColor} h-4`} />
-        <div className={`w-1 rounded-sm ${style.barColor} h-6`} />
-        <div className={`w-1 rounded-sm ${style.barColor} h-5`} />
-      </div>
     </div>
   );
 }
