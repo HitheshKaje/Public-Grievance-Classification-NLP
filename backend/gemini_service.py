@@ -31,6 +31,53 @@ def get_gemini_client():
         logger.error(f"Error initializing Gemini client: {e}")
         return None
 
+def fallback_nlp_extraction(complaint_data: Dict[str, Any]) -> Dict[str, Any]:
+    """Smart heuristic fallback when GEMINI_API_KEY is not yet configured."""
+    title = complaint_data.get("title") or "Citizen Grievance"
+    desc = complaint_data.get("description") or complaint_data.get("text") or ""
+    loc = complaint_data.get("location") or "the reported incident area"
+    combined = f"{title} {desc}".lower()
+
+    # Department taxonomy matching
+    dept = "General Civic Administration"
+    if any(k in combined for k in ["water", "pipeline", "leak", "tap", "drinking", "sewage", "drainage", "pipe", "borewell"]):
+        dept = "Water Supply Department"
+    elif any(k in combined for k in ["street light", "streetlight", "lamp", "pole light", "dark road"]):
+        dept = "Municipal Lighting Division"
+    elif any(k in combined for k in ["power", "electricity", "wire", "transformer", "voltage", "blackout", "current", "shock"]):
+        dept = "Power & Electricity Board"
+    elif any(k in combined for k in ["road", "pothole", "tar", "asphalt", "bridge", "footpath", "highway", "flyover"]):
+        dept = "Public Works Department"
+    elif any(k in combined for k in ["garbage", "trash", "waste", "dustbin", "dump", "litter", "debris"]):
+        dept = "Solid Waste Management"
+    elif any(k in combined for k in ["hospital", "clinic", "health", "mosquito", "dengue", "disease", "epidemic", "sanitization"]):
+        dept = "Health & Sanitation Department"
+    elif any(k in combined for k in ["school", "college", "teacher", "classroom", "student", "education"]):
+        dept = "Department of Public Instruction"
+
+    # Priority determination
+    is_high = any(k in combined for k in ["urgent", "emergency", "danger", "hazard", "spark", "overflow", "burst", "live wire", "flood", "critical", "risk"])
+    priority = "High" if is_high else "Normal"
+
+    directives = (
+        f"1. Depute an authorized nodal inspection team immediately to inspect {loc}.\n"
+        f"2. Assess technical scope of the grievance titled '{title}'.\n"
+        f"3. Execute required civil, mechanical, and operational rectifications under standard {dept} SOP.\n"
+        f"4. Upload geotagged compliance certificate and photographic verification upon completion."
+    )
+
+    return {
+        "transcribed_text": desc or f"Recorded citizen petition regarding {title} at {loc}.",
+        "structured_title": title.title(),
+        "structured_description": desc or f"Grievance registered for immediate administrative intervention at {loc}.",
+        "detected_department": dept,
+        "incident_location": loc,
+        "priority": priority,
+        "directives": directives,
+        "is_fallback": True,
+        "note": "Structured via built-in NLP heuristics. Add GEMINI_API_KEY in backend/.env for multimodal audio/photo OCR."
+    }
+
 def extract_multimodal_complaint(
     complaint_data: Dict[str, Any],
     uploads_dir: Path
@@ -38,13 +85,15 @@ def extract_multimodal_complaint(
     """
     Extracts structured grievance information from multimodal complaint
     (Audio recording, Photo evidence, PDF petition, or Text) using Gemini.
+    Falls back to intelligent local NLP if API key is not configured.
     """
     client = get_gemini_client()
     if not client:
+        logger.info("GEMINI_API_KEY not configured. Using intelligent NLP fallback extraction.")
         return {
-            "success": False,
-            "error": "GEMINI_API_KEY is not set in backend/.env",
-            "extracted": None
+            "success": True,
+            "error": None,
+            "extracted": fallback_nlp_extraction(complaint_data)
         }
 
     # Gather inputs

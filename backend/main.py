@@ -3,6 +3,7 @@ import re
 import secrets
 import string
 import logging
+from pathlib import Path
 from datetime import datetime, timedelta
 from typing import List, Optional, Union
 from bson import ObjectId
@@ -914,7 +915,8 @@ from gemini_service import extract_multimodal_complaint
 
 @app.post("/api/complaints/{complaint_id}/extract-ai")
 async def extract_complaint_ai(complaint_id: str):
-    query = [{"complaint_id": complaint_id}]
+    db = get_db()
+    query = [{"complaint_id": complaint_id}, {"complaint_id": complaint_id.upper()}]
     if ObjectId.is_valid(complaint_id):
         query.append({"_id": ObjectId(complaint_id)})
 
@@ -922,7 +924,7 @@ async def extract_complaint_ai(complaint_id: str):
     if not complaint:
         raise HTTPException(status_code=404, detail="Complaint not found")
 
-    result = extract_multimodal_complaint(complaint, UPLOADS_DIR)
+    result = extract_multimodal_complaint(complaint, Path(UPLOAD_DIR))
     if not result.get("success"):
         return {
             "success": False,
