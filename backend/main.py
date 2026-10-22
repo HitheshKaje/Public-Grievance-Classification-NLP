@@ -15,6 +15,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 
 from database import get_db, init_db
+from gemini_service import extract_multimodal_complaint, classify_text_with_gemini
 from models import (
     ComplaintCreate, ComplaintResponse, ClassifyRequest, ClassifyResponse, 
     AnalyticsResponse, CategoryDistribution, ComplaintTrend,
@@ -396,10 +397,22 @@ async def get_categories():
         {"name": "Others", "department": "General Administration"}
     ]
 
-@app.post("/api/classify")
+@app.post("/api/classify", response_model=ClassifyResponse)
 async def classify_complaint(request: ClassifyRequest):
-    # Requirement 10: Keep NLP classification separate for now.
-    raise HTTPException(status_code=503, detail="Classification model is not available yet.")
+    """
+    Classifies grievance text using Gemini AI into category, department, and confidence.
+    """
+    if not request.text or not request.text.strip():
+        raise HTTPException(status_code=422, detail="Text is required for classification.")
+    
+    result = classify_text_with_gemini(request.text.strip())
+    return ClassifyResponse(
+        id=secrets.token_hex(4),
+        category=result.get("category", "General Civic Administration"),
+        confidence=float(result.get("confidence", 0.95)),
+        status="Classified",
+        department=result.get("department", "General Civic Administration")
+    )
 
 class StatusUpdate(BaseModel):
     status: str
@@ -910,8 +923,6 @@ async def forward_complaint_with_document(id: str, request: ComplaintForwardRequ
         "work_order": work_order_doc,
         "complaint": format_complaint(updated_complaint)
     }
-
-from gemini_service import extract_multimodal_complaint
 
 @app.post("/api/complaints/{complaint_id}/extract-ai")
 async def extract_complaint_ai(complaint_id: str):

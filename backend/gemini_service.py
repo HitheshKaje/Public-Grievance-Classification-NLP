@@ -4,7 +4,8 @@ import logging
 from typing import Optional, Dict, Any
 from pathlib import Path
 from dotenv import load_dotenv
-
+_backend_env = Path(__file__).resolve().parent / ".env"
+load_dotenv(dotenv_path=_backend_env)
 load_dotenv()
 
 logger = logging.getLogger("uvicorn.error")
@@ -78,6 +79,23 @@ def fallback_nlp_extraction(complaint_data: Dict[str, Any]) -> Dict[str, Any]:
         "note": "Structured via built-in NLP heuristics. Add GEMINI_API_KEY in backend/.env for multimodal audio/photo OCR."
     }
 
+def _parse_json_response(raw_text: str) -> dict:
+    cleaned = raw_text.strip()
+    if cleaned.startswith("```json"):
+        cleaned = cleaned[7:]
+    elif cleaned.startswith("```"):
+        cleaned = cleaned[3:]
+    if cleaned.endswith("```"):
+        cleaned = cleaned[:-3]
+    return json.loads(cleaned.strip())
+
+MODELS_CASCADE = [
+    "gemini-3.5-flash-lite",
+    "gemini-3.5-flash",
+    "gemini-flash-latest",
+    "gemini-2.5-flash"
+]
+
 def extract_multimodal_complaint(
     complaint_data: Dict[str, Any],
     uploads_dir: Path
@@ -85,7 +103,7 @@ def extract_multimodal_complaint(
     """
     Extracts structured grievance information from multimodal complaint
     (Audio recording, Photo evidence, PDF petition, or Text) using Gemini.
-    Falls back to intelligent local NLP if API key is not configured.
+    Falls back to intelligent local NLP if API key fails or is unavailable.
     """
     client = get_gemini_client()
     if not client:
@@ -101,11 +119,11 @@ def extract_multimodal_complaint(
     title_input = complaint_data.get("title") or ""
     citizen_name = complaint_data.get("citizen_name") or "Anonymous Citizen"
     location_input = complaint_data.get("location") or ""
-    method = complaint_data.get("submission_method") or "write"
-    attachments = complaint_data.get("attachments") or []
+    method = complaint_data.get("submission_method") or complaint_data.get("method") or "write"
+    attachments = complaint_data.get("attachments") or complaint_data.get("file_references") or []
 
-    prompt = f"""You are an expert Government Public Grievance Officer and Data Analyst.
-Analyze this citizen grievance intake and synthesize it into a formal, structured official record.
+    prompt = f"""You are an expert Government Public Grievance Redressal Officer and Multimodal AI Analyst.
+Analyze this citizen grievance intake and synthesize it into an official, structured administrative record.
 
 Available Official Civic Departments:
 {json.dumps(DEPARTMENTS, indent=2)}
@@ -118,11 +136,11 @@ Citizen Input Details:
 - Citizen Statement/Notes: {text_input}
 
 Task:
-1. If media (audio recording, image photo, or PDF document) is attached, extract and transcribe all spoken dialogue, signage, or petition text.
+1. If any media (voice recording, field photo, or scanned PDF petition) is attached, transcribe all spoken audio, signage text, or petition contents.
 2. Formulate a precise, formal administrative subject / title.
 3. Classify into the most appropriate official department from the list above.
-4. Extract or verify the incident geolocation/ward.
-5. Determine priority ("High" for hazard/water contamination/live wire/sewage flood, or "Normal").
+4. Extract or confirm the incident geolocation / ward landmark.
+5. Determine priority ("High" for hazard, live wire, water contamination, sewage flood, or "Normal").
 6. Generate 4 numbered, enforceable engineering action directives for the field nodal officer.
 
 Return ONLY a valid JSON object matching this schema:
@@ -133,7 +151,7 @@ Return ONLY a valid JSON object matching this schema:
   "detected_department": "Exact department name from list",
   "incident_location": "Identified location/landmark",
   "priority": "High | Normal",
-  "directives": "1. Inspect...\\n2. Rectify...\\n3. Verify...\\n4. Upload compliance report."
+  "directives": "1. Depute team...\\n2. Assess...\\n3. Rectify...\\n4. Upload compliance certificate."
 }}
 """
 
@@ -142,7 +160,6 @@ Return ONLY a valid JSON object matching this schema:
     # Attach media if available
     for att in attachments:
         rel_path = att.get("path") or ""
-        # Handle path formatting
         clean_path = rel_path.replace("uploads/", "").replace("uploads\\", "").lstrip("/\\")
         file_path = uploads_dir / clean_path
         if file_path.exists():
@@ -151,6 +168,7 @@ Return ONLY a valid JSON object matching this schema:
                 ext = file_path.suffix.lower()
                 if ext in ['.jpg', '.jpeg']: mime_type = 'image/jpeg'
                 elif ext == '.png': mime_type = 'image/png'
+                elif ext == '.webp': mime_type = 'image/webp'
                 elif ext == '.pdf': mime_type = 'application/pdf'
                 elif ext in ['.mp3', '.wav', '.ogg', '.webm', '.m4a']: mime_type = 'audio/webm'
                 else: mime_type = 'application/octet-stream'
@@ -164,41 +182,82 @@ Return ONLY a valid JSON object matching this schema:
             except Exception as e:
                 logger.warning(f"Could not attach file {file_path}: {e}")
 
-    try:
-        response = client.models.generate_content(
-            model='gemini-2.5-flash',
-            contents=contents,
-            config={
-                "response_mime_type": "application/json"
-            }
-        )
-        parsed = json.loads(response.text)
-        return {
-            "success": True,
-            "error": None,
-            "extracted": parsed
-        }
-    except Exception as e:
-        logger.error(f"Gemini generation error: {e}")
-        # Try gemini-1.5-flash if 2.5 is unavailable
+    last_error = None
+    for model_name in MODELS_CASCADE:
         try:
             response = client.models.generate_content(
-                model='gemini-1.5-flash',
+                model=model_name,
                 contents=contents,
                 config={
                     "response_mime_type": "application/json"
                 }
             )
-            parsed = json.loads(response.text)
+            parsed = _parse_json_response(response.text)
+            parsed["model_used"] = model_name
+            parsed["is_fallback"] = False
             return {
                 "success": True,
                 "error": None,
                 "extracted": parsed
             }
-        except Exception as e2:
-            logger.error(f"Fallback Gemini generation error: {e2}")
-            return {
-                "success": False,
-                "error": str(e2),
-                "extracted": None
-            }
+        except Exception as e:
+            last_error = e
+            logger.warning(f"Model {model_name} failed: {e}. Trying fallback...")
+            continue
+
+    logger.error(f"All Gemini models failed: {last_error}. Falling back to NLP heuristics.")
+    fallback = fallback_nlp_extraction(complaint_data)
+    fallback["note"] = f"Gemini API error ({str(last_error)[:100]}). Falling back to NLP heuristics."
+    return {
+        "success": True,
+        "error": str(last_error),
+        "extracted": fallback
+    }
+
+def classify_text_with_gemini(text: str) -> Dict[str, Any]:
+    """
+    Classifies a raw complaint text using Gemini into Department, Category, and Priority.
+    """
+    client = get_gemini_client()
+    if not client:
+        return {
+            "category": "General Civic Administration",
+            "department": "General Civic Administration",
+            "confidence": 0.85,
+            "priority": "Normal",
+            "is_ai": False
+        }
+
+    prompt = f"""Classify this public grievance into category, department, and priority.
+Complaint Text: "{text}"
+
+Departments:
+{json.dumps(DEPARTMENTS, indent=2)}
+
+Return ONLY a JSON object:
+{{
+  "category": "Short Category Name (e.g., Water Supply, Electricity, Public Works, Sanitation)",
+  "department": "Exact Department Name from list above",
+  "confidence": 0.95,
+  "priority": "High | Normal"
+}}
+"""
+    for model_name in MODELS_CASCADE:
+        try:
+            response = client.models.generate_content(
+                model=model_name,
+                contents=[prompt],
+                config={"response_mime_type": "application/json"}
+            )
+            return _parse_json_response(response.text)
+        except Exception as e:
+            logger.warning(f"Classify model {model_name} failed: {e}")
+            continue
+
+    return {
+        "category": "General Administration",
+        "department": "General Civic Administration",
+        "confidence": 0.80,
+        "priority": "Normal"
+    }
+
