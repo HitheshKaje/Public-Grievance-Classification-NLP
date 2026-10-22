@@ -5,7 +5,7 @@ import {
   ExternalLink, Calendar, ChevronRight, Sparkles, Image,
   Mic, Paperclip, Download, Eye, FileDown
 } from 'lucide-react';
-import { forwardComplaintWithWorkOrder } from '../../services/complaintService';
+import { forwardComplaintWithWorkOrder, extractComplaintAI } from '../../services/complaintService';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api';
 const BACKEND_URL = API_BASE_URL.replace('/api', '');
@@ -26,8 +26,39 @@ export default function ComplaintWorkOrderModal({
   const [deadline, setDeadline] = useState(complaint.work_order?.resolution_deadline || '72 hours');
   const [directives, setDirectives] = useState(complaint.work_order?.action_directives || '');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isExtractingAi, setIsExtractingAi] = useState(false);
+  const [aiNotice, setAiNotice] = useState(null);
   const [error, setError] = useState(null);
   const [dispatchedOrder, setDispatchedOrder] = useState(complaint.work_order || null);
+
+  const handleAiExtraction = async () => {
+    setIsExtractingAi(true);
+    setAiNotice(null);
+    setError(null);
+    try {
+      const res = await extractComplaintAI(complaint.complaint_id);
+      if (res.success && res.extracted) {
+        const ext = res.extracted;
+        if (ext.detected_department) {
+          setDepartment(ext.detected_department);
+        }
+        if (ext.priority) {
+          setPriority(ext.priority);
+        }
+        if (ext.directives) {
+          setDirectives(ext.directives);
+        }
+        setAiNotice("Successfully analyzed media & extracted directives via Gemini AI!");
+        setTimeout(() => setAiNotice(null), 5000);
+      } else {
+        setError(res.error || res.message || "Failed to extract with Gemini AI.");
+      }
+    } catch (err) {
+      setError(err.message || "Gemini extraction request failed.");
+    } finally {
+      setIsExtractingAi(false);
+    }
+  };
 
   const departmentsList = [
     'Water Supply Department',
@@ -373,21 +404,41 @@ export default function ComplaintWorkOrderModal({
 
               {/* Work Order Structuring Form */}
               <form onSubmit={handleDispatch} className="space-y-4">
-                <div className="flex items-center justify-between">
+                <div className="flex flex-wrap items-center justify-between gap-2">
                   <span className="text-[11px] font-bold text-slate-700 uppercase tracking-wider flex items-center gap-1.5">
                     <Sparkles className="h-3.5 w-3.5 text-blue-600" />
                     <span>Formal Work Order Structure & Routing Parameters</span>
                   </span>
-                  {onOpenAddOfficer && (
+                  <div className="flex items-center gap-2">
                     <button
                       type="button"
-                      onClick={onOpenAddOfficer}
-                      className="text-blue-600 hover:text-blue-800 text-[11px] font-semibold underline cursor-pointer"
+                      onClick={handleAiExtraction}
+                      disabled={isExtractingAi}
+                      className="px-3 py-1 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white rounded-xl text-xs font-semibold flex items-center gap-1.5 shadow-xs transition-all cursor-pointer disabled:opacity-50"
+                      title="Analyze voice recording, images, or petition with Gemini to auto-fill department and directives"
                     >
-                      + Add New Officer to Directory
+                      <Sparkles className={`h-3.5 w-3.5 ${isExtractingAi ? 'animate-spin' : ''}`} />
+                      <span>{isExtractingAi ? 'AI Extracting...' : '✨ AI Auto-Extract & Fill'}</span>
                     </button>
-                  )}
+                    {onOpenAddOfficer && (
+                      <button
+                        type="button"
+                        onClick={onOpenAddOfficer}
+                        className="text-blue-600 hover:text-blue-800 text-[11px] font-semibold underline cursor-pointer"
+                      >
+                        + Add Officer
+                      </button>
+                    )}
+                  </div>
                 </div>
+
+                {/* AI Extraction Success Notification Banner */}
+                {aiNotice && (
+                  <div className="p-2.5 rounded-xl bg-blue-50 border border-blue-200 text-blue-800 flex items-center gap-2 text-xs">
+                    <CheckCircle2 className="h-4 w-4 text-blue-600 flex-shrink-0" />
+                    <span className="font-medium">{aiNotice}</span>
+                  </div>
+                )}
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   {/* Target Department */}
