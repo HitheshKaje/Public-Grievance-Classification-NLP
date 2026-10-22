@@ -277,7 +277,7 @@ export default function OfficerDashboard({
 
         {/* Right Column (~35%) */}
         <div className="lg:col-span-4 flex flex-col">
-          <OfficerWorkloadCard stats={stats} />
+          <OfficerWorkloadCard stats={stats} complaints={complaints} />
         </div>
       </div>
     </div>

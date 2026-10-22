@@ -416,10 +416,13 @@ async def get_officer_stats(department: str = "All"):
     db = get_db()
     dept_filter = {}
     if department and department != "All":
+        short_name = department.replace("Department", "").replace("Board", "").strip()
         dept_filter = {
             "$or": [
                 {"department": department},
-                {"assigned_department": department}
+                {"assigned_department": department},
+                {"predicted_category": {"$regex": short_name, "$options": "i"}},
+                {"title": {"$regex": short_name, "$options": "i"}}
             ]
         }
 
@@ -427,15 +430,15 @@ async def get_officer_stats(department: str = "All"):
     total_assigned = await db.complaints.count_documents(dept_filter)
 
     # In Progress
-    in_prog_filter = {"status": "In Progress"}
+    in_prog_filter = {"status": {"$in": ["In Progress", "Processing", "In-Progress"]}}
     if dept_filter:
-        in_prog_filter = {"$and": [dept_filter, {"status": "In Progress"}]}
+        in_prog_filter = {"$and": [dept_filter, in_prog_filter]}
     in_progress = await db.complaints.count_documents(in_prog_filter)
 
     # Resolved
     res_filter = {"status": "Resolved"}
     if dept_filter:
-        res_filter = {"$and": [dept_filter, {"status": "Resolved"}]}
+        res_filter = {"$and": [dept_filter, res_filter]}
     resolved = await db.complaints.count_documents(res_filter)
 
     # Overdue (not resolved and older than 3 days)
@@ -454,6 +457,11 @@ async def get_officer_stats(department: str = "All"):
 
     # Total system complaints & unassigned count for reference
     total_system = await db.complaints.count_documents({})
+    system_pending = await db.complaints.count_documents({"status": "Pending"})
+    system_in_progress = await db.complaints.count_documents({"status": {"$in": ["In Progress", "Processing", "In-Progress"]}})
+    system_resolved = await db.complaints.count_documents({"status": "Resolved"})
+    system_overdue = await db.complaints.count_documents(overdue_cond)
+
     unassigned_count = await db.complaints.count_documents({
         "$or": [
             {"assigned_department": None},
@@ -468,18 +476,35 @@ async def get_officer_stats(department: str = "All"):
     recent_cursor = db.complaints.find(recent_query).sort([("created_at", -1)]).limit(5)
     recent_docs = await recent_cursor.to_list(length=5)
 
-    return {
-        "department": department,
-        "total_assigned": total_assigned if total_assigned > 0 else total_system,
-        "department_count": total_assigned,
-        "in_progress": in_progress,
-        "resolved": resolved,
-        "overdue": overdue,
-        "pending": pending,
-        "total_system": total_system,
-        "unassigned_count": unassigned_count,
-        "recent_updates": [format_complaint(doc) for doc in recent_docs]
-    }
+    # If department filter matched specific records, use them.
+    # Otherwise, fall back to overall active queue counts so cards stay consistent.
+    if total_assigned > 0:
+        return {
+            "department": department,
+            "total_assigned": total_assigned,
+            "department_count": total_assigned,
+            "in_progress": in_progress,
+            "resolved": resolved,
+            "overdue": overdue,
+            "pending": pending,
+            "total_system": total_system,
+            "unassigned_count": unassigned_count,
+            "recent_updates": [format_complaint(doc) for doc in recent_docs]
+        }
+    else:
+        return {
+            "department": department,
+            "total_assigned": total_system,
+            "department_count": 0,
+            "in_progress": system_in_progress,
+            "resolved": system_resolved,
+            "overdue": system_overdue,
+            "pending": system_pending,
+            "total_system": total_system,
+            "unassigned_count": unassigned_count,
+            "recent_updates": [format_complaint(doc) for doc in recent_docs]
+        }
+
 
 @app.get("/api/user/stats")
 async def get_user_stats(
