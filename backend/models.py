@@ -127,5 +127,5 @@ class ComplaintForwardRequest(BaseModel):
     officer_id: Optional[str] = None
     priority: Optional[str] = "Normal"
     directives: Optional[str] = None
-    deadline: Optional[str] = "48 hours"
+    deadline: Optional[str] = "72 hours"
 

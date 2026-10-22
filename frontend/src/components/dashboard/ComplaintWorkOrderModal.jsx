@@ -459,8 +459,8 @@ export default function ComplaintWorkOrderModal({
                       className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-slate-800 focus:outline-none focus:border-blue-500 font-medium"
                     >
                       <option value="24 hours">24 Hours (Immediate Action)</option>
-                      <option value="48 hours">48 Hours (Expedited SLA)</option>
-                      <option value="72 hours">72 Hours (Standard 3-Day SLA)</option>
+                      <option value="48 hours">48 Hours</option>
+                      <option value="72 hours">72 Hours (Standard SLA)</option>
                       <option value="7 days">7 Days (Civil Infrastructure Works)</option>
                     </select>
                   </div>
