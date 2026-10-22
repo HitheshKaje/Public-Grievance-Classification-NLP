@@ -910,4 +910,41 @@ async def forward_complaint_with_document(id: str, request: ComplaintForwardRequ
         "complaint": format_complaint(updated_complaint)
     }
 
+from gemini_service import extract_multimodal_complaint
+
+@app.post("/api/complaints/{complaint_id}/extract-ai")
+async def extract_complaint_ai(complaint_id: str):
+    query = [{"complaint_id": complaint_id}]
+    if ObjectId.is_valid(complaint_id):
+        query.append({"_id": ObjectId(complaint_id)})
+
+    complaint = await db.complaints.find_one({"$or": query})
+    if not complaint:
+        raise HTTPException(status_code=404, detail="Complaint not found")
+
+    result = extract_multimodal_complaint(complaint, UPLOADS_DIR)
+    if not result.get("success"):
+        return {
+            "success": False,
+            "error": result.get("error") or "Extraction failed",
+            "message": "Please ensure GEMINI_API_KEY is configured in backend/.env"
+        }
+
+    extracted = result.get("extracted", {})
+    # Persist extracted details into MongoDB document
+    await db.complaints.update_one(
+        {"$or": query},
+        {"$set": {
+            "ai_extracted": extracted,
+            "ai_extracted_at": datetime.utcnow()
+        }}
+    )
+
+    return {
+        "success": True,
+        "extracted": extracted,
+        "message": "Multimodal grievance successfully transcribed and structured via Gemini AI."
+    }
+
+
 

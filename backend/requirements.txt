@@ -5,3 +5,4 @@ pydantic
 python-dotenv
 pydantic-settings
 python-multipart
+google-genai

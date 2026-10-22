@@ -368,5 +368,18 @@ export async function fetchUserStats({ complaintIds = '', citizenId = '', phone 
   }
 }
 
-
-
+/**
+ * Calls Gemini AI multimodal extraction endpoint to extract text, department, priority, and directives.
+ */
+export async function extractComplaintAI(complaintId) {
+  try {
+    const response = await fetch(`${API_BASE_URL}/complaints/${complaintId}/extract-ai`, {
+      method: 'POST'
+    });
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error('Error extracting complaint with AI:', error);
+    throw error;
+  }
+}
