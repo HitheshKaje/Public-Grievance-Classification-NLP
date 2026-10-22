@@ -234,24 +234,15 @@ export default function OfficerDashboard({
         />
       </div>
 
-      {/* Row 2: Two-Column Section (Assigned Complaints & Department Info / Quick Actions) */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-stretch">
+      {/* Row 2: Two-Column Section (Recent Updates & Workload on Left, Department Info & Quick Actions on Right) */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
         {/* Left Column (~65%) */}
-        <div className="lg:col-span-8 flex flex-col">
-          <OfficerAssignedComplaintsCard 
-            complaints={complaints}
-            total={totalComplaints}
-            loading={loadingComplaints}
-            search={search}
-            onSearchChange={setSearch}
-            statusFilter={statusFilter}
-            onStatusFilterChange={setStatusFilter}
-            departmentFilter={departmentFilter}
-            onDepartmentFilterChange={setDepartmentFilter}
-            onUpdateStatus={handleUpdateStatus}
-            onRefresh={() => { loadComplaints(); loadStats(); }}
-            departmentName={departmentName}
+        <div className="lg:col-span-8 flex flex-col gap-5">
+          <OfficerRecentUpdatesCard 
+            updates={stats.recent_updates || []} 
+            onViewAll={() => onNavigateTab && onNavigateTab('assigned')} 
           />
+          <OfficerWorkloadCard stats={stats} complaints={complaints} />
         </div>
 
         {/* Right Column (~35%) */}
@@ -265,21 +256,6 @@ export default function OfficerDashboard({
         </div>
       </div>
 
-      {/* Row 3: Two-Column Bottom Section (Recent Updates & My Workload) */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-stretch">
-        {/* Left Column (~65%) */}
-        <div className="lg:col-span-8 flex flex-col">
-          <OfficerRecentUpdatesCard 
-            updates={stats.recent_updates || []} 
-            onViewAll={() => onNavigateTab && onNavigateTab('assigned')} 
-          />
-        </div>
-
-        {/* Right Column (~35%) */}
-        <div className="lg:col-span-4 flex flex-col">
-          <OfficerWorkloadCard stats={stats} complaints={complaints} />
-        </div>
-      </div>
     </div>
   );
 }
