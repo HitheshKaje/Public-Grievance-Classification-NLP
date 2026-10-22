@@ -167,14 +167,12 @@ export default function VoiceComplaintUpload({ formData, onUpdateFormData, onPro
         return;
       }
 
-      // Explicit audio constraints with autoGainControl to amplify quiet mics!
+      // Native audio constraints without sampleRate/channelCount locks (avoids Windows Realtek 48kHz driver conflict)
       const stream = await navigator.mediaDevices.getUserMedia({
         audio: {
           echoCancellation: true,
-          noiseSuppression: true,
-          autoGainControl: true, // Crucial for auto-boosting low Windows mic levels!
-          channelCount: 1,
-          sampleRate: 44100
+          autoGainControl: true,
+          noiseSuppression: false // prevents aggressive noise gating from silencing quiet speech
         }
       });
       streamRef.current = stream;
@@ -189,38 +187,47 @@ export default function VoiceComplaintUpload({ formData, onUpdateFormData, onPro
         audioContextRef.current = aCtx;
         const source = aCtx.createMediaStreamSource(stream);
         const analyser = aCtx.createAnalyser();
-        analyser.fftSize = 64;
+        analyser.fftSize = 256;
+        analyser.smoothingTimeConstant = 0.3;
         source.connect(analyser);
         analyserRef.current = analyser;
 
-        const dataArr = new Uint8Array(analyser.frequencyBinCount);
+        const timeData = new Uint8Array(analyser.fftSize);
+        const freqData = new Uint8Array(analyser.frequencyBinCount);
         let lowVolumeTicks = 0;
 
         const updateMeter = () => {
           if (!analyserRef.current) return;
-          analyserRef.current.getByteFrequencyData(dataArr);
-          let sum = 0;
-          for (let i = 0; i < dataArr.length; i++) {
-            sum += dataArr[i];
+          
+          // Time domain is much more accurate for voice volume than small FFT bins
+          analyserRef.current.getByteTimeDomainData(timeData);
+          analyserRef.current.getByteFrequencyData(freqData);
+
+          let maxDev = 0;
+          for (let i = 0; i < timeData.length; i++) {
+            const dev = Math.abs(timeData[i] - 128);
+            if (dev > maxDev) maxDev = dev;
           }
-          const avg = sum / dataArr.length;
-          const pct = Math.min(100, Math.round((avg / 128) * 100));
+          // Amplify sensitivity: even subtle speech reaches 20-60%
+          const pct = Math.min(100, Math.round((maxDev / 48) * 100));
           setMicLevel(pct);
 
           // Calculate 12 equalizer bars from frequency bands
-          const step = Math.floor(dataArr.length / 12) || 1;
+          const step = Math.floor(freqData.length / 12) || 1;
           const bars = [];
           for (let b = 0; b < 12; b++) {
-            const val = dataArr[b * step] || 0;
-            bars.push(Math.max(15, Math.min(100, Math.round((val / 255) * 100))));
+            const val = freqData[b * step] || 0;
+            // Mix frequency with raw peak deviation so bars animate even on subtle speech
+            const combined = Math.max(val, maxDev * 2);
+            bars.push(Math.max(15, Math.min(100, Math.round((combined / 255) * 100))));
           }
           setWaveBars(bars);
 
-          // Detect silence if recording has run for > 2 seconds
-          if (durationRef.current >= 2) {
-            if (pct < 4) {
+          // Detect silence only if recording has run for > 3 seconds and signal is truly 0
+          if (durationRef.current >= 3) {
+            if (maxDev < 2) {
               lowVolumeTicks++;
-              if (lowVolumeTicks > 45) {
+              if (lowVolumeTicks > 60) {
                 setIsMicSilent(true);
               }
             } else {
