@@ -880,7 +880,7 @@ async def forward_complaint_with_document(id: str, request: ComplaintForwardRequ
         "officer_id": request.officer_id or "OFF-GEN-001",
         "priority": request.priority or "Normal",
         "action_directives": directives_text.strip(),
-        "resolution_deadline": request.deadline or "48 hours",
+        "resolution_deadline": request.deadline or "72 hours",
         "dispatched_at": datetime.utcnow().isoformat(),
         "dispatched_by": "System Administrator",
         "official_seal": "VERIFIED & ISSUED UNDER PUBLIC GRIEVANCE REDRESSAL ACT"

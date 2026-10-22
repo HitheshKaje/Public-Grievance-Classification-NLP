@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { 
   FileText, Search, ChevronDown, Send, CheckCircle2, 
-  MapPin, Clock, Eye, X, Filter, Check, ShieldCheck 
+  MapPin, Clock, Eye, X, Filter, Check, ShieldCheck,
+  Printer, Image, Mic, Paperclip
 } from 'lucide-react';
 
 export default function IncomingComplaintsCard({
@@ -235,9 +236,26 @@ export default function IncomingComplaintsCard({
                       {c.complaint_id}
                     </td>
                     <td className="py-3 px-3 max-w-[240px]">
-                      <p className="font-semibold text-slate-800 truncate" title={c.title}>
-                        {c.title}
-                      </p>
+                      <div className="flex items-center gap-1.5">
+                        {c.method === 'voice' && (
+                          <span className="p-1 rounded bg-purple-100 text-purple-700 flex-shrink-0" title="Voice Recording">
+                            <Mic className="h-3 w-3" />
+                          </span>
+                        )}
+                        {c.method === 'image' && (
+                          <span className="p-1 rounded bg-emerald-100 text-emerald-700 flex-shrink-0" title="Photo Evidence">
+                            <Image className="h-3 w-3" />
+                          </span>
+                        )}
+                        {c.method === 'pdf' && (
+                          <span className="p-1 rounded bg-amber-100 text-amber-700 flex-shrink-0" title="PDF Document Attached">
+                            <Paperclip className="h-3 w-3" />
+                          </span>
+                        )}
+                        <p className="font-semibold text-slate-800 truncate" title={c.title}>
+                          {c.title}
+                        </p>
+                      </div>
                       <p className="text-[11px] text-slate-500 truncate mt-0.5" title={c.description || c.text}>
                         {c.description || c.text || 'No text provided'}
                       </p>
@@ -256,27 +274,39 @@ export default function IncomingComplaintsCard({
                       </span>
                     </td>
                     <td className="py-3 px-3 text-center whitespace-nowrap">
-                      {isForwarded ? (
+                      <div className="flex items-center justify-center gap-1.5">
                         <button
                           type="button"
-                          onClick={() => onOpenWorkOrderModal && onOpenWorkOrderModal(c)}
-                          className="px-2.5 py-1 text-[11px] font-semibold bg-emerald-50 hover:bg-emerald-100 text-emerald-700 rounded-lg border border-emerald-200 transition-colors cursor-pointer inline-flex items-center gap-1.5"
-                          title="View Dispatched Work Order"
+                          onClick={() => onOpenWorkOrderModal && onOpenWorkOrderModal({ ...c, initialTab: 'pdf_preview' })}
+                          className="px-2 py-1 text-[11px] font-semibold bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg border border-slate-200/80 transition-colors cursor-pointer inline-flex items-center gap-1"
+                          title="Generate & Export Structured Government PDF"
                         >
-                          <CheckCircle2 className="h-3 w-3" />
-                          <span>View Order</span>
+                          <Printer className="h-3 w-3 text-blue-600" />
+                          <span>PDF</span>
                         </button>
-                      ) : (
-                        <button
-                          type="button"
-                          onClick={() => onOpenWorkOrderModal && onOpenWorkOrderModal(c)}
-                          className="px-2.5 py-1 text-[11px] font-semibold bg-[#1e6bf3] hover:bg-blue-700 text-white rounded-lg shadow-xs transition-colors cursor-pointer inline-flex items-center gap-1.5"
-                          title="Convert to Work Order and Forward to Officer"
-                        >
-                          <Send className="h-3 w-3" />
-                          <span>Convert & Forward</span>
-                        </button>
-                      )}
+
+                        {isForwarded ? (
+                          <button
+                            type="button"
+                            onClick={() => onOpenWorkOrderModal && onOpenWorkOrderModal(c)}
+                            className="px-2.5 py-1 text-[11px] font-semibold bg-emerald-50 hover:bg-emerald-100 text-emerald-700 rounded-lg border border-emerald-200 transition-colors cursor-pointer inline-flex items-center gap-1.5"
+                            title="View Dispatched Work Order"
+                          >
+                            <CheckCircle2 className="h-3 w-3" />
+                            <span>View Order</span>
+                          </button>
+                        ) : (
+                          <button
+                            type="button"
+                            onClick={() => onOpenWorkOrderModal && onOpenWorkOrderModal(c)}
+                            className="px-2.5 py-1 text-[11px] font-semibold bg-[#1e6bf3] hover:bg-blue-700 text-white rounded-lg shadow-xs transition-colors cursor-pointer inline-flex items-center gap-1.5"
+                            title="Convert to Structured Work Order and Dispatch to Officer"
+                          >
+                            <Send className="h-3 w-3" />
+                            <span>Convert & Forward</span>
+                          </button>
+                        )}
+                      </div>
                     </td>
                   </tr>
                 );

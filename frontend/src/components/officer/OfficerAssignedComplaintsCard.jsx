@@ -2,8 +2,10 @@ import React, { useState } from 'react';
 import { 
   FileText, Search, Filter, ChevronDown, CheckCircle2, 
   Clock, AlertCircle, RefreshCw, Eye, X, Send, MapPin, 
-  ExternalLink, User, Calendar, Tag, Building2, Check
+  ExternalLink, User, Calendar, Tag, Building2, Check,
+  Printer
 } from 'lucide-react';
+import ComplaintWorkOrderModal from '../dashboard/ComplaintWorkOrderModal';
 
 export default function OfficerAssignedComplaintsCard({
   complaints = [],
@@ -20,6 +22,7 @@ export default function OfficerAssignedComplaintsCard({
   departmentName = "Water Supply Department"
 }) {
   const [selectedComplaint, setSelectedComplaint] = useState(null);
+  const [pdfModalComplaint, setPdfModalComplaint] = useState(null);
   const [remarksText, setRemarksText] = useState('');
   const [updatingId, setUpdatingId] = useState(null);
   const [statusDropdownOpen, setStatusDropdownOpen] = useState(false);
@@ -315,6 +318,16 @@ export default function OfficerAssignedComplaintsCard({
 
                       <button
                         type="button"
+                        onClick={() => setPdfModalComplaint({ ...item, initialTab: 'pdf_preview' })}
+                        className="px-2 py-1 text-[10px] font-semibold bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg border border-slate-200/80 transition-colors cursor-pointer inline-flex items-center gap-1"
+                        title="View & Print Official Government PDF Work Order"
+                      >
+                        <Printer className="h-3 w-3 text-blue-600" />
+                        <span>PDF</span>
+                      </button>
+
+                      <button
+                        type="button"
                         onClick={() => setSelectedComplaint(item)}
                         className="p-1 rounded-lg text-slate-500 hover:text-slate-800 hover:bg-slate-100 transition-colors cursor-pointer"
                         title="View Full Grievance Details"
@@ -460,6 +473,15 @@ export default function OfficerAssignedComplaintsCard({
             </div>
           </div>
         </div>
+      )}
+
+      {/* Structured Government PDF Work Order Modal */}
+      {pdfModalComplaint && (
+        <ComplaintWorkOrderModal
+          complaint={pdfModalComplaint}
+          onClose={() => setPdfModalComplaint(null)}
+          onForwardSuccess={onRefresh}
+        />
       )}
     </div>
   );

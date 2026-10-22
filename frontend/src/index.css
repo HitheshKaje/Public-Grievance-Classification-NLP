@@ -29,3 +29,28 @@ body {
 ::-webkit-scrollbar-thumb:hover {
   background: #94a3b8;
 }
+
+/* Formal Government Work Order PDF Printing Styles */
+@media print {
+  body * {
+    visibility: hidden !important;
+  }
+  #printable-work-order, #printable-work-order * {
+    visibility: visible !important;
+  }
+  #printable-work-order {
+    position: absolute !important;
+    left: 0 !important;
+    top: 0 !important;
+    width: 100% !important;
+    margin: 0 !important;
+    padding: 24px !important;
+    background: white !important;
+    color: #0f172a !important;
+    box-shadow: none !important;
+    border: none !important;
+  }
+  .no-print {
+    display: none !important;
+  }
+}
