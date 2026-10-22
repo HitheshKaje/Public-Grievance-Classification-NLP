@@ -246,8 +246,8 @@ export default function ComplaintWorkOrderModal({
             </div>
           )}
 
-          {/* Success Banner if already dispatched */}
-          {dispatchedOrder && (
+          {/* Success Banner if already dispatched (parameters tab only) */}
+          {dispatchedOrder && activeTab === 'parameters' && (
             <div className="p-4 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-900 space-y-2 no-print">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2 font-bold text-sm text-emerald-950">
@@ -574,28 +574,28 @@ export default function ComplaintWorkOrderModal({
             </div>
           )}
 
-          {/* TAB 2: OFFICIAL STRUCTURED PDF DOCUMENT PREVIEW */}
+          {/* TAB 2: CLEAN STRUCTURED WORK ORDER DOCUMENT PREVIEW */}
           {activeTab === 'pdf_preview' && (
             <div className="space-y-4">
               {/* Action Toolbar above Document */}
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3 bg-blue-50/70 border border-blue-200 rounded-2xl no-print">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3 bg-slate-50 border border-slate-200 rounded-xl no-print">
                 <div className="flex items-center gap-2">
-                  <ShieldCheck className="h-5 w-5 text-blue-600" />
-                  <div>
-                    <h3 className="font-bold text-slate-900 text-xs">
-                      Official Government Work Order Ready for Export / Print
-                    </h3>
-                    <p className="text-[11px] text-slate-500">
-                      Standardized structured document converting citizen multimodal petition into enforceable statutory directives.
-                    </p>
-                  </div>
+                  <span className="font-bold text-slate-800 text-xs">Work Order Preview</span>
+                  <span className="font-mono text-[11px] px-2 py-0.5 rounded bg-slate-200 text-slate-700 font-semibold">
+                    {workOrderId}
+                  </span>
+                  {dispatchedOrder && (
+                    <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 font-semibold">
+                      Dispatched
+                    </span>
+                  )}
                 </div>
 
                 <div className="flex items-center gap-2">
                   <button
                     type="button"
                     onClick={handlePrint}
-                    className="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs flex items-center gap-1.5 shadow-sm transition-colors cursor-pointer"
+                    className="px-3.5 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs flex items-center gap-1.5 transition-colors cursor-pointer"
                   >
                     <Printer className="h-3.5 w-3.5" />
                     <span>Print / Save as PDF</span>
@@ -606,7 +606,7 @@ export default function ComplaintWorkOrderModal({
                       type="button"
                       onClick={handleDispatch}
                       disabled={isSubmitting}
-                      className="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-xs flex items-center gap-1.5 shadow-sm transition-colors cursor-pointer disabled:opacity-50"
+                      className="px-3.5 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-xs flex items-center gap-1.5 transition-colors cursor-pointer disabled:opacity-50"
                     >
                       <Send className="h-3.5 w-3.5" />
                       <span>Dispatch to Officer</span>
@@ -615,160 +615,145 @@ export default function ComplaintWorkOrderModal({
                 </div>
               </div>
 
-              {/* THE FORMAL GOVERNMENT STRUCTURED PDF WORK ORDER DOCUMENT */}
+              {/* CLEAN STRUCTURED WORK ORDER DOCUMENT */}
               <div 
                 id="printable-work-order" 
-                className="bg-white p-8 rounded-2xl border-2 border-slate-300 shadow-md text-slate-900 space-y-6 max-w-3xl mx-auto"
-                style={{ fontFamily: 'Georgia, Cambria, "Times New Roman", serif' }}
+                className="bg-white p-8 rounded-xl border border-slate-200 shadow-sm text-slate-800 max-w-3xl mx-auto space-y-6"
               >
-                {/* Government Official Letterhead */}
-                <div className="text-center pb-4 border-b-2 border-slate-800 space-y-1">
-                  <div className="inline-block px-3 py-1 bg-slate-900 text-white font-mono text-[10px] tracking-widest uppercase font-bold rounded mb-1">
-                    GOVERNMENT OF KARNATAKA &bull; PUBLIC GRIEVANCE ADMINISTRATIVE PORTAL
+                {/* Clean Header */}
+                <div className="border-b border-slate-200 pb-4">
+                  <div className="flex items-start justify-between">
+                    <div>
+                      <p className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider">
+                        Public Grievance Management System
+                      </p>
+                      <h1 className="text-lg font-bold text-slate-900 mt-0.5">
+                        Grievance Work Order
+                      </h1>
+                    </div>
+                    <div className="text-right text-[11px] text-slate-500">
+                      <p className="font-mono font-semibold text-slate-900">{workOrderId}</p>
+                      <p className="mt-0.5">{new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}</p>
+                    </div>
                   </div>
-                  <h1 className="text-xl font-black uppercase tracking-tight text-slate-950">
-                    FORMAL ADMINISTRATIVE WORK ORDER & DISPATCH
-                  </h1>
-                  <p className="text-xs text-slate-600 italic">
-                    Issued under the Public Grievance Redressal and Citizen Service Delivery Guarantee Act, 2026
-                  </p>
-                  <div className="flex items-center justify-between pt-2 text-[11px] font-mono font-bold text-slate-700">
-                    <span>WORK ORDER REF: <strong className="text-blue-900">{workOrderId}</strong></span>
-                    <span>DISPATCH DATE: <strong>{new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}</strong></span>
-                    <span>ORIGINAL GRIEVANCE: <strong className="text-blue-900">{complaint.complaint_id}</strong></span>
+
+                  {/* Clean 4-Column Summary Bar */}
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-3 mt-3 border-t border-slate-100 text-[11px]">
+                    <div>
+                      <span className="text-slate-400 block text-[10px]">Complaint ID</span>
+                      <span className="font-mono font-semibold text-slate-800">{complaint.complaint_id}</span>
+                    </div>
+                    <div>
+                      <span className="text-slate-400 block text-[10px]">Submission Channel</span>
+                      <span className="font-medium text-slate-800">{methodInfo.label}</span>
+                    </div>
+                    <div>
+                      <span className="text-slate-400 block text-[10px]">Priority</span>
+                      <span className="font-semibold text-slate-800">{priority}</span>
+                    </div>
+                    <div>
+                      <span className="text-slate-400 block text-[10px]">Resolution Deadline</span>
+                      <span className="font-medium text-slate-800">{deadline}</span>
+                    </div>
                   </div>
                 </div>
 
-                {/* Section A: Complainant & Origin Intake */}
-                <div>
-                  <h2 className="text-xs font-bold uppercase tracking-wider bg-slate-100 p-1.5 px-3 border-l-4 border-slate-800 text-slate-900 mb-2">
-                    Section I: Citizen Petition Intake & Inflow Metadata
+                {/* Section 1: Grievance Details */}
+                <div className="space-y-3">
+                  <h2 className="text-xs font-bold text-slate-900 uppercase tracking-wide border-b border-slate-100 pb-1">
+                    Grievance Details
                   </h2>
-                  <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-xs border border-slate-200 p-3 rounded-lg bg-slate-50/50">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
                     <div>
-                      <span className="text-slate-500 font-sans block text-[10px]">Complainant Name:</span>
-                      <strong className="text-slate-900">{complaint.citizen_name || 'Anonymous Petitioner'}</strong>
+                      <span className="text-slate-400 block text-[10px]">Complainant</span>
+                      <p className="font-medium text-slate-800">{complaint.citizen_name || 'Anonymous'}</p>
                     </div>
                     <div>
-                      <span className="text-slate-500 font-sans block text-[10px]">Contact Mobile / Email:</span>
-                      <strong className="text-slate-900">{complaint.phone || complaint.email || 'Verified In-App'}</strong>
+                      <span className="text-slate-400 block text-[10px]">Contact</span>
+                      <p className="font-medium text-slate-800">{complaint.phone || complaint.email || 'N/A'}</p>
                     </div>
-                    <div>
-                      <span className="text-slate-500 font-sans block text-[10px]">Incident Geolocation / Ward:</span>
-                      <strong className="text-slate-900">{complaint.location || 'Reported Jurisdiction'}</strong>
-                    </div>
-                    <div>
-                      <span className="text-slate-500 font-sans block text-[10px]">Intake Methodology & Evidence:</span>
-                      <strong className="text-blue-900 uppercase font-mono">{methodInfo.label}</strong>
+                    <div className="sm:col-span-2">
+                      <span className="text-slate-400 block text-[10px]">Incident Location</span>
+                      <p className="font-medium text-slate-800">{complaint.location || 'Reported Jurisdiction'}</p>
                     </div>
                   </div>
-                </div>
 
-                {/* Section B: Substantive Grievance Statement */}
-                <div>
-                  <h2 className="text-xs font-bold uppercase tracking-wider bg-slate-100 p-1.5 px-3 border-l-4 border-slate-800 text-slate-900 mb-2">
-                    Section II: Grievance Title & Statement of Fact
-                  </h2>
-                  <div className="border border-slate-200 p-3.5 rounded-lg space-y-2">
-                    <p className="text-sm font-bold text-slate-950">
-                      Grievance Subject: "{complaint.title}"
-                    </p>
-                    <p className="text-xs text-slate-800 leading-relaxed italic bg-slate-50 p-2.5 rounded border border-slate-100">
-                      "{complaint.description || complaint.text}"
+                  <div className="pt-2">
+                    <span className="text-slate-400 block text-[10px]">Subject</span>
+                    <p className="text-xs font-bold text-slate-900 mt-0.5">{complaint.title}</p>
+                    <span className="text-slate-400 block text-[10px] mt-2">Citizen Statement</span>
+                    <p className="text-xs text-slate-700 leading-relaxed mt-0.5 whitespace-pre-wrap">
+                      {complaint.description || complaint.text}
                     </p>
                   </div>
                 </div>
 
-                {/* Embedded Photographic Evidence if present */}
+                {/* Attached Photographic Evidence if present */}
                 {imageFiles.length > 0 && (
-                  <div>
-                    <h2 className="text-xs font-bold uppercase tracking-wider bg-slate-100 p-1.5 px-3 border-l-4 border-slate-800 text-slate-900 mb-2">
-                      Section III: Attached Photographic Evidence
+                  <div className="space-y-2 pt-1">
+                    <h2 className="text-xs font-bold text-slate-900 uppercase tracking-wide border-b border-slate-100 pb-1">
+                      Attached Photographic Evidence
                     </h2>
-                    <div className="border border-slate-200 p-3 rounded-lg flex items-center gap-4">
-                      <div className="h-28 w-44 rounded border border-slate-300 overflow-hidden bg-slate-100 flex-shrink-0">
+                    <div className="flex items-center gap-3 border border-slate-200 rounded-lg p-2.5">
+                      <div className="h-20 w-28 rounded overflow-hidden bg-slate-100 flex-shrink-0 border border-slate-200">
                         <img 
                           src={getMediaUrl(imageFiles[0].path)} 
                           alt="Field Evidence" 
                           className="h-full w-full object-cover"
                         />
                       </div>
-                      <div className="text-xs space-y-1">
-                        <p className="font-bold text-slate-900">{imageFiles[0].filename}</p>
-                        <p className="text-[11px] text-slate-600">
-                          Digital geotagged evidence attached by complainant at the incident site.
-                        </p>
-                        <p className="text-[10px] font-mono text-slate-500">
-                          Storage Ref: {imageFiles[0].path}
-                        </p>
+                      <div className="text-xs">
+                        <p className="font-semibold text-slate-800">{imageFiles[0].filename}</p>
+                        <p className="text-[11px] text-slate-500 mt-0.5">Photographic evidence attached with citizen petition.</p>
                       </div>
                     </div>
                   </div>
                 )}
 
-                {/* Section IV: Nodal Departmental Allocation */}
-                <div>
-                  <h2 className="text-xs font-bold uppercase tracking-wider bg-slate-100 p-1.5 px-3 border-l-4 border-slate-800 text-slate-900 mb-2">
-                    Section IV: Official Departmental Allocation & SLA Mandate
+                {/* Section 2: Department Assignment */}
+                <div className="space-y-3 pt-1">
+                  <h2 className="text-xs font-bold text-slate-900 uppercase tracking-wide border-b border-slate-100 pb-1">
+                    Department Assignment
                   </h2>
-                  <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-xs border border-slate-200 p-3 rounded-lg bg-slate-50/50">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
                     <div>
-                      <span className="text-slate-500 font-sans block text-[10px]">Executing Department:</span>
-                      <strong className="text-slate-900 text-sm">{department}</strong>
+                      <span className="text-slate-400 block text-[10px]">Assigned Department</span>
+                      <p className="font-semibold text-slate-900">{department}</p>
                     </div>
                     <div>
-                      <span className="text-slate-500 font-sans block text-[10px]">Designated Nodal Officer:</span>
-                      <strong className="text-slate-900">{officerName}</strong> ({officerDesignation})
-                    </div>
-                    <div>
-                      <span className="text-slate-500 font-sans block text-[10px]">Mandated SLA Deadline:</span>
-                      <strong className="text-rose-800 font-mono text-sm">{deadline}</strong>
-                    </div>
-                    <div>
-                      <span className="text-slate-500 font-sans block text-[10px]">Assigned Priority:</span>
-                      <strong className="text-slate-900 uppercase font-mono">{priority}</strong>
+                      <span className="text-slate-400 block text-[10px]">Designated Officer</span>
+                      <p className="font-semibold text-slate-900">{officerName} <span className="font-normal text-slate-500">({officerDesignation})</span></p>
                     </div>
                   </div>
                 </div>
 
-                {/* Section V: Executive Action Directives */}
-                <div>
-                  <h2 className="text-xs font-bold uppercase tracking-wider bg-slate-100 p-1.5 px-3 border-l-4 border-slate-800 text-slate-900 mb-2">
-                    Section V: Enforceable Directives & Compliance Checklist
+                {/* Section 3: Action Directives */}
+                <div className="space-y-2 pt-1">
+                  <h2 className="text-xs font-bold text-slate-900 uppercase tracking-wide border-b border-slate-100 pb-1">
+                    Action Directives
                   </h2>
-                  <div className="border border-slate-200 p-3.5 rounded-lg bg-slate-50/70 font-mono text-xs whitespace-pre-wrap leading-relaxed text-slate-900">
+                  <div className="text-xs text-slate-800 whitespace-pre-wrap leading-relaxed space-y-1">
                     {directives}
                   </div>
                 </div>
 
-                {/* Official Signatures & Seal */}
-                <div className="pt-6 border-t-2 border-slate-800 flex items-end justify-between text-xs">
-                  <div className="space-y-1">
-                    <div className="h-14 w-28 border border-slate-300 rounded flex items-center justify-center text-[10px] text-slate-400 uppercase font-bold italic">
-                      [OFFICIAL STAMP]
-                    </div>
-                    <span className="text-[10px] text-slate-500 block">
-                      Tamper-evident Central MongoDB Record
-                    </span>
+                {/* Clean Footer Sign-off */}
+                <div className="pt-8 mt-6 border-t border-slate-200 flex items-end justify-between text-[11px] text-slate-500">
+                  <div>
+                    <p className="font-medium text-slate-700">Public Grievance Management System</p>
+                    <p className="text-[10px] text-slate-400">Automated Dispatch & Redressal Tracking</p>
                   </div>
-
-                  <div className="text-right space-y-1">
-                    <div className="font-bold text-slate-900 uppercase text-xs">
-                      Director General of Public Grievances
-                    </div>
-                    <div className="text-[11px] text-slate-600">
-                      Nodal Administrative Redressal Authority
-                    </div>
-                    <div className="text-[10px] font-mono text-slate-400">
-                      Digital Verification Code: PGMS-CERT-SEC256
-                    </div>
+                  <div className="text-right">
+                    <div className="border-b border-slate-300 w-36 mb-1 ml-auto"></div>
+                    <p className="font-semibold text-slate-800">Authorized Nodal Officer</p>
+                    <p className="text-[10px] text-slate-400">{department}</p>
                   </div>
                 </div>
               </div>
             </div>
           )}
-
         </div>
+
       </div>
     </div>
   );
