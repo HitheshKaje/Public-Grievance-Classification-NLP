@@ -561,38 +561,53 @@ export default function LoginPage({ initialPortal = 'officer', onLoginSuccess })
           )}
 
           {/* Submit Button */}
-          <button
-            type="submit"
-            id="auth-submit-btn"
-            disabled={loading || (touched.email && !isEmailValid) || (touched.password && !isPasswordValid)}
-            className={`w-full py-3.5 px-6 rounded-2xl font-bold text-sm tracking-wide uppercase transition-all duration-200 flex items-center justify-center gap-2.5 shadow-xl cursor-pointer relative overflow-hidden group font-display ${
-              currentPortalConfig.btnColor
-            } ${
-              loading ? 'opacity-70 cursor-not-allowed' : 'hover:scale-[1.01] active:scale-[0.99]'
-            }`}
-          >
-            {/* Shimmer sweep effect */}
-            <div className="absolute inset-0 w-1/2 h-full bg-white/20 skew-x-12 shimmer-sweep pointer-events-none" />
+          {(() => {
+            const isAdminRegisterBlocked = selectedRole === 'admin' && isRegister && !adminCapacity.registration_allowed;
 
-            {loading ? (
-              <>
-                <div className="h-4.5 w-4.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                <span>Authenticating...</span>
-              </>
-            ) : isRegister ? (
-              <>
-                <UserPlus className="h-4.5 w-4.5 group-hover:scale-110 transition-transform" />
-                <span>Create Account</span>
-                <ArrowRight className="h-4 w-4 ml-0.5 group-hover:translate-x-1 transition-transform" />
-              </>
-            ) : (
-              <>
-                <LogIn className="h-4.5 w-4.5 group-hover:scale-110 transition-transform" />
-                <span>Sign In</span>
-                <ArrowRight className="h-4 w-4 ml-0.5 group-hover:translate-x-1 transition-transform" />
-              </>
-            )}
-          </button>
+            return (
+              <button
+                type="submit"
+                id="auth-submit-btn"
+                disabled={loading || isAdminRegisterBlocked || (touched.email && !isEmailValid) || (touched.password && !isPasswordValid)}
+                className={`w-full py-3.5 px-6 rounded-2xl font-bold text-sm tracking-wide uppercase transition-all duration-200 flex items-center justify-center gap-2.5 shadow-xl relative overflow-hidden group font-display ${
+                  isAdminRegisterBlocked
+                    ? 'bg-slate-300 text-slate-500 cursor-not-allowed shadow-none'
+                    : currentPortalConfig.btnColor
+                } ${
+                  loading ? 'opacity-70 cursor-not-allowed' : isAdminRegisterBlocked ? '' : 'cursor-pointer hover:scale-[1.01] active:scale-[0.99]'
+                }`}
+              >
+                {/* Shimmer sweep effect */}
+                {!isAdminRegisterBlocked && (
+                  <div className="absolute inset-0 w-1/2 h-full bg-white/20 skew-x-12 shimmer-sweep pointer-events-none" />
+                )}
+
+                {loading ? (
+                  <>
+                    <div className="h-4.5 w-4.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                    <span>Authenticating...</span>
+                  </>
+                ) : isAdminRegisterBlocked ? (
+                  <>
+                    <Shield className="h-4.5 w-4.5 text-slate-400" />
+                    <span>Admin Registrations Full (Max 2)</span>
+                  </>
+                ) : isRegister ? (
+                  <>
+                    <UserPlus className="h-4.5 w-4.5 group-hover:scale-110 transition-transform" />
+                    <span>Create Account</span>
+                    <ArrowRight className="h-4 w-4 ml-0.5 group-hover:translate-x-1 transition-transform" />
+                  </>
+                ) : (
+                  <>
+                    <LogIn className="h-4.5 w-4.5 group-hover:scale-110 transition-transform" />
+                    <span>Sign In</span>
+                    <ArrowRight className="h-4 w-4 ml-0.5 group-hover:translate-x-1 transition-transform" />
+                  </>
+                )}
+              </button>
+            );
+          })()}
         </form>
       </div>
     </div>
