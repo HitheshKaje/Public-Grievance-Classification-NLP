@@ -4,6 +4,7 @@ import {
   Loader2, Trash2, AlertTriangle, X 
 } from 'lucide-react';
 import { deleteComplaint } from '../../services/complaintService';
+import { useLanguage } from '../../context/LanguageContext';
 
 export default function UserRecentComplaintsCard({
   complaints = [],
@@ -13,6 +14,7 @@ export default function UserRecentComplaintsCard({
   onSubmitNew,
   onComplaintDeleted
 }) {
+  const { t } = useLanguage();
   const [copiedId, setCopiedId] = useState(null);
   const [deleteModal, setDeleteModal] = useState({ open: false, id: null, title: '' });
   const [deleting, setDeleting] = useState(false);
