@@ -305,14 +305,38 @@ export default function ComplaintWorkOrderModal({
                   </div>
                 </div>
 
-                {/* Citizen Statement / Transcript */}
-                <div>
-                  <span className="text-slate-400 block text-[10px] mb-1">
-                    {complaint.method === 'voice' ? 'Transcribed Voice Statement' : 'Citizen Grievance Statement'}
-                  </span>
-                  <p className="p-3 rounded-xl bg-white border border-slate-200 text-slate-700 leading-relaxed whitespace-pre-wrap text-xs">
-                    {complaint.description || complaint.text || 'No description entered.'}
-                  </p>
+                {/* Citizen Statement / Transcript & Language Translation */}
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="text-slate-400 block text-[10px]">
+                      {complaint.method === 'voice' ? 'Transcribed Voice Statement' : 'Citizen Grievance Statement'}
+                    </span>
+                    {complaint.detected_language && (
+                      <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-violet-100 text-violet-800 border border-violet-200">
+                        Language: {complaint.detected_language}
+                      </span>
+                    )}
+                  </div>
+
+                  {/* If original statement was non-English (Hindi or Kannada) */}
+                  {(complaint.original_language_text || complaint.original_description) && 
+                   complaint.detected_language && complaint.detected_language !== 'English' && (
+                    <div className="p-2.5 rounded-xl bg-slate-50 border border-slate-200/80 text-xs text-slate-700 italic space-y-0.5">
+                      <span className="text-[10px] uppercase font-bold text-slate-400 not-italic block">
+                        Original Citizen Words ({complaint.detected_language})
+                      </span>
+                      <p>"{complaint.original_language_text || complaint.original_description}"</p>
+                    </div>
+                  )}
+
+                  <div className="p-3 rounded-xl bg-white border border-slate-200 text-slate-800 leading-relaxed whitespace-pre-wrap text-xs space-y-1">
+                    {complaint.detected_language && complaint.detected_language !== 'English' && (
+                      <span className="text-[10px] uppercase font-bold text-violet-600 block">
+                        Official English Sentence Translation
+                      </span>
+                    )}
+                    <p>{complaint.english_translation || complaint.description || complaint.text || 'No description entered.'}</p>
+                  </div>
                 </div>
 
                 {/* MULTIMODAL ATTACHMENTS & EVIDENCE VIEWER */}

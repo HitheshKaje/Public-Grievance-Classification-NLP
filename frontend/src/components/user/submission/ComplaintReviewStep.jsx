@@ -98,13 +98,40 @@ export default function ComplaintReviewStep({
         </div>
 
         {/* Description / Text Details */}
-        <div className="p-4 sm:p-5">
-          <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider block mb-1.5">
-            Complaint Description & Context
-          </span>
+        <div className="p-4 sm:p-5 space-y-3">
+          <div className="flex items-center justify-between">
+            <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider block">
+              Complaint Description & Context
+            </span>
+            {formData.detectedLanguage && (
+              <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-violet-100 text-violet-800 border border-violet-200 flex items-center gap-1">
+                <Globe className="h-3 w-3" />
+                <span>Intake: {formData.detectedLanguage}</span>
+              </span>
+            )}
+          </div>
+
+          {/* Original Statement if in Hindi or Kannada */}
+          {formData.originalLanguageText && formData.detectedLanguage !== 'English' && (
+            <div className="p-3 bg-slate-50 rounded-xl border border-slate-200 space-y-1">
+              <span className="text-[10px] uppercase font-bold text-slate-400 block">
+                Original Citizen Statement ({formData.detectedLanguage})
+              </span>
+              <p className="text-xs text-slate-700 italic">
+                "{formData.originalLanguageText}"
+              </p>
+            </div>
+          )}
+
+          {/* Converted English Sentence */}
           {formData.description?.trim() ? (
-            <div className="p-3.5 bg-slate-50/80 rounded-xl border border-slate-100 text-xs text-slate-700 whitespace-pre-wrap leading-relaxed">
-              {formData.description}
+            <div className="p-3.5 bg-violet-50/50 rounded-xl border border-violet-100 text-xs text-slate-800 whitespace-pre-wrap leading-relaxed space-y-1">
+              {formData.detectedLanguage && formData.detectedLanguage !== 'English' && (
+                <span className="text-[10px] uppercase font-bold text-violet-700 block mb-0.5">
+                  Official Converted English Statement
+                </span>
+              )}
+              <p className="font-medium text-slate-800">{formData.description}</p>
             </div>
           ) : (
             <p className="text-xs text-slate-400 italic">
