@@ -1,11 +1,14 @@
 import React from 'react';
 import { Zap, FileText, Search, ClipboardList, HelpCircle } from 'lucide-react';
+import { useLanguage } from '../../context/LanguageContext';
 
 export default function UserQuickActionsCard({ onActionClick }) {
+  const { t } = useLanguage();
+
   const actions = [
     {
       id: 'submit',
-      label: 'Submit Complaint',
+      label: t('submit', 'Submit Complaint'),
       icon: FileText,
       bgColor: 'bg-[#eff6ff]',
       borderColor: 'border-blue-100',
@@ -13,7 +16,7 @@ export default function UserQuickActionsCard({ onActionClick }) {
     },
     {
       id: 'track',
-      label: 'Track Complaint',
+      label: t('track', 'Track Complaint'),
       icon: Search,
       bgColor: 'bg-[#faf5ff]',
       borderColor: 'border-purple-100',
@@ -21,7 +24,7 @@ export default function UserQuickActionsCard({ onActionClick }) {
     },
     {
       id: 'my_complaints',
-      label: 'My Complaints',
+      label: t('my_complaints', 'My Complaints'),
       icon: ClipboardList,
       bgColor: 'bg-[#ecfdf5]',
       borderColor: 'border-emerald-100',
@@ -29,7 +32,7 @@ export default function UserQuickActionsCard({ onActionClick }) {
     },
     {
       id: 'support',
-      label: 'Help & Support',
+      label: t('support', 'Help & Support'),
       icon: HelpCircle,
       bgColor: 'bg-[#fffbeb]',
       borderColor: 'border-amber-100',
@@ -43,7 +46,7 @@ export default function UserQuickActionsCard({ onActionClick }) {
       <div className="flex items-center gap-2 mb-4">
         <Zap className="h-4.5 w-4.5 text-amber-500 stroke-[2.2]" />
         <h2 className="text-sm font-bold text-slate-800 tracking-tight">
-          Quick Actions
+          {t('quick_actions', 'Quick Actions')}
         </h2>
       </div>
 
