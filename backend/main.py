@@ -134,6 +134,8 @@ def format_user(doc: dict) -> dict:
         "email": doc.get("email", ""),
         "role": doc.get("role", "citizen"),
         "department": doc.get("department"),
+        "designation": doc.get("designation", "Nodal Officer" if doc.get("role") == "officer" else None),
+        "zone": doc.get("zone"),
         "officer_id": doc.get("officer_id"),
         "citizen_id": doc.get("citizen_id"),
         "phone": doc.get("phone"),
@@ -144,7 +146,8 @@ def format_user(doc: dict) -> dict:
 async def register(payload: UserRegister):
     """
     Registers a new user directly into the MongoDB 'users' collection.
-    Enforces validation on email format, password length, and role constraints.
+    Only Citizen self-registration is permitted.
+    Officers must be provisioned by System Administrators in the Admin Dashboard.
     """
     db = get_db()
 
@@ -167,22 +170,23 @@ async def register(payload: UserRegister):
     role = (payload.role or "citizen").strip().lower()
     if role == "user":
         role = "citizen"
-    if role not in ["citizen", "officer", "admin"]:
-        raise HTTPException(status_code=422, detail="Invalid role specified. Must be citizen, officer, or admin.")
 
-    # Strict Limit: Exactly maximum 2 Admin accounts allowed in the entire system
+    # Enforce strict policy: Officers can ONLY be created by Admin
+    if role == "officer":
+        raise HTTPException(
+            status_code=403,
+            detail="Officer accounts cannot be registered self-service. Department officers must be provisioned by a System Administrator in the Admin Dashboard."
+        )
+
+    # Admins cannot register publicly
     if role == "admin":
-        admin_count = await db.users.count_documents({"role": "admin"})
-        if admin_count >= 2:
-            raise HTTPException(
-                status_code=403,
-                detail="Maximum limit reached: Only 2 administrator accounts are permitted in the system. Further admin registrations are disabled."
-            )
+        raise HTTPException(
+            status_code=403,
+            detail="Administrator accounts cannot be registered publicly."
+        )
 
-    # 5. Department validation for officers
-    department = (payload.department or "").strip() if payload.department else None
-    if role == "officer" and not department:
-        department = "General Administration"
+    if role != "citizen":
+        raise HTTPException(status_code=422, detail="Invalid role specified. Only citizen accounts can register.")
 
     # 6. Check uniqueness in MongoDB
     existing_user = await db.users.find_one({"email": email})

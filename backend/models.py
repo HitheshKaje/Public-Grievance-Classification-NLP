@@ -122,6 +122,7 @@ class OfficerCreate(BaseModel):
     department: str
     designation: Optional[str] = "Nodal Officer"
     email: Optional[str] = None
+    password: Optional[str] = None
     phone: Optional[str] = None
     zone: Optional[str] = None
     officer_id: Optional[str] = None
@@ -168,6 +169,8 @@ class UserResponse(BaseModel):
     officer_id: Optional[str] = None
     citizen_id: Optional[str] = None
     phone: Optional[str] = None
+    designation: Optional[str] = None
+    zone: Optional[str] = None
     created_at: Optional[datetime] = None
 
     class Config:
