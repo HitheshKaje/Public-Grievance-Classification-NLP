@@ -263,6 +263,7 @@ export default function AdminDashboard({
           statusFilter={statusFilter}
           onStatusFilterChange={setStatusFilter}
           onOpenWorkOrderModal={(comp) => setActiveWorkOrderComplaint(comp)}
+          onUpdateStatus={handleUpdateStatus}
           onRefresh={loadComplaints}
         />
 
@@ -272,6 +273,7 @@ export default function AdminDashboard({
             officers={officers}
             onClose={() => setActiveWorkOrderComplaint(null)}
             onForwardSuccess={handleForwardSuccess}
+            onStatusUpdated={handleUpdateStatus}
             onOpenAddOfficer={() => {
               setActiveWorkOrderComplaint(null);
               setIsAddOfficerModalOpen(true);
@@ -309,6 +311,7 @@ export default function AdminDashboard({
           statusFilter={statusFilter}
           onStatusFilterChange={setStatusFilter}
           onOpenWorkOrderModal={(comp) => setActiveWorkOrderComplaint(comp)}
+          onUpdateStatus={handleUpdateStatus}
           onRefresh={loadComplaints}
         />
 
@@ -318,6 +321,7 @@ export default function AdminDashboard({
             officers={officers}
             onClose={() => setActiveWorkOrderComplaint(null)}
             onForwardSuccess={handleForwardSuccess}
+            onStatusUpdated={handleUpdateStatus}
             onOpenAddOfficer={() => {
               setActiveWorkOrderComplaint(null);
               setIsAddOfficerModalOpen(true);
@@ -398,17 +402,17 @@ export default function AdminDashboard({
           loading={loadingStats}
         />
         <StatCard
-          title="Ready for Forwarding"
-          icon={Loader2}
+          title="In Progress"
+          icon={Clock}
           color="purple"
-          value={stats.ready_forwarding}
+          value={stats.in_progress}
           loading={loadingStats}
         />
         <StatCard
-          title="Forwarded Complaints"
+          title="Resolved Cases"
           icon={CheckCircle2}
           color="emerald"
-          value={stats.forwarded}
+          value={stats.resolved}
           loading={loadingStats}
         />
       </div>
