@@ -1,5 +1,5 @@
 import React from 'react';
-import { Home, Search, Bell } from 'lucide-react';
+import { Home, Search, Bell, LogOut } from 'lucide-react';
 import UserProfileDropdown from '../common/UserProfileDropdown';
 
 export default function Header({ onOpenSidebar, activeTabTitle = "Overview", currentUser, onLogout }) {
@@ -17,8 +17,8 @@ export default function Header({ onOpenSidebar, activeTabTitle = "Overview", cur
         </h1>
       </div>
 
-      {/* Right: Search, Notification Bell, User Profile */}
-      <div className="flex items-center gap-3 sm:gap-4">
+      {/* Right: Search, Notification Bell, User Profile, Logout */}
+      <div className="flex items-center gap-3 sm:gap-3.5">
         {/* Search Input */}
         <div className="relative hidden md:block w-60 lg:w-72">
           <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
@@ -45,6 +45,19 @@ export default function Header({ onOpenSidebar, activeTabTitle = "Overview", cur
           user={currentUser || { name: 'System Admin', email: 'admin@gov.in', role: 'admin' }}
           onLogout={onLogout}
         />
+
+        {/* Visible Logout Button */}
+        <button
+          type="button"
+          id="header-logout-btn"
+          onClick={onLogout}
+          className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-rose-600 hover:text-rose-700 bg-rose-50 hover:bg-rose-100 border border-rose-200/80 rounded-full transition-all shadow-xs cursor-pointer active:scale-95"
+          title="Logout from account"
+          aria-label="Logout"
+        >
+          <LogOut className="h-3.5 w-3.5" />
+          <span className="hidden sm:inline">Logout</span>
+        </button>
       </div>
     </header>
   );
