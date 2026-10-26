@@ -31,6 +31,9 @@ export default function ImageComplaintUpload({ formData, onUpdateFormData, onPro
   const [uploadError, setUploadError] = useState('');
   const [errors, setErrors] = useState({});
   const [imagePreviewUrl, setImagePreviewUrl] = useState(null);
+  const [isTranslating, setIsTranslating] = useState(false);
+  const [translationResult, setTranslationResult] = useState(null);
+  const [translationError, setTranslationError] = useState('');
   const fileInputRef = useRef(null);
 
   const primaryImage = formData.imageFile || null;
