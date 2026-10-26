@@ -368,6 +368,19 @@ export default function LoginPage({ initialPortal = 'officer', onLoginSuccess })
           </div>
         )}
 
+        {/* Dual-Admin Limit Banner */}
+        {selectedRole === 'admin' && isRegister && !adminCapacity.registration_allowed && (
+          <div className="mx-7 sm:mx-9 mt-4 p-3.5 bg-purple-50 border border-purple-200/90 rounded-2xl text-purple-900 text-xs sm:text-sm flex items-start gap-2.5 animate-in fade-in duration-200">
+            <Shield className="h-4.5 w-4.5 text-purple-600 flex-shrink-0 mt-0.5" />
+            <div>
+              <p className="font-bold text-slate-900">Dual-Admin Limit Reached (2 of 2 Seats Active)</p>
+              <p className="text-xs text-slate-600 mt-1 font-sans leading-relaxed">
+                The system restricts administration to exactly 2 administrators. Both seats are currently active in MongoDB. Additional admin registrations are disabled. Please switch to the <strong>Sign In</strong> tab.
+              </p>
+            </div>
+          </div>
+        )}
+
         {successMsg && (
           <div className="mx-7 sm:mx-9 mt-4 p-3.5 bg-emerald-50 border border-emerald-200 rounded-2xl text-emerald-800 text-xs sm:text-sm flex items-center gap-2.5 animate-in fade-in duration-200">
             <CheckCircle2 className="h-4 w-4 text-emerald-600 flex-shrink-0" />
