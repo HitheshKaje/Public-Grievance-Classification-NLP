@@ -4,7 +4,7 @@ import {
   CheckCircle2, AlertCircle, Sparkles, LogIn, UserPlus, 
   Phone, Briefcase, Check, ArrowRight
 } from 'lucide-react';
-import { login, register } from '../services/authService';
+import { login, register, getAdminSlotStatus } from '../services/authService';
 
 export default function LoginPage({ initialPortal = 'officer', onLoginSuccess }) {
   const [selectedRole, setSelectedRole] = useState(
