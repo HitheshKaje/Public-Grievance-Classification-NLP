@@ -18,8 +18,10 @@ import {
   Calendar, CheckCircle2, Clock, AlertCircle, Headphones, 
   PhoneCall, MapPin, ExternalLink, HelpCircle, Send, FileText, ArrowRight
 } from 'lucide-react';
+import { useLanguage } from '../context/LanguageContext';
 
 export default function UserDashboard({ activeTab = 'dashboard', onNavigateTab, currentUser }) {
+  const { t } = useLanguage();
   const [trackedId, setTrackedId] = useState(null);
   const [scope, setScope] = useState('my'); // 'my' | 'all'
   const [loadingStats, setLoadingStats] = useState(false);
@@ -243,39 +245,39 @@ export default function UserDashboard({ activeTab = 'dashboard', onNavigateTab, 
             <div className="flex items-center justify-between border-b border-slate-100 pb-3">
               <h3 className="text-sm font-bold text-slate-800 flex items-center gap-2">
                 <User className="h-4 w-4 text-emerald-600" />
-                <span>Personal Account Details</span>
+                <span>{t('profile_title', 'Personal Account Details')}</span>
               </h3>
-              <span className="text-xs text-slate-400 font-medium">Public Grievance System</span>
+              <span className="text-xs text-slate-400 font-medium">MongoDB Active</span>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
               <div className="p-3.5 bg-slate-50/80 rounded-xl border border-slate-100">
-                <span className="text-[11px] text-slate-400 font-medium block">Full Legal Name</span>
+                <span className="text-[11px] text-slate-400 font-medium block">{t('full_name', 'Full Legal Name')}</span>
                 <p className="text-sm font-bold text-slate-800 mt-0.5">{displayName}</p>
               </div>
 
               <div className="p-3.5 bg-slate-50/80 rounded-xl border border-slate-100">
-                <span className="text-[11px] text-slate-400 font-medium block">Official Email Address</span>
+                <span className="text-[11px] text-slate-400 font-medium block">{t('email', 'Official Email Address')}</span>
                 <p className="text-sm font-bold text-slate-800 mt-0.5 truncate">{displayEmail}</p>
               </div>
 
               <div className="p-3.5 bg-slate-50/80 rounded-xl border border-slate-100">
-                <span className="text-[11px] text-slate-400 font-medium block">Registered Citizen ID</span>
+                <span className="text-[11px] text-slate-400 font-medium block">{t('citizen_id', 'Registered Citizen ID')}</span>
                 <p className="text-sm font-mono font-bold text-emerald-700 mt-0.5">{citizenId}</p>
               </div>
 
               <div className="p-3.5 bg-slate-50/80 rounded-xl border border-slate-100">
-                <span className="text-[11px] text-slate-400 font-medium block">Contact Mobile Number</span>
+                <span className="text-[11px] text-slate-400 font-medium block">{t('phone', 'Contact Mobile Number')}</span>
                 <p className="text-sm font-bold text-slate-800 mt-0.5">{phone}</p>
               </div>
 
               <div className="p-3.5 bg-slate-50/80 rounded-xl border border-slate-100">
-                <span className="text-[11px] text-slate-400 font-medium block">Account Authority Level</span>
+                <span className="text-[11px] text-slate-400 font-medium block">{t('account_role', 'Account Authority Level')}</span>
                 <p className="text-sm font-bold text-slate-800 mt-0.5 capitalize">{role} (Public Access)</p>
               </div>
 
               <div className="p-3.5 bg-slate-50/80 rounded-xl border border-slate-100">
-                <span className="text-[11px] text-slate-400 font-medium block">Database Security</span>
+                <span className="text-[11px] text-slate-400 font-medium block">{t('verified_status', 'Database Security')}</span>
                 <p className="text-sm font-bold text-slate-800 mt-0.5 flex items-center gap-1.5 text-emerald-600">
                   <ShieldCheck className="h-4 w-4" />
                   <span>PBKDF2-HMAC-SHA256 Encrypted</span>
@@ -289,27 +291,27 @@ export default function UserDashboard({ activeTab = 'dashboard', onNavigateTab, 
             <div>
               <h3 className="text-sm font-bold text-slate-800 border-b border-slate-100 pb-3 flex items-center gap-2">
                 <FileText className="h-4 w-4 text-blue-600" />
-                <span>Grievance Summary</span>
+                <span>{t('grievances_summary', 'Grievance Summary')}</span>
               </h3>
 
               <div className="mt-4 space-y-3">
                 <div className="flex items-center justify-between p-3 rounded-xl bg-slate-50">
-                  <span className="text-xs text-slate-600 font-medium">Total Submitted</span>
+                  <span className="text-xs text-slate-600 font-medium">{t('total_submitted', 'Total Submitted')}</span>
                   <span className="text-sm font-extrabold text-slate-900">{userStats.total}</span>
                 </div>
 
                 <div className="flex items-center justify-between p-3 rounded-xl bg-blue-50/70 border border-blue-100">
-                  <span className="text-xs text-blue-700 font-medium">In Processing</span>
+                  <span className="text-xs text-blue-700 font-medium">{t('in_processing', 'In Processing')}</span>
                   <span className="text-sm font-extrabold text-blue-700">{userStats.in_processing}</span>
                 </div>
 
                 <div className="flex items-center justify-between p-3 rounded-xl bg-emerald-50/70 border border-emerald-100">
-                  <span className="text-xs text-emerald-700 font-medium">Resolved Redressals</span>
+                  <span className="text-xs text-emerald-700 font-medium">{t('resolved', 'Resolved Redressals')}</span>
                   <span className="text-sm font-extrabold text-emerald-700">{userStats.resolved}</span>
                 </div>
 
                 <div className="flex items-center justify-between p-3 rounded-xl bg-amber-50/70 border border-amber-100">
-                  <span className="text-xs text-amber-700 font-medium">Pending Triage</span>
+                  <span className="text-xs text-amber-700 font-medium">{t('pending_review', 'Pending Triage')}</span>
                   <span className="text-sm font-extrabold text-amber-700">{userStats.pending}</span>
                 </div>
               </div>
@@ -320,7 +322,7 @@ export default function UserDashboard({ activeTab = 'dashboard', onNavigateTab, 
               onClick={() => onNavigateTab && onNavigateTab('my_complaints')}
               className="mt-6 w-full py-2.5 px-3 rounded-xl text-xs font-bold text-blue-700 bg-blue-50 hover:bg-blue-100 transition-colors flex items-center justify-center gap-1.5 cursor-pointer"
             >
-              <span>Manage My Complaints</span>
+              <span>{t('my_complaints', 'Manage My Complaints')}</span>
               <ArrowRight className="h-3.5 w-3.5" />
             </button>
           </div>
@@ -500,7 +502,7 @@ export default function UserDashboard({ activeTab = 'dashboard', onNavigateTab, 
               }`}
             >
               <User className="h-3.5 w-3.5" />
-              <span>My Submissions ({storedUserIds.length})</span>
+              <span>{t('filter_my', 'My Complaints')} ({storedUserIds.length})</span>
             </button>
             <button
               type="button"
@@ -512,7 +514,7 @@ export default function UserDashboard({ activeTab = 'dashboard', onNavigateTab, 
               }`}
             >
               <Globe className="h-3.5 w-3.5" />
-              <span>All Portal Cases ({systemStats.total || 'Live'})</span>
+              <span>{t('filter_all', 'All Portal Cases')} ({systemStats.total || 'Live'})</span>
             </button>
           </div>
         </div>
@@ -525,10 +527,10 @@ export default function UserDashboard({ activeTab = 'dashboard', onNavigateTab, 
             type="button"
             onClick={loadCitizenStats}
             className="flex items-center gap-1.5 text-slate-600 hover:text-blue-600 px-2.5 py-1 rounded-lg hover:bg-slate-100 transition-colors cursor-pointer"
-            title="Refresh statistics"
+            title={t('refresh', 'Refresh')}
           >
             <RefreshCw className={`h-3.5 w-3.5 ${loadingStats ? 'animate-spin text-blue-600' : ''}`} />
-            <span>Refresh</span>
+            <span>{t('refresh', 'Refresh')}</span>
           </button>
         </div>
       </div>

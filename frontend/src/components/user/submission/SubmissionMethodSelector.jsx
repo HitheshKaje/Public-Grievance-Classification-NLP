@@ -1,15 +1,20 @@
 import React from 'react';
-import { PenTool, FileText, Camera, Mic, Globe2, Sparkles } from 'lucide-react';
+import { PenTool, FileText, Camera, Mic, Globe2 } from 'lucide-react';
+import { useLanguage } from '../../../context/LanguageContext';
 
-export default function SubmissionMethodSelector({ selectedMethod, onSelectMethod, selectedLanguage, onSelectLanguage, currentLanguage }) {
-  const activeLang = selectedLanguage || currentLanguage || 'en';
-  const handleLang = onSelectLanguage || (() => {});
+export default function SubmissionMethodSelector({ selectedMethod, onSelectMethod, onSelectLanguage }) {
+  const { language, setLanguage, t } = useLanguage();
+
+  const handleLang = (langId) => {
+    setLanguage(langId);
+    if (onSelectLanguage) onSelectLanguage(langId);
+  };
 
   const methods = [
     {
       id: 'write',
-      title: 'Write a Complaint',
-      description: 'Fill out our structured grievance form with title, details, and incident location.',
+      title: t('method_text', 'Write a Complaint'),
+      description: t('method_text_desc', 'Fill out our structured grievance form with title, details, and incident location.'),
       icon: PenTool,
       badge: 'Direct Entry',
       color: 'blue',
@@ -19,8 +24,8 @@ export default function SubmissionMethodSelector({ selectedMethod, onSelectMetho
     },
     {
       id: 'pdf',
-      title: 'Upload PDF Document',
-      description: 'Submit an existing typed complaint, petition, or official representation letter.',
+      title: t('method_pdf', 'Upload PDF Document'),
+      description: t('method_pdf_desc', 'Submit an existing typed complaint, petition, or official representation letter.'),
       icon: FileText,
       badge: 'Document Mode',
       color: 'rose',
@@ -30,8 +35,8 @@ export default function SubmissionMethodSelector({ selectedMethod, onSelectMetho
     },
     {
       id: 'image',
-      title: 'Upload Photographs',
-      description: 'Attach visual evidence (damaged road, leak, broken light) with problem description.',
+      title: t('method_photo', 'Upload Photographs'),
+      description: t('method_photo_desc', 'Attach visual evidence (damaged road, leak, broken light) with problem description.'),
       icon: Camera,
       badge: 'Visual Evidence',
       color: 'emerald',
@@ -41,8 +46,8 @@ export default function SubmissionMethodSelector({ selectedMethod, onSelectMetho
     },
     {
       id: 'voice',
-      title: 'Voice Grievance',
-      description: 'Record or upload an audio complaint. Transcribed & classified by NLP.',
+      title: t('method_voice', 'Voice Grievance'),
+      description: t('method_voice_desc', 'Record or upload an audio complaint. Transcribed & classified by NLP.'),
       icon: Mic,
       badge: 'Speech / Audio',
       color: 'violet',
@@ -53,9 +58,9 @@ export default function SubmissionMethodSelector({ selectedMethod, onSelectMetho
   ];
 
   const languages = [
-    { id: 'en', label: 'English', status: 'Operational' },
-    { id: 'kn', label: 'ಕನ್ನಡ (Kannada)', status: 'Planned' },
-    { id: 'hi', label: 'हिन्दी (Hindi)', status: 'Planned' },
+    { id: 'en', label: 'English', native: 'English' },
+    { id: 'kn', label: 'ಕನ್ನಡ (Kannada)', native: 'ಕನ್ನಡ' },
+    { id: 'hi', label: 'हिन्दी (Hindi)', native: 'हिन्दी' },
   ];
 
   return (
@@ -64,29 +69,27 @@ export default function SubmissionMethodSelector({ selectedMethod, onSelectMetho
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 pb-2 border-b border-slate-100">
         <div className="flex items-center gap-2 text-xs font-semibold text-slate-700">
           <Globe2 className="h-4 w-4 text-blue-600" />
-          <span>Filing Language:</span>
+          <span>{t('filing_language', 'Dashboard & Filing Language:')}</span>
         </div>
 
         <div className="flex items-center gap-1.5 flex-wrap">
           {languages.map((lang) => {
-            const isSelected = activeLang === lang.id;
+            const isSelected = language === lang.id;
             return (
               <button
                 key={lang.id}
                 type="button"
+                id={`submission-lang-${lang.id}`}
                 onClick={() => handleLang(lang.id)}
-                className={`px-3 py-1 rounded-full text-xs font-medium transition-all flex items-center gap-1.5 cursor-pointer ${
+                className={`px-3 py-1.5 rounded-full text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
                   isSelected
-                    ? 'bg-blue-600 text-white shadow-xs'
-                    : 'bg-slate-100 text-slate-600 hover:bg-slate-200/80'
+                    ? 'bg-blue-600 text-white shadow-xs scale-105'
+                    : 'bg-slate-100 text-slate-700 hover:bg-slate-200/80 hover:text-slate-900'
                 }`}
+                title={`Switch language to ${lang.label}`}
               >
                 <span>{lang.label}</span>
-                {lang.status === 'Planned' && (
-                  <span className={`text-[9px] px-1 py-0.2 rounded ${isSelected ? 'bg-blue-700 text-blue-100' : 'bg-slate-200 text-slate-500'}`}>
-                    Soon
-                  </span>
-                )}
+                <span className={`h-1.5 w-1.5 rounded-full ${isSelected ? 'bg-white' : 'bg-emerald-500'}`} />
               </button>
             );
           })}
