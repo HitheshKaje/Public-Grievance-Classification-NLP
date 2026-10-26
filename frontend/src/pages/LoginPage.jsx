@@ -29,6 +29,18 @@ export default function LoginPage({ initialPortal = 'officer', onLoginSuccess })
   const [errorMsg, setErrorMsg] = useState('');
   const [successMsg, setSuccessMsg] = useState('');
   const [shake, setShake] = useState(false);
+  const [adminCapacity, setAdminCapacity] = useState({
+    max_admins: 2,
+    current_admins: 2,
+    slots_available: 0,
+    registration_allowed: false
+  });
+
+  useEffect(() => {
+    getAdminSlotStatus().then(status => {
+      if (status) setAdminCapacity(status);
+    });
+  }, [selectedRole]);
 
   // Mouse move handler for interactive dynamic ambient glow
   const handleMouseMove = (e) => {
@@ -279,9 +291,16 @@ export default function LoginPage({ initialPortal = 'officer', onLoginSuccess })
               <RoleIcon className="h-5 w-5" />
             </div>
             <div>
-              <h2 className="text-lg font-bold text-slate-900 leading-tight font-display tracking-tight">
-                {currentPortalConfig.label} {isRegister ? 'Registration' : 'Login'}
-              </h2>
+              <div className="flex items-center gap-2">
+                <h2 className="text-lg font-bold text-slate-900 leading-tight font-display tracking-tight">
+                  {currentPortalConfig.label} {isRegister ? 'Registration' : 'Login'}
+                </h2>
+                {selectedRole === 'admin' && (
+                  <span className="text-[10px] font-semibold bg-purple-100 text-purple-700 px-2 py-0.5 rounded-full border border-purple-200">
+                    2 Admins Max
+                  </span>
+                )}
+              </div>
             </div>
           </div>
 
