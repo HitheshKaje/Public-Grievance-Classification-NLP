@@ -513,6 +513,12 @@ async def create_complaint(request: Request):
 
     # Check if this complaint involves audio, image, PDF, or non-English text (Hindi or Kannada)
     has_files = len(file_references) > 0
+    if not has_files and not title and not description:
+        raise HTTPException(
+            status_code=422,
+            detail="Complaint title or description is required when no attachments are provided."
+        )
+
     detected_script = detect_script_language(f"{title} {description}")
     is_non_english = detected_script in ["Hindi", "Kannada"]
     is_voice_or_media = method in ["voice", "image", "pdf"] or has_files
