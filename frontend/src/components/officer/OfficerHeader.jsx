@@ -1,9 +1,8 @@
 import React from 'react';
 import { Menu, Search, Bell, Droplets } from 'lucide-react';
-import PortalSwitcher from '../common/PortalSwitcher';
 import UserProfileDropdown from '../common/UserProfileDropdown';
 
-export default function OfficerHeader({ onOpenSidebar, onSelectPortal, currentPortal = 'officer', departmentName = "Water Supply Department", currentUser, onLogout }) {
+export default function OfficerHeader({ onOpenSidebar, departmentName = "Water Supply Department", currentUser, onLogout }) {
   const activeDept = currentUser?.department || departmentName;
 
   return (
@@ -34,16 +33,8 @@ export default function OfficerHeader({ onOpenSidebar, onSelectPortal, currentPo
         </div>
       </div>
 
-      {/* Right: Switcher, Search, Notification Bell, Officer Profile */}
+      {/* Right: Search, Notification Bell, Officer Profile */}
       <div className="flex items-center gap-3 sm:gap-4">
-        {/* Portal Role Switcher */}
-        {onSelectPortal && (
-          <PortalSwitcher
-            currentPortal={currentPortal}
-            onSelectPortal={onSelectPortal}
-          />
-        )}
-
         {/* Search Input */}
         <div className="relative hidden md:block w-60 lg:w-72">
           <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
@@ -69,7 +60,6 @@ export default function OfficerHeader({ onOpenSidebar, onSelectPortal, currentPo
         <UserProfileDropdown
           user={currentUser || { name: 'Er. Rajesh Kumar', email: 'officer.water@gov.in', role: 'officer', department: activeDept, officer_id: 'OFF-WTR-001' }}
           onLogout={onLogout}
-          onSelectPortal={onSelectPortal}
         />
       </div>
     </header>

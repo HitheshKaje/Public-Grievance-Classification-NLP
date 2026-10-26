@@ -1,9 +1,8 @@
 import React from 'react';
 import { Menu, Bell } from 'lucide-react';
-import PortalSwitcher from '../common/PortalSwitcher';
 import UserProfileDropdown from '../common/UserProfileDropdown';
 
-export default function UserHeader({ onOpenSidebar, onSelectPortal, currentPortal = 'user', currentUser, onLogout }) {
+export default function UserHeader({ onOpenSidebar, currentUser, onLogout }) {
   const citizenName = currentUser?.name || 'Citizen';
 
   return (
@@ -29,16 +28,8 @@ export default function UserHeader({ onOpenSidebar, onSelectPortal, currentPorta
         </div>
       </div>
 
-      {/* Right: Switcher, Notifications, User Profile */}
+      {/* Right: Notifications, User Profile */}
       <div className="flex items-center gap-4">
-        {/* Portal Role Switcher */}
-        {onSelectPortal && (
-          <PortalSwitcher
-            currentPortal={currentPortal}
-            onSelectPortal={onSelectPortal}
-          />
-        )}
-
         {/* Notification Bell with red badge */}
         <button
           type="button"
@@ -53,7 +44,6 @@ export default function UserHeader({ onOpenSidebar, onSelectPortal, currentPorta
         <UserProfileDropdown
           user={currentUser || { name: 'Aarav Sharma', email: 'citizen@gmail.com', role: 'citizen', citizen_id: 'CIT-2026-001' }}
           onLogout={onLogout}
-          onSelectPortal={onSelectPortal}
         />
       </div>
     </header>
