@@ -11,11 +11,19 @@ body {
   min-height: 100vh;
   background-color: #f8fafc;
   color: #0f172a;
-  font-family: 'Orbitron', 'Plus Jakarta Sans', system-ui, sans-serif;
+  font-family: 'Plus Jakarta Sans', 'Inter', system-ui, -apple-system, sans-serif;
 }
 
-h1, h2, h3, h4, h5, h6, button, .font-display, .font-orbitron {
-  font-family: 'Orbitron', sans-serif;
+/* Orbitron font is used EXCLUSIVELY on the Login page */
+.login-orbitron-theme,
+.login-orbitron-theme h1,
+.login-orbitron-theme h2,
+.login-orbitron-theme h3,
+.login-orbitron-theme button,
+.login-orbitron-theme input,
+.login-orbitron-theme select,
+.login-orbitron-theme .font-display {
+  font-family: 'Orbitron', sans-serif !important;
   letter-spacing: 0.02em;
 }
 

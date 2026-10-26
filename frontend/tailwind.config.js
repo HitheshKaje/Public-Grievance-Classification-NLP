@@ -22,9 +22,9 @@ export default {
         }
       },
       fontFamily: {
+        sans: ['"Plus Jakarta Sans"', 'Inter', 'system-ui', '-apple-system', 'sans-serif'],
+        display: ['"Plus Jakarta Sans"', 'Inter', 'sans-serif'],
         orbitron: ['Orbitron', 'sans-serif'],
-        sans: ['Orbitron', '"Plus Jakarta Sans"', 'Inter', 'system-ui', 'sans-serif'],
-        display: ['Orbitron', 'sans-serif'],
       }
     },
   },

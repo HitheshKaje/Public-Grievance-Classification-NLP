@@ -202,7 +202,7 @@ export default function LoginPage({ initialPortal = 'officer', onLoginSuccess })
     <div 
       ref={containerRef}
       onMouseMove={handleMouseMove}
-      className="min-h-screen bg-[#080d19] text-slate-100 flex flex-col justify-center items-center p-4 sm:p-8 font-sans relative overflow-hidden select-none"
+      className="login-orbitron-theme min-h-screen bg-[#080d19] text-slate-100 flex flex-col justify-center items-center p-4 sm:p-8 relative overflow-hidden select-none"
     >
       {/* Interactive Mouse Spotlight Glow */}
       <div 
