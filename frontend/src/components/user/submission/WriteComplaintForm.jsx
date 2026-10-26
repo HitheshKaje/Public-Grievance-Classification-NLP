@@ -140,6 +140,51 @@ export default function WriteComplaintForm({ formData, onUpdateFormData, onProce
             <span>{errors.description}</span>
           </p>
         )}
+
+        {/* Multilingual Translation Helper & Action */}
+        <div className="mt-2 flex flex-col sm:flex-row sm:items-center justify-between gap-2 p-2.5 bg-slate-50 border border-slate-200/80 rounded-xl">
+          <div className="flex items-center gap-1.5 text-[11px] text-slate-600">
+            <Globe className="h-3.5 w-3.5 text-violet-600 flex-shrink-0" />
+            <span>You can write in <strong>Hindi (हिन्दी)</strong>, <strong>Kannada (ಕನ್ನಡ)</strong>, or <strong>English</strong>.</span>
+          </div>
+
+          <button
+            type="button"
+            disabled={isTranslating || (!formData.description?.trim() && !formData.title?.trim())}
+            onClick={handleTranslateText}
+            className="px-3 py-1 text-xs rounded-lg font-semibold bg-violet-50 text-violet-700 hover:bg-violet-100 border border-violet-200 flex items-center gap-1.5 transition-colors cursor-pointer disabled:opacity-50 self-start sm:self-center"
+          >
+            {isTranslating ? (
+              <>
+                <RefreshCw className="h-3 w-3 animate-spin" />
+                <span>Translating...</span>
+              </>
+            ) : (
+              <>
+                <Sparkles className="h-3 w-3 text-amber-500" />
+                <span>✨ Translate to English</span>
+              </>
+            )}
+          </button>
+        </div>
+
+        {translationResult && (
+          <div className="mt-2 p-3 bg-violet-50/80 border border-violet-200 rounded-xl space-y-1.5 text-xs">
+            <div className="flex items-center justify-between">
+              <span className="font-bold text-violet-900 flex items-center gap-1">
+                <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600" />
+                <span>Translated from {translationResult.detected_language} to English</span>
+              </span>
+              <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-violet-200 text-violet-800">
+                {translationResult.detected_language}
+              </span>
+            </div>
+            <p className="text-slate-800 italic bg-white/80 p-2 rounded-lg border border-violet-100">
+              "{translationResult.english_sentence}"
+            </p>
+            <p className="text-[10px] text-emerald-700">✓ English title and description are auto-filled.</p>
+          </div>
+        )}
       </div>
 
       {/* Incident Location */}
