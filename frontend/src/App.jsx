@@ -133,7 +133,7 @@ export default function App() {
   }
 
   // 3. Officer Portal (Default)
-  const officerDepartment = currentUser?.department || "Water Supply Department";
+  const officerDepartment = currentUser?.department || "General Administration";
 
   return (
     <OfficerLayout
@@ -149,6 +149,7 @@ export default function App() {
         activeTab={officerTab}
         onNavigateTab={setOfficerTab}
         departmentName={officerDepartment}
+        currentUser={currentUser}
       />
     </OfficerLayout>
   );
