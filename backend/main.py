@@ -163,6 +163,15 @@ async def register(payload: UserRegister):
     if role not in ["citizen", "officer", "admin"]:
         raise HTTPException(status_code=422, detail="Invalid role specified. Must be citizen, officer, or admin.")
 
+    # Strict Limit: Exactly maximum 2 Admin accounts allowed in the entire system
+    if role == "admin":
+        admin_count = await db.users.count_documents({"role": "admin"})
+        if admin_count >= 2:
+            raise HTTPException(
+                status_code=403,
+                detail="Maximum limit reached: Only 2 administrator accounts are permitted in the system. Further admin registrations are disabled."
+            )
+
     # 5. Department validation for officers
     department = (payload.department or "").strip() if payload.department else None
     if role == "officer" and not department:
