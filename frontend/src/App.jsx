@@ -18,6 +18,13 @@ export default function App() {
     return 'officer'; // default
   };
 
+  const isLoginRoute = () => {
+    const path = window.location.pathname.toLowerCase();
+    const hash = window.location.hash.toLowerCase();
+    return path.includes('login') || hash.includes('login');
+  };
+
+  const [isExplicitLogin, setIsExplicitLogin] = useState(isLoginRoute);
   const [currentUser, setCurrentUser] = useState(getCurrentUser);
   const [currentPortal, setCurrentPortal] = useState(() => {
     if (currentUser?.role === 'admin') return 'admin';
@@ -32,6 +39,7 @@ export default function App() {
 
   // Handle successful login
   const handleLoginSuccess = (user, role) => {
+    setIsExplicitLogin(false);
     setCurrentUser(user);
     const targetRole = role || user?.role;
     let targetPortal = 'officer';
@@ -53,6 +61,8 @@ export default function App() {
   const handleLogout = () => {
     logout();
     setCurrentUser(null);
+    setIsExplicitLogin(true);
+    window.history.pushState({}, '', '/login');
   };
 
   // Sync portal changes with browser history and URL
@@ -65,14 +75,15 @@ export default function App() {
   // Listen for browser forward/back buttons
   useEffect(() => {
     const handlePopState = () => {
+      setIsExplicitLogin(isLoginRoute());
       setCurrentPortal(getInitialPortal());
     };
     window.addEventListener('popstate', handlePopState);
     return () => window.removeEventListener('popstate', handlePopState);
   }, []);
 
-  // If not authenticated, render LoginPage
-  if (!currentUser) {
+  // If not authenticated or on /login route, render LoginPage
+  if (!currentUser || isExplicitLogin) {
     return (
       <LoginPage
         initialPortal={currentPortal}
