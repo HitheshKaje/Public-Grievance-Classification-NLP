@@ -129,3 +129,30 @@ class ComplaintForwardRequest(BaseModel):
     directives: Optional[str] = None
     deadline: Optional[str] = "72 hours"
 
+class UserRegister(BaseModel):
+    name: str
+    email: str
+    password: str
+    role: str = "citizen"
+    department: Optional[str] = None
+    phone: Optional[str] = None
+
+class UserLogin(BaseModel):
+    email: str
+    password: str
+    role: Optional[str] = None
+
+class UserResponse(BaseModel):
+    id: str = Field(alias="_id")
+    name: str
+    email: str
+    role: str
+    department: Optional[str] = None
+    officer_id: Optional[str] = None
+    citizen_id: Optional[str] = None
+    phone: Optional[str] = None
+    created_at: Optional[datetime] = None
+
+    class Config:
+        populate_by_name = True
+

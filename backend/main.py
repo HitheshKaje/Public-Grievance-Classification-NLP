@@ -14,13 +14,14 @@ from fastapi import FastAPI, HTTPException, Query, Request, UploadFile, File, Fo
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 
-from database import get_db, init_db
+from database import get_db, init_db, hash_password, verify_password
 from gemini_service import extract_multimodal_complaint, classify_text_with_gemini
 from models import (
     ComplaintCreate, ComplaintResponse, ClassifyRequest, ClassifyResponse, 
     AnalyticsResponse, CategoryDistribution, ComplaintTrend,
     CitizenComplaintCreate, CitizenComplaintResponse,
-    OfficerCreate, OfficerResponse, ComplaintForwardRequest
+    OfficerCreate, OfficerResponse, ComplaintForwardRequest,
+    UserRegister, UserLogin, UserResponse
 )
 
 logger = logging.getLogger("uvicorn")
@@ -110,6 +111,211 @@ async def health_check():
     except Exception as e:
         logger.error(f"Health check failed: {e}")
         raise HTTPException(status_code=503, detail="Database connection failure")
+
+# ==========================================
+# DYNAMIC MONGODB AUTHENTICATION ENDPOINTS
+# ==========================================
+
+EMAIL_REGEX = re.compile(r'^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$')
+
+def format_user(doc: dict) -> dict:
+    if not doc:
+        return {}
+    return {
+        "id": str(doc.get("_id", "")),
+        "name": doc.get("name", ""),
+        "email": doc.get("email", ""),
+        "role": doc.get("role", "citizen"),
+        "department": doc.get("department"),
+        "officer_id": doc.get("officer_id"),
+        "citizen_id": doc.get("citizen_id"),
+        "phone": doc.get("phone"),
+        "created_at": doc.get("created_at").isoformat() if isinstance(doc.get("created_at"), datetime) else doc.get("created_at")
+    }
+
+@app.post("/api/auth/register")
+async def register(payload: UserRegister):
+    """
+    Registers a new user directly into the MongoDB 'users' collection.
+    Enforces validation on email format, password length, and role constraints.
+    """
+    db = get_db()
+
+    # 1. Name validation
+    name = (payload.name or "").strip()
+    if len(name) < 2:
+        raise HTTPException(status_code=422, detail="Full name must be at least 2 characters long.")
+
+    # 2. Email validation
+    email = (payload.email or "").strip().lower()
+    if not email or not EMAIL_REGEX.match(email):
+        raise HTTPException(status_code=422, detail="Please enter a valid email address (e.g., name@domain.com).")
+
+    # 3. Password validation
+    password = payload.password or ""
+    if len(password) < 6:
+        raise HTTPException(status_code=422, detail="Password must be at least 6 characters long.")
+
+    # 4. Role normalization & validation
+    role = (payload.role or "citizen").strip().lower()
+    if role == "user":
+        role = "citizen"
+    if role not in ["citizen", "officer", "admin"]:
+        raise HTTPException(status_code=422, detail="Invalid role specified. Must be citizen, officer, or admin.")
+
+    # 5. Department validation for officers
+    department = (payload.department or "").strip() if payload.department else None
+    if role == "officer" and not department:
+        department = "General Administration"
+
+    # 6. Check uniqueness in MongoDB
+    existing_user = await db.users.find_one({"email": email})
+    if existing_user:
+        raise HTTPException(
+            status_code=409, 
+            detail="An account with this email address already exists in MongoDB. Please sign in instead."
+        )
+
+    # 7. Hash password securely with PBKDF2-HMAC-SHA256 & cryptographic salt
+    pw_hash, salt = hash_password(password)
+
+    # 8. Generate appropriate unique identifier
+    rand_code = "".join(secrets.choice(string.ascii_uppercase + string.digits) for _ in range(6))
+    officer_id = f"OFF-{rand_code}" if role == "officer" else None
+    citizen_id = f"CIT-{rand_code}" if role == "citizen" else None
+
+    user_doc = {
+        "name": name,
+        "email": email,
+        "password_hash": pw_hash,
+        "password_salt": salt,
+        "role": role,
+        "department": department,
+        "officer_id": officer_id,
+        "citizen_id": citizen_id,
+        "phone": (payload.phone or "").strip() or None,
+        "created_at": datetime.utcnow()
+    }
+
+    result = await db.users.insert_one(user_doc)
+    user_doc["_id"] = result.inserted_id
+
+    # If officer, also register in officers collection for cross-system consistency
+    if role == "officer":
+        await db.officers.update_one(
+            {"email": email},
+            {"$set": {
+                "name": name,
+                "email": email,
+                "department": department,
+                "officer_id": officer_id,
+                "designation": "Nodal Officer",
+                "phone": user_doc["phone"],
+                "status": "Active",
+                "created_at": datetime.utcnow()
+            }},
+            upsert=True
+        )
+
+    token = secrets.token_hex(24)
+    return {
+        "success": True,
+        "message": f"Successfully registered {role.title()} account in MongoDB.",
+        "token": token,
+        "user": format_user(user_doc)
+    }
+
+@app.post("/api/auth/login")
+async def login(payload: UserLogin):
+    """
+    Authenticates a user against dynamic MongoDB credentials.
+    Performs field validations, password verification, and role matching.
+    """
+    db = get_db()
+
+    # 1. Email validation
+    email = (payload.email or "").strip().lower()
+    if not email or not EMAIL_REGEX.match(email):
+        raise HTTPException(
+            status_code=422, 
+            detail="Please provide a valid email address."
+        )
+
+    # 2. Password validation
+    password = payload.password or ""
+    if not password:
+        raise HTTPException(
+            status_code=422, 
+            detail="Password is required."
+        )
+
+    # 3. Query MongoDB for user
+    user_doc = await db.users.find_one({"email": email})
+    if not user_doc:
+        raise HTTPException(
+            status_code=401, 
+            detail="No account found with this email. Please check your credentials or register a new account."
+        )
+
+    # 4. Verify hashed password
+    stored_hash = user_doc.get("password_hash", "")
+    stored_salt = user_doc.get("password_salt", "")
+    if not verify_password(password, stored_hash, stored_salt):
+        raise HTTPException(
+            status_code=401, 
+            detail="Incorrect password. Please verify your credentials and try again."
+        )
+
+    # 5. Role validation if portal requested a specific role
+    user_role = user_doc.get("role", "citizen").lower()
+    if user_role == "user":
+        user_role = "citizen"
+
+    if payload.role:
+        requested_role = payload.role.strip().lower()
+        if requested_role == "user":
+            requested_role = "citizen"
+
+        if requested_role != user_role:
+            role_labels = {
+                "citizen": "Citizen",
+                "officer": "Department Officer",
+                "admin": "System Administrator"
+            }
+            raise HTTPException(
+                status_code=403,
+                detail=f"Access Denied: Your account is registered as a {role_labels.get(user_role, user_role)}. You cannot access the {role_labels.get(requested_role, requested_role)} portal with these credentials."
+            )
+
+    # 6. Update last login timestamp in MongoDB
+    await db.users.update_one(
+        {"_id": user_doc["_id"]},
+        {"$set": {"last_login": datetime.utcnow()}}
+    )
+
+    token = secrets.token_hex(24)
+    return {
+        "success": True,
+        "message": f"Welcome back, {user_doc.get('name', 'User')}!",
+        "token": token,
+        "user": format_user(user_doc)
+    }
+
+@app.get("/api/auth/me")
+async def get_current_user_profile(email: Optional[str] = Query(None)):
+    """Fetches user profile dynamically from MongoDB."""
+    if not email:
+        raise HTTPException(status_code=400, detail="User email parameter is required.")
+    
+    db = get_db()
+    user_doc = await db.users.find_one({"email": email.strip().lower()})
+    if not user_doc:
+        raise HTTPException(status_code=404, detail="User not found in MongoDB.")
+    
+    return {
+        "success": True,
+        "user": format_user(user_doc)
+    }
 
 @app.post("/api/complaints")
 async def create_complaint(request: Request):
