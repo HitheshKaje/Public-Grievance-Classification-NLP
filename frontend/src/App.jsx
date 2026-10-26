@@ -115,6 +115,7 @@ export default function App() {
         <UserDashboard
           activeTab={userTab}
           onNavigateTab={setUserTab}
+          currentUser={currentUser}
         />
       </UserLayout>
     );
