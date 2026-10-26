@@ -542,6 +542,26 @@ async def get_complaint(id: str):
         raise HTTPException(status_code=404, detail="Complaint not found")
     return format_complaint(doc)
 
+@app.delete("/api/complaints/{id}")
+async def delete_complaint(id: str):
+    """
+    Deletes a complaint from MongoDB by complaint_id or ObjectId.
+    """
+    db = get_db()
+    cleaned_id = id.strip()
+    query = [{"complaint_id": cleaned_id}, {"complaint_id": cleaned_id.upper()}]
+    if ObjectId.is_valid(cleaned_id):
+        query.append({"_id": ObjectId(cleaned_id)})
+
+    result = await db.complaints.delete_one({"$or": query})
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail=f"Complaint '{id}' was not found.")
+
+    return {
+        "success": True,
+        "message": f"Grievance petition '{id}' has been permanently deleted from MongoDB."
+    }
+
 @app.get("/api/analytics", response_model=AnalyticsResponse)
 async def get_analytics(range: int = 30):
     db = get_db()

@@ -383,3 +383,38 @@ export async function extractComplaintAI(complaintId) {
     throw error;
   }
 }
+
+/**
+ * Removes a complaint ID from local storage history.
+ */
+export function removeLocalUserComplaintId(complaintId) {
+  if (!complaintId) return;
+  const cleanId = complaintId.trim();
+  try {
+    const existing = getLocalUserComplaintIds();
+    const updated = existing.filter(id => id.toUpperCase() !== cleanId.toUpperCase());
+    localStorage.setItem(USER_COMPLAINTS_KEY, JSON.stringify(updated));
+  } catch (e) {
+    console.error('Failed to remove citizen complaint ID locally:', e);
+  }
+}
+
+/**
+ * Permanently deletes a grievance petition from MongoDB by ID.
+ */
+export async function deleteComplaint(complaintId) {
+  try {
+    const response = await fetch(`${API_BASE_URL}/complaints/${encodeURIComponent(complaintId)}`, {
+      method: 'DELETE'
+    });
+    const data = await response.json().catch(() => null);
+    if (!response.ok) {
+      throw new Error(data?.detail || `Failed to delete complaint (Status ${response.status})`);
+    }
+    removeLocalUserComplaintId(complaintId);
+    return data;
+  } catch (error) {
+    console.error('Error deleting complaint:', error);
+    throw error;
+  }
+}
