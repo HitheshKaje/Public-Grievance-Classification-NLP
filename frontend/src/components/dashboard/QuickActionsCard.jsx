@@ -1,5 +1,5 @@
 import React from 'react';
-import { Zap, FileText, Users, Landmark } from 'lucide-react';
+import { Zap, FileText, Users, Settings } from 'lucide-react';
 
 export default function QuickActionsCard({ onActionClick }) {
   return (
@@ -34,14 +34,14 @@ export default function QuickActionsCard({ onActionClick }) {
           <span>Manage Officers</span>
         </button>
 
-        {/* View Reports */}
+        {/* System Settings */}
         <button
           type="button"
-          onClick={() => onActionClick && onActionClick('view_reports')}
-          className="bg-[#059669] hover:bg-emerald-700 text-white rounded-xl py-3 px-2.5 flex items-center justify-center gap-2 text-xs font-semibold shadow-sm shadow-emerald-500/20 transition-all cursor-pointer"
+          onClick={() => onActionClick && onActionClick('view_settings')}
+          className="bg-slate-800 hover:bg-slate-900 text-white rounded-xl py-3 px-2.5 flex items-center justify-center gap-2 text-xs font-semibold shadow-sm shadow-slate-900/20 transition-all cursor-pointer"
         >
-          <Landmark className="h-4 w-4 stroke-[2]" />
-          <span>View Reports</span>
+          <Settings className="h-4 w-4 stroke-[2]" />
+          <span>System Settings</span>
         </button>
       </div>
     </div>

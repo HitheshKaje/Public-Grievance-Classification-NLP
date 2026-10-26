@@ -6,7 +6,6 @@ import {
   Send, 
   Landmark, 
   Users, 
-  BarChart2, 
   Settings,
   X,
   LogOut
@@ -19,7 +18,6 @@ export const SIDEBAR_ITEMS = [
   { id: 'forwarding', label: 'Department Forwarding', icon: Send },
   { id: 'departments', label: 'Departments', icon: Landmark },
   { id: 'officers', label: 'Officers', icon: Users },
-  { id: 'reports', label: 'Reports', icon: BarChart2 },
   { id: 'settings', label: 'Settings', icon: Settings },
 ];
 

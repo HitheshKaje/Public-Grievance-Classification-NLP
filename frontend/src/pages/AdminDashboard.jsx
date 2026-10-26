@@ -11,7 +11,7 @@ import {
   ShieldCheck,
   AlertCircle,
   ArrowRight,
-  BarChart2,
+  Settings,
   Landmark
 } from 'lucide-react';
 import StatCard from '../components/dashboard/StatCard';
@@ -24,6 +24,7 @@ import QuickActionsCard from '../components/dashboard/QuickActionsCard';
 import ComplaintWorkOrderModal from '../components/dashboard/ComplaintWorkOrderModal';
 import AddOfficerModal from '../components/dashboard/AddOfficerModal';
 import OfficersDirectoryView from '../components/dashboard/OfficersDirectoryView';
+import AdminSettingsView from '../components/dashboard/AdminSettingsView';
 import EmptyState from '../components/common/EmptyState';
 import { 
   fetchAdminStats, 
@@ -138,9 +139,9 @@ export default function AdminDashboard({
       } else {
         setIsAddOfficerModalOpen(true);
       }
-    } else if (actionId === 'view_reports') {
+    } else if (actionId === 'view_settings' || actionId === 'view_reports') {
       if (onNavigateTab) {
-        onNavigateTab('reports');
+        onNavigateTab('settings');
       }
     }
   };
@@ -314,20 +315,27 @@ export default function AdminDashboard({
     );
   }
 
-  // 5. Other sub-views (classification, reports, settings)
-  if (['classification', 'reports', 'settings'].includes(activeTab)) {
-    const sectionInfo = {
-      classification: { title: 'Classification Review', desc: 'NLP automated categorization confidence review queue.' },
-      reports: { title: 'Reports & Analytics', desc: 'Comprehensive SLA resolution summaries and intake reports.' },
-      settings: { title: 'System Settings', desc: 'Portal administration, taxonomy configuration, and API settings.' },
-    };
-    const current = sectionInfo[activeTab] || { title: activeTab, desc: '' };
+  // 5. Settings Tab (Interactive Production Admin System Settings)
+  if (activeTab === 'settings') {
+    return (
+      <AdminSettingsView 
+        onNotify={(msg) => {
+          setNotification(msg);
+          setTimeout(() => setNotification(null), 4000);
+        }} 
+      />
+    );
+  }
 
+  // 6. Classification Review Queue
+  if (activeTab === 'classification') {
     return (
       <div className="space-y-5">
         <div className="bg-white rounded-2xl border border-slate-100 p-6 shadow-sm">
-          <h2 className="text-base font-bold text-slate-800">{current.title}</h2>
-          <p className="text-xs text-slate-500 mt-1">{current.desc}</p>
+          <h2 className="text-base font-bold text-slate-800">Classification Review Queue</h2>
+          <p className="text-xs text-slate-500 mt-1">
+            NLP automated categorization confidence review queue and triage routing recommendations.
+          </p>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
           <RecentActivityCard 
@@ -491,29 +499,29 @@ export default function AdminDashboard({
               </div>
             </div>
 
-            {/* Reports & Analytics */}
+            {/* System & AI Settings */}
             <div 
-              onClick={() => onNavigateTab && onNavigateTab('reports')}
-              className="p-4 rounded-xl border border-slate-100 hover:border-emerald-200 bg-slate-50/60 hover:bg-emerald-50/40 transition-all cursor-pointer group flex flex-col justify-between"
+              onClick={() => onNavigateTab && onNavigateTab('settings')}
+              className="p-4 rounded-xl border border-slate-100 hover:border-blue-200 bg-slate-50/60 hover:bg-blue-50/40 transition-all cursor-pointer group flex flex-col justify-between"
             >
               <div className="flex items-start justify-between">
-                <div className="h-9 w-9 rounded-lg bg-emerald-100 text-emerald-700 flex items-center justify-center group-hover:scale-105 transition-transform">
-                  <BarChart2 className="h-4.5 w-4.5" />
+                <div className="h-9 w-9 rounded-lg bg-blue-100 text-blue-700 flex items-center justify-center group-hover:scale-105 transition-transform">
+                  <Settings className="h-4.5 w-4.5" />
                 </div>
-                <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-emerald-100/70 text-emerald-800 font-mono">
-                  Analytics
+                <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-blue-100/70 text-blue-800 font-mono">
+                  Config
                 </span>
               </div>
               <div className="mt-3">
-                <h3 className="text-xs font-bold text-slate-800 group-hover:text-emerald-700 transition-colors">
-                  Reports & SLA Analytics
+                <h3 className="text-xs font-bold text-slate-800 group-hover:text-blue-700 transition-colors">
+                  System & AI Settings
                 </h3>
                 <p className="text-[11px] text-slate-500 mt-0.5">
-                  Resolution rate, department response efficiency, and trends.
+                  Multilingual AI pipeline, SLA targets, audio/photo/PDF rules & access control.
                 </p>
               </div>
-              <div className="mt-3 flex items-center gap-1 text-[11px] font-semibold text-emerald-600">
-                <span>View Reports</span>
+              <div className="mt-3 flex items-center gap-1 text-[11px] font-semibold text-blue-600">
+                <span>Configure Settings</span>
                 <ArrowRight className="h-3 w-3 group-hover:translate-x-1 transition-transform" />
               </div>
             </div>
