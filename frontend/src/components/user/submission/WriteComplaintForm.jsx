@@ -1,11 +1,45 @@
 import React, { useState } from 'react';
-import { MapPin, User, Phone, Mail, ArrowRight, Info, AlertCircle } from 'lucide-react';
+import { 
+  MapPin, User, Phone, Mail, ArrowRight, Info, AlertCircle,
+  Sparkles, RefreshCw, Globe, CheckCircle2
+} from 'lucide-react';
 import SupportingDocumentsDropzone from './SupportingDocumentsDropzone';
 import { useLanguage } from '../../../context/LanguageContext';
+import { processMultimodalComplaint } from '../../../services/complaintService';
 
 export default function WriteComplaintForm({ formData, onUpdateFormData, onProceedToReview }) {
   const { t } = useLanguage();
   const [errors, setErrors] = useState({});
+  const [isTranslating, setIsTranslating] = useState(false);
+  const [translationResult, setTranslationResult] = useState(null);
+  const [translationError, setTranslationError] = useState('');
+
+  const handleTranslateText = async () => {
+    if (!formData.description?.trim() && !formData.title?.trim()) return;
+    setIsTranslating(true);
+    setTranslationError('');
+    try {
+      const result = await processMultimodalComplaint(formData, 'write');
+      setTranslationResult(result);
+      onUpdateFormData({
+        title: result.structured_title || formData.title,
+        description: result.english_sentence || result.structured_description || formData.description,
+        location: (result.incident_location && result.incident_location !== 'Reported Incident Site') ? result.incident_location : (formData.location || 'Reported Incident Site'),
+        detectedLanguage: result.detected_language,
+        detectedLanguageCode: result.detected_language_code,
+        originalLanguageText: result.original_transcription || formData.description,
+        englishTranslation: result.english_sentence
+      });
+      if (errors.title) setErrors((prev) => ({ ...prev, title: '' }));
+      if (errors.description) setErrors((prev) => ({ ...prev, description: '' }));
+      if (errors.location) setErrors((prev) => ({ ...prev, location: '' }));
+    } catch (err) {
+      console.error('Translation error:', err);
+      setTranslationError(err.message || 'Translation failed. The backend will process upon submission.');
+    } finally {
+      setIsTranslating(false);
+    }
+  };
 
   const validate = () => {
     const errs = {};
