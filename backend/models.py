@@ -9,15 +9,19 @@ class FileReference(BaseModel):
     content_type: Optional[str] = None
 
 class CitizenComplaintCreate(BaseModel):
-    title: str
-    description: str
-    location: str
+    title: Optional[str] = ""
+    description: Optional[str] = ""
+    location: Optional[str] = ""
     citizen_name: Optional[str] = None
     phone: Optional[str] = None
     email: Optional[str] = None
     citizen_id: Optional[str] = None
     method: Optional[str] = "write"
     file_references: Optional[List[FileReference]] = []
+    detected_language: Optional[str] = None
+    detected_language_code: Optional[str] = None
+    original_language_text: Optional[str] = None
+    english_translation: Optional[str] = None
 
 class CitizenComplaintResponse(BaseModel):
     id: str = Field(alias="_id")
@@ -36,6 +40,11 @@ class CitizenComplaintResponse(BaseModel):
     phone: Optional[str] = None
     email: Optional[str] = None
     method: Optional[str] = None
+    detected_language: Optional[str] = None
+    detected_language_code: Optional[str] = None
+    original_language_text: Optional[str] = None
+    english_translation: Optional[str] = None
+    ai_extracted: Optional[dict] = None
 
     class Config:
         populate_by_name = True
@@ -63,6 +72,10 @@ class ComplaintResponse(BaseModel):
     citizenId: Optional[str] = None
     ward: Optional[str] = None
     priority: Optional[str] = None
+    detected_language: Optional[str] = None
+    detected_language_code: Optional[str] = None
+    original_language_text: Optional[str] = None
+    english_translation: Optional[str] = None
 
     class Config:
         populate_by_name = True
@@ -76,6 +89,10 @@ class ClassifyResponse(BaseModel):
     confidence: float
     status: str
     department: str
+    priority: Optional[str] = "Normal"
+    detected_language: Optional[str] = None
+    detected_language_code: Optional[str] = None
+    english_translation: Optional[str] = None
 
 class CategoryDistribution(BaseModel):
     category: str
