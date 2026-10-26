@@ -16,6 +16,7 @@ export default function AdminLayout({ children, activeTab, onSelectTab, onSelect
         onSelectTab={onSelectTab}
         isOpen={sidebarOpen}
         onClose={() => setSidebarOpen(false)}
+        onLogout={onLogout}
       />
 
       {/* Main Content Area */}

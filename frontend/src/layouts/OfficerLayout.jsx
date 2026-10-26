@@ -13,6 +13,7 @@ export default function OfficerLayout({ children, activeTab, onSelectTab, onSele
         onSelectTab={onSelectTab}
         isOpen={sidebarOpen}
         onClose={() => setSidebarOpen(false)}
+        onLogout={onLogout}
       />
 
       {/* Main Content Area */}

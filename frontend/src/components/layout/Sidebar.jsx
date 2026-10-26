@@ -8,7 +8,8 @@ import {
   Users, 
   BarChart2, 
   Settings,
-  X
+  X,
+  LogOut
 } from 'lucide-react';
 
 export const SIDEBAR_ITEMS = [
@@ -22,7 +23,7 @@ export const SIDEBAR_ITEMS = [
   { id: 'settings', label: 'Settings', icon: Settings },
 ];
 
-export default function Sidebar({ activeTab, onSelectTab, isOpen, onClose }) {
+export default function Sidebar({ activeTab, onSelectTab, isOpen, onClose, onLogout }) {
   return (
     <>
       {/* Mobile backdrop */}
@@ -99,6 +100,21 @@ export default function Sidebar({ activeTab, onSelectTab, isOpen, onClose }) {
               );
             })}
           </nav>
+
+          {/* Logout Action in Sidebar */}
+          {onLogout && (
+            <div className="px-3.5 pt-2 pb-3 border-t border-white/10">
+              <button
+                type="button"
+                id="sidebar-logout-btn"
+                onClick={onLogout}
+                className="w-full flex items-center gap-3.5 px-4 py-2.5 rounded-xl text-xs font-semibold text-rose-300 hover:text-white hover:bg-rose-500/20 transition-all text-left group cursor-pointer active:scale-95"
+              >
+                <LogOut className="h-4 w-4 text-rose-400 group-hover:text-rose-200 transition-colors" />
+                <span className="text-[13px]">Log Out</span>
+              </button>
+            </div>
+          )}
         </div>
 
         {/* Bottom Capitol Illustration Watermark */}

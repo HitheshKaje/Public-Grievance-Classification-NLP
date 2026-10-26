@@ -13,6 +13,7 @@ export default function UserLayout({ children, activeTab, onSelectTab, onSelectP
         onSelectTab={onSelectTab}
         isOpen={sidebarOpen}
         onClose={() => setSidebarOpen(false)}
+        onLogout={onLogout}
       />
 
       {/* Main Content Area */}
