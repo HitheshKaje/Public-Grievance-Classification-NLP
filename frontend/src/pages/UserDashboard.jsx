@@ -508,50 +508,6 @@ export default function UserDashboard({ activeTab = 'dashboard', onNavigateTab, 
                   </div>
                 </div>
               </div>
-
-              {/* Toll-Free Helpline */}
-              <div className="p-4 bg-emerald-50/60 rounded-2xl border border-emerald-100">
-                <span className="text-[11px] text-emerald-600 font-semibold block uppercase tracking-wider flex items-center gap-1">
-                  <PhoneCall className="h-3 w-3" />
-                  <span>National Grievance Toll-Free</span>
-                </span>
-                <p className="text-base font-extrabold text-emerald-900 mt-1 font-mono">
-                  1800-11-4000
-                </p>
-                <p className="text-[11px] text-emerald-700 mt-0.5">
-                  Free nationwide citizen helpline (Mon-Sat, 9 AM - 6 PM)
-                </p>
-              </div>
-
-              {/* Central Secretariat Desk */}
-              <div className="p-4 bg-slate-50/80 rounded-2xl border border-slate-100">
-                <span className="text-[11px] text-slate-400 font-semibold block uppercase tracking-wider flex items-center gap-1">
-                  <Phone className="h-3 w-3" />
-                  <span>Secretariat Phone Desk</span>
-                </span>
-                <p className="text-sm font-bold text-slate-900 mt-1 font-mono">
-                  +91 11 2436 0000 / 2436 1234
-                </p>
-                <p className="text-[11px] text-slate-500 mt-0.5">
-                  Direct administrative telephone line
-                </p>
-              </div>
-            </div>
-
-            {/* Office Address */}
-            <div className="p-4 bg-slate-50/80 rounded-2xl border border-slate-100 flex items-start gap-3">
-              <MapPin className="h-5 w-5 text-red-500 flex-shrink-0 mt-0.5" />
-              <div>
-                <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider block">
-                  Central Directorate Headquarters
-                </span>
-                <p className="text-xs text-slate-800 font-semibold mt-0.5">
-                  Department of Administrative Reforms & Public Grievances (DARPG)
-                </p>
-                <p className="text-xs text-slate-600 mt-0.5">
-                  5th Floor, Sardar Patel Bhavan, Parliament Street, New Delhi - 110001, India
-                </p>
-              </div>
             </div>
           </div>
 
