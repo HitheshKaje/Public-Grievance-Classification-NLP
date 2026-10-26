@@ -255,6 +255,11 @@ export default function IncomingComplaintsCard({
                         <p className="font-semibold text-slate-800 truncate" title={c.title}>
                           {c.title}
                         </p>
+                        {c.detected_language && (
+                          <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-violet-100 text-violet-700 border border-violet-200 flex-shrink-0" title={`Filed in ${c.detected_language}`}>
+                            {c.detected_language}
+                          </span>
+                        )}
                       </div>
                       <p className="text-[11px] text-slate-500 truncate mt-0.5" title={c.description || c.text}>
                         {c.description || c.text || 'No text provided'}
