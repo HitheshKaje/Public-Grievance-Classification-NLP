@@ -188,6 +188,8 @@ async def register(payload: UserRegister):
     if role != "citizen":
         raise HTTPException(status_code=422, detail="Invalid role specified. Only citizen accounts can register.")
 
+    department = (payload.department or "").strip() or None
+
     # 6. Check uniqueness in MongoDB
     existing_user = await db.users.find_one({"email": email})
     if existing_user:

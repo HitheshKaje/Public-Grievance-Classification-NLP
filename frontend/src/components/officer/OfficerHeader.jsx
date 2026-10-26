@@ -1,9 +1,20 @@
 import React from 'react';
-import { Menu, Search, Bell, Droplets, LogOut } from 'lucide-react';
+import { Menu, Search, Bell, Droplets, Zap, Building2, Shield, CheckCircle2, LogOut } from 'lucide-react';
 import UserProfileDropdown from '../common/UserProfileDropdown';
 
-export default function OfficerHeader({ onOpenSidebar, departmentName = "Water Supply Department", currentUser, onLogout }) {
+export default function OfficerHeader({ onOpenSidebar, departmentName = "General Administration", currentUser, onLogout }) {
   const activeDept = currentUser?.department || departmentName;
+
+  const getDeptIcon = (dept = '') => {
+    const d = dept.toLowerCase();
+    if (d.includes('water')) return Droplets;
+    if (d.includes('power') || d.includes('elect') || d.includes('light')) return Zap;
+    if (d.includes('sanitat') || d.includes('health') || d.includes('waste')) return CheckCircle2;
+    if (d.includes('police') || d.includes('safe')) return Shield;
+    return Building2;
+  };
+
+  const DeptIcon = getDeptIcon(activeDept);
 
   return (
     <header className="h-16 px-6 lg:px-8 bg-transparent flex items-center justify-between">
@@ -20,7 +31,7 @@ export default function OfficerHeader({ onOpenSidebar, departmentName = "Water S
 
         <div className="flex items-center gap-3">
           <div className="h-8 w-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 flex-shrink-0">
-            <Droplets className="h-4.5 w-4.5 fill-current" />
+            <DeptIcon className="h-4.5 w-4.5" />
           </div>
           <div>
             <span className="text-[11px] text-slate-500 font-medium block leading-none">
@@ -58,7 +69,7 @@ export default function OfficerHeader({ onOpenSidebar, departmentName = "Water S
 
         {/* Officer Profile Dropdown */}
         <UserProfileDropdown
-          user={currentUser || { name: 'Er. Rajesh Kumar', email: 'officer.water@gov.in', role: 'officer', department: activeDept, officer_id: 'OFF-WTR-001' }}
+          user={currentUser}
           onLogout={onLogout}
         />
 

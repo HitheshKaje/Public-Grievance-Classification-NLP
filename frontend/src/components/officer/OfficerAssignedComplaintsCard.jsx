@@ -19,7 +19,7 @@ export default function OfficerAssignedComplaintsCard({
   onDepartmentFilterChange,
   onUpdateStatus,
   onRefresh,
-  departmentName = "Water Supply Department"
+  departmentName = "General Administration"
 }) {
   const [selectedComplaint, setSelectedComplaint] = useState(null);
   const [pdfModalComplaint, setPdfModalComplaint] = useState(null);
