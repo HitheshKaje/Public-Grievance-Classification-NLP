@@ -1,9 +1,11 @@
 import React, { useState, useRef } from 'react';
 import { 
   FileText, UploadCloud, Trash2, RefreshCw, AlertCircle, 
-  MapPin, User, Phone, Mail, ArrowRight, Info, CheckCircle2, ShieldAlert
+  MapPin, User, Phone, Mail, ArrowRight, Info, CheckCircle2, ShieldAlert,
+  Sparkles
 } from 'lucide-react';
 import SupportingDocumentsDropzone from './SupportingDocumentsDropzone';
+import { processMultimodalComplaint } from '../../../services/complaintService';
 
 const MAX_PDF_SIZE_BYTES = 10 * 1024 * 1024; // 10MB
 
@@ -19,6 +21,9 @@ export default function PdfComplaintUpload({ formData, onUpdateFormData, onProce
   const [isDragging, setIsDragging] = useState(false);
   const [uploadError, setUploadError] = useState('');
   const [errors, setErrors] = useState({});
+  const [isTranslating, setIsTranslating] = useState(false);
+  const [translationResult, setTranslationResult] = useState(null);
+  const [translationError, setTranslationError] = useState('');
   const fileInputRef = useRef(null);
 
   const selectedPdf = formData.pdfFile || null;
@@ -74,8 +79,36 @@ export default function PdfComplaintUpload({ formData, onUpdateFormData, onProce
   const handleRemovePdf = () => {
     onUpdateFormData({ pdfFile: null });
     setUploadError('');
+    setTranslationResult(null);
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
+    }
+  };
+
+  // AI Multilingual PDF Extraction & English Conversion Handler
+  const handleAiAnalyzePdf = async () => {
+    if (!formData.pdfFile) return;
+    setIsTranslating(true);
+    setTranslationError('');
+    try {
+      const result = await processMultimodalComplaint(formData, 'pdf');
+      setTranslationResult(result);
+      onUpdateFormData({
+        title: result.structured_title || formData.title,
+        description: result.english_sentence || result.structured_description || formData.description,
+        location: (result.incident_location && result.incident_location !== 'Reported Incident Site') ? result.incident_location : (formData.location || 'Reported Incident Site'),
+        detectedLanguage: result.detected_language,
+        detectedLanguageCode: result.detected_language_code,
+        originalLanguageText: result.original_transcription,
+        englishTranslation: result.english_sentence
+      });
+      if (errors.title) setErrors((prev) => ({ ...prev, title: '' }));
+      if (errors.location) setErrors((prev) => ({ ...prev, location: '' }));
+    } catch (err) {
+      console.error('PDF analysis error:', err);
+      setTranslationError(err.message || 'AI PDF petition conversion could not be completed. The backend will process and translate upon submission.');
+    } finally {
+      setIsTranslating(false);
     }
   };
 
@@ -84,14 +117,26 @@ export default function PdfComplaintUpload({ formData, onUpdateFormData, onProce
     if (!selectedPdf) {
       errs.pdfFile = 'Please upload a PDF complaint document before proceeding.';
     }
+
+    // Auto-populate title if empty and PDF attached
     if (!formData.title?.trim()) {
-      errs.title = 'Complaint title is required.';
-    } else if (formData.title.trim().length < 5) {
-      errs.title = 'Title must be at least 5 characters long.';
+      if (translationResult?.structured_title) {
+        onUpdateFormData({ title: translationResult.structured_title });
+      } else if (selectedPdf) {
+        onUpdateFormData({ title: 'PDF Grievance Petition' });
+      } else {
+        errs.title = 'Complaint title is required.';
+      }
     }
+
     if (!formData.location?.trim()) {
-      errs.location = 'Incident location or area is required.';
+      if (translationResult?.incident_location && translationResult.incident_location !== 'Reported Incident Site') {
+        onUpdateFormData({ location: translationResult.incident_location });
+      } else {
+        errs.location = 'Incident location or area is required.';
+      }
     }
+
     if (formData.phone && !/^[0-9+\-\s]{8,15}$/.test(formData.phone.trim())) {
       errs.phone = 'Please enter a valid phone number or leave blank.';
     }
