@@ -94,8 +94,37 @@ export default function ImageComplaintUpload({ formData, onUpdateFormData, onPro
   const handleRemoveImage = () => {
     onUpdateFormData({ imageFile: null });
     setUploadError('');
+    setTranslationResult(null);
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
+    }
+  };
+
+  // AI Multilingual Image OCR & English Conversion Handler
+  const handleAiAnalyzeImage = async () => {
+    if (!formData.imageFile) return;
+    setIsTranslating(true);
+    setTranslationError('');
+    try {
+      const result = await processMultimodalComplaint(formData, 'image');
+      setTranslationResult(result);
+      onUpdateFormData({
+        title: result.structured_title || formData.title,
+        description: result.english_sentence || result.structured_description || formData.description,
+        location: (result.incident_location && result.incident_location !== 'Reported Incident Site') ? result.incident_location : (formData.location || 'Reported Incident Site'),
+        detectedLanguage: result.detected_language,
+        detectedLanguageCode: result.detected_language_code,
+        originalLanguageText: result.original_transcription,
+        englishTranslation: result.english_sentence
+      });
+      if (errors.title) setErrors((prev) => ({ ...prev, title: '' }));
+      if (errors.description) setErrors((prev) => ({ ...prev, description: '' }));
+      if (errors.location) setErrors((prev) => ({ ...prev, location: '' }));
+    } catch (err) {
+      console.error('Image analysis error:', err);
+      setTranslationError(err.message || 'AI image conversion could not be completed. The backend will process and translate upon submission.');
+    } finally {
+      setIsTranslating(false);
     }
   };
 
@@ -104,19 +133,37 @@ export default function ImageComplaintUpload({ formData, onUpdateFormData, onPro
     if (!primaryImage) {
       errs.imageFile = 'Please attach at least one clear photograph of the issue.';
     }
+
+    // Auto-populate title if citizen uploaded photo without typing
     if (!formData.title?.trim()) {
-      errs.title = 'Complaint title is required.';
-    } else if (formData.title.trim().length < 5) {
-      errs.title = 'Title must be at least 5 characters long.';
+      if (translationResult?.structured_title) {
+        onUpdateFormData({ title: translationResult.structured_title });
+      } else if (primaryImage) {
+        onUpdateFormData({ title: 'Photographic Evidence Civic Grievance' });
+      } else {
+        errs.title = 'Complaint title is required.';
+      }
     }
+
+    // Auto-populate description if photo attached
     if (!formData.description?.trim()) {
-      errs.description = 'Written explanation is required. The NLP classifier reads text to assign your complaint to the correct department.';
-    } else if (formData.description.trim().length < 20) {
-      errs.description = 'Description should be at least 20 characters so the NLP classifier can route it effectively.';
+      if (translationResult?.english_sentence) {
+        onUpdateFormData({ description: translationResult.english_sentence });
+      } else if (primaryImage) {
+        onUpdateFormData({ description: 'Photographic evidence attached for administrative inspection and rectification.' });
+      } else {
+        errs.description = 'Written explanation or AI image analysis is required.';
+      }
     }
+
     if (!formData.location?.trim()) {
-      errs.location = 'Incident location or landmark is required.';
+      if (translationResult?.incident_location && translationResult.incident_location !== 'Reported Incident Site') {
+        onUpdateFormData({ location: translationResult.incident_location });
+      } else {
+        errs.location = 'Incident location or landmark is required.';
+      }
     }
+
     if (formData.phone && !/^[0-9+\-\s]{8,15}$/.test(formData.phone.trim())) {
       errs.phone = 'Please enter a valid phone number or leave blank.';
     }
@@ -271,6 +318,92 @@ export default function ImageComplaintUpload({ formData, onUpdateFormData, onPro
                 </button>
               </div>
             </div>
+          </div>
+        )}
+
+        {/* AI Image OCR & Translation Card */}
+        {primaryImage && (
+          <div className="mt-3 p-4 rounded-2xl bg-gradient-to-br from-blue-50/90 via-indigo-50/70 to-slate-50/90 border border-blue-200/90 shadow-sm space-y-3">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+              <div>
+                <div className="flex items-center gap-2">
+                  <Sparkles className="h-4 w-4 text-blue-600" />
+                  <span className="text-xs font-bold text-blue-950">
+                    Multilingual Image OCR & English Conversion
+                  </span>
+                </div>
+                <p className="text-[11px] text-blue-700 mt-0.5">
+                  Reads text on boards/letters in Hindi (हिन्दी) or Kannada (ಕನ್ನಡ) or visually analyzes the scene, converting everything to English sentences.
+                </p>
+              </div>
+
+              <button
+                type="button"
+                disabled={isTranslating}
+                onClick={handleAiAnalyzeImage}
+                className="px-4 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white rounded-xl text-xs font-semibold shadow-sm flex items-center justify-center gap-2 transition-all cursor-pointer disabled:opacity-60 self-start sm:self-center"
+              >
+                {isTranslating ? (
+                  <>
+                    <RefreshCw className="h-3.5 w-3.5 animate-spin" />
+                    <span>Analyzing Image...</span>
+                  </>
+                ) : (
+                  <>
+                    <Sparkles className="h-3.5 w-3.5 text-amber-300" />
+                    <span>{translationResult ? 'Re-analyze Image' : '✨ Read Image & Convert to English'}</span>
+                  </>
+                )}
+              </button>
+            </div>
+
+            {translationError && (
+              <p className="text-[11px] text-rose-600 flex items-center gap-1 bg-white/70 p-2 rounded-lg border border-rose-200">
+                <AlertCircle className="h-3.5 w-3.5 flex-shrink-0" />
+                <span>{translationError}</span>
+              </p>
+            )}
+
+            {translationResult && (
+              <div className="bg-white/95 rounded-xl border border-blue-100 p-3.5 space-y-2.5 text-xs shadow-xs">
+                <div className="flex items-center justify-between pb-1 border-b border-slate-100">
+                  <span className="font-bold text-emerald-700 flex items-center gap-1.5 text-xs">
+                    <CheckCircle2 className="h-4 w-4 text-emerald-600" />
+                    <span>Visual Evidence & OCR Converted to English</span>
+                  </span>
+                  <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-blue-100 text-blue-800 border border-blue-200">
+                    Detected Language: {translationResult.detected_language}
+                  </span>
+                </div>
+
+                {translationResult.original_transcription && (
+                  <div className="p-2 bg-slate-50 rounded-lg">
+                    <span className="text-[10px] uppercase font-bold text-slate-400 block mb-0.5">
+                      Extracted Text / Evidence ({translationResult.detected_language})
+                    </span>
+                    <p className="text-slate-800 italic">
+                      "{translationResult.original_transcription}"
+                    </p>
+                  </div>
+                )}
+
+                <div className="p-2.5 bg-blue-50/70 border border-blue-200/60 rounded-lg space-y-1">
+                  <span className="text-[10px] uppercase font-bold text-blue-700 block">
+                    Converted English Sentence (Official Administrative Record)
+                  </span>
+                  <p className="text-slate-900 font-semibold leading-relaxed">
+                    "{translationResult.english_sentence}"
+                  </p>
+                </div>
+
+                <div className="flex flex-wrap items-center gap-x-4 gap-y-1 pt-1 text-[11px] text-slate-600">
+                  <span>Dept: <strong className="text-slate-800">{translationResult.detected_department}</strong></span>
+                  <span>&bull;</span>
+                  <span>Priority: <strong className={translationResult.priority === 'High' ? 'text-rose-600' : 'text-slate-800'}>{translationResult.priority}</strong></span>
+                </div>
+                <p className="text-[10px] text-emerald-600 font-medium">✓ Title, English description, and landmark are auto-synced below.</p>
+              </div>
+            )}
           </div>
         )}
 
