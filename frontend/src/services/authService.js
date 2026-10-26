@@ -122,3 +122,17 @@ export function logout() {
     console.error('Failed to clear auth state:', err);
   }
 }
+
+/**
+ * Check admin capacity status (strict maximum of 2 admins allowed).
+ */
+export async function getAdminSlotStatus() {
+  try {
+    const res = await fetch(`${API_BASE_URL}/auth/admin-slot-status`);
+    if (!res.ok) return { max_admins: 2, current_admins: 2, slots_available: 0, registration_allowed: false };
+    return await res.json();
+  } catch (err) {
+    console.warn('Failed to fetch admin capacity:', err);
+    return { max_admins: 2, current_admins: 2, slots_available: 0, registration_allowed: false };
+  }
+}
