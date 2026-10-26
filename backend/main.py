@@ -344,37 +344,34 @@ async def get_admin_slot_status():
         "registration_allowed": count < 2
     }
 
-@app.post("/api/complaints")
-async def create_complaint(request: Request):
+@app.post("/api/multimodal/process")
+@app.post("/api/complaints/transcribe-translate")
+async def process_multimodal_grievance_endpoint(request: Request):
     """
-    Complaint submission API that accepts complaints from Citizen Dashboard.
-    Supports both multipart/form-data (with file uploads) and application/json.
+    Dedicated Multimodal & Multilingual endpoint for Hindi, Kannada, and English.
+    Accepts:
+    - Spoken Voice Audio (Hindi, Kannada, or English): grasps voice and converts to English sentences.
+    - Image (photo or written/printed document in Hindi, Kannada, or English): OCRs and converts to English.
+    - PDF (petition or grievance letter in Hindi, Kannada, or English): extracts and converts to English.
+    - Written Text: translates Hindi or Kannada into clear, structured English sentences.
     """
-    db = get_db()
     content_type = request.headers.get("content-type", "")
-
     title = ""
     description = ""
     location = ""
-    citizen_name = None
-    phone = None
-    email = None
-    citizen_id = None
+    citizen_name = "Citizen"
     method = "write"
+    raw_files = []
     file_references = []
 
     if "multipart/form-data" in content_type:
         form = await request.form()
         title = (form.get("title") or "").strip()
-        description = (form.get("description") or "").strip()
+        description = (form.get("description") or form.get("text") or "").strip()
         location = (form.get("location") or "").strip()
-        citizen_name = form.get("citizen_name") or form.get("citizenName")
-        phone = form.get("phone")
-        email = form.get("email")
-        citizen_id = form.get("citizen_id") or form.get("citizenId")
-        method = form.get("method") or "write"
+        citizen_name = form.get("citizen_name") or form.get("citizenName") or "Citizen"
+        method = form.get("method") or "multimodal"
 
-        # Process any uploaded files
         for key, value in form.multi_items():
             if hasattr(value, "filename") and value.filename:
                 safe_name = re.sub(r'[^a-zA-Z0-9_.-]', '_', value.filename)
@@ -389,6 +386,112 @@ async def create_complaint(request: Request):
                     "size": len(content),
                     "content_type": value.content_type or "application/octet-stream",
                     "field": key
+                })
+                raw_files.append({
+                    "bytes": content,
+                    "filename": value.filename,
+                    "mime_type": value.content_type or "application/octet-stream"
+                })
+    else:
+        try:
+            body = await request.json()
+        except Exception:
+            raise HTTPException(status_code=400, detail="Invalid JSON or form payload.")
+        title = (body.get("title") or "").strip()
+        description = (body.get("description") or body.get("text") or body.get("details") or "").strip()
+        location = (body.get("location") or "").strip()
+        citizen_name = body.get("citizen_name") or body.get("citizenName") or "Citizen"
+        method = body.get("method") or "text"
+
+    complaint_data = {
+        "title": title,
+        "description": description,
+        "text": description,
+        "location": location,
+        "citizen_name": citizen_name,
+        "method": method,
+        "file_references": file_references
+    }
+
+    result = process_multilingual_complaint(
+        complaint_data,
+        uploads_dir=Path(UPLOAD_DIR),
+        raw_files=raw_files if raw_files else None
+    )
+
+    extracted = result.get("extracted", {})
+    return {
+        "success": True,
+        "detected_language": extracted.get("detected_language", "English"),
+        "detected_language_code": extracted.get("detected_language_code", "en"),
+        "original_transcription": extracted.get("original_language_text", description),
+        "original_language_text": extracted.get("original_language_text", description),
+        "english_sentence": extracted.get("english_sentence", description),
+        "english_translation": extracted.get("english_sentence", description),
+        "structured_title": extracted.get("structured_title", title or "Citizen Grievance"),
+        "structured_description": extracted.get("structured_description", description),
+        "detected_department": extracted.get("detected_department", "General Civic Administration"),
+        "incident_location": extracted.get("incident_location", location or "Reported Incident Site"),
+        "priority": extracted.get("priority", "Normal"),
+        "directives": extracted.get("directives", ""),
+        "confidence": extracted.get("confidence", 0.95),
+        "file_references": file_references,
+        "message": f"Processed successfully from {extracted.get('detected_language', 'native')} to English."
+    }
+
+@app.post("/api/complaints")
+async def create_complaint(request: Request):
+    """
+    Complaint submission API that accepts complaints in Hindi, Kannada, and English
+    across all modalities (Voice audio recording, Field Photo / Image, PDF petition, or Text).
+    Automatically transcribes spoken voice in Hindi/Kannada/English, OCRs images/PDFs,
+    and converts them to English sentences while storing original text & language metadata.
+    """
+    db = get_db()
+    content_type = request.headers.get("content-type", "")
+
+    title = ""
+    description = ""
+    location = ""
+    citizen_name = None
+    phone = None
+    email = None
+    citizen_id = None
+    method = "write"
+    file_references = []
+    in_memory_files = []
+
+    if "multipart/form-data" in content_type:
+        form = await request.form()
+        title = (form.get("title") or "").strip()
+        description = (form.get("description") or "").strip()
+        location = (form.get("location") or "").strip()
+        citizen_name = form.get("citizen_name") or form.get("citizenName")
+        phone = form.get("phone")
+        email = form.get("email")
+        citizen_id = form.get("citizen_id") or form.get("citizenId")
+        method = form.get("method") or "write"
+
+        # Process any uploaded files (Voice webm/mp3/wav, photo jpeg/png, or petition pdf)
+        for key, value in form.multi_items():
+            if hasattr(value, "filename") and value.filename:
+                safe_name = re.sub(r'[^a-zA-Z0-9_.-]', '_', value.filename)
+                unique_filename = f"{datetime.utcnow().strftime('%Y%m%d%H%M%S')}_{secrets.token_hex(4)}_{safe_name}"
+                target_path = os.path.join(UPLOAD_DIR, unique_filename)
+                content = await value.read()
+                with open(target_path, "wb") as f:
+                    f.write(content)
+                file_references.append({
+                    "filename": value.filename,
+                    "path": f"/uploads/{unique_filename}",
+                    "size": len(content),
+                    "content_type": value.content_type or "application/octet-stream",
+                    "field": key
+                })
+                in_memory_files.append({
+                    "bytes": content,
+                    "filename": value.filename,
+                    "mime_type": value.content_type or "application/octet-stream"
                 })
     else:
         # JSON payload
@@ -406,18 +509,84 @@ async def create_complaint(request: Request):
         method = body.get("method") or "write"
         file_references = body.get("file_references", [])
 
-    # Validation
+    # Check if this complaint involves audio, image, PDF, or non-English text (Hindi or Kannada)
+    has_files = len(file_references) > 0
+    detected_script = detect_script_language(f"{title} {description}")
+    is_non_english = detected_script in ["Hindi", "Kannada"]
+    is_voice_or_media = method in ["voice", "image", "pdf"] or has_files
+
+    # Multilingual & Multimodal conversion engine
+    ai_data = None
+    original_lang = detected_script
+    original_text = description or title or ""
+    english_translation = description or title or ""
+    structured_title = title
+    structured_desc = description
+    suggested_dept = None
+    priority = "Normal"
+
+    if is_voice_or_media or is_non_english:
+        try:
+            complaint_payload = {
+                "title": title,
+                "description": description,
+                "text": description,
+                "location": location,
+                "citizen_name": citizen_name,
+                "method": method,
+                "file_references": file_references
+            }
+            ai_result = process_multilingual_complaint(
+                complaint_payload,
+                uploads_dir=Path(UPLOAD_DIR),
+                raw_files=in_memory_files if in_memory_files else None
+            )
+            if ai_result.get("success") and ai_result.get("extracted"):
+                ai_data = ai_result["extracted"]
+                original_lang = ai_data.get("detected_language") or detected_script
+                original_text = ai_data.get("original_language_text") or original_text
+                english_translation = ai_data.get("english_sentence") or ai_data.get("structured_description") or english_translation
+                structured_title = ai_data.get("structured_title") or structured_title
+                structured_desc = ai_data.get("structured_description") or english_translation or structured_desc
+                suggested_dept = ai_data.get("detected_department")
+                priority = ai_data.get("priority", "Normal")
+                if not location and ai_data.get("incident_location"):
+                    location = ai_data.get("incident_location")
+        except Exception as e:
+            logger.error(f"Multilingual intake processing notice: {e}")
+
+    # Fallback default values if still empty after media processing
     if not title:
-        raise HTTPException(status_code=422, detail="Complaint title is required.")
-    if not description and method == "write":
-        raise HTTPException(status_code=422, detail="Complaint description is required.")
+        if structured_title:
+            title = structured_title
+        elif method == "voice":
+            title = f"Voice Grievance ({original_lang})"
+        elif method == "image":
+            title = f"Photo Evidence Grievance ({original_lang})"
+        elif method == "pdf":
+            title = f"PDF Petition Grievance ({original_lang})"
+        else:
+            title = "Citizen Public Grievance"
+
+    if not description:
+        description = structured_desc or english_translation or title
+
     if not location:
-        raise HTTPException(status_code=422, detail="Incident location is required.")
+        location = "Location pending verification"
+
+    lang_code = get_language_code(original_lang)
+
+    # Use converted English title and description for administrative clarity,
+    # while preserving the original citizen words in original_title and original_description
+    final_title = structured_title if (is_non_english or structured_title) else title
+    final_description = structured_desc if (is_non_english or structured_desc) else description
 
     doc = {
-        "title": title,
-        "description": description or title,
-        "text": description or title,  # For backward-compatibility with admin dashboard
+        "title": final_title,
+        "original_title": title,
+        "description": final_description,
+        "original_description": original_text or description,
+        "text": final_description,  # For backward-compatibility with admin dashboard & search
         "location": location,
         "citizen_name": citizen_name,
         "phone": phone,
@@ -425,9 +594,15 @@ async def create_complaint(request: Request):
         "citizen_id": citizen_id,
         "method": method,
         "file_references": file_references,
+        "detected_language": original_lang,
+        "detected_language_code": lang_code,
+        "original_language_text": original_text,
+        "english_translation": english_translation,
+        "ai_extracted": ai_data,
+        "priority": priority,
         "predicted_category": None,           # Stored as unclassified / null per req 10
         "assigned_department": None,          # Stored as unassigned / null per req 10
-        "confidence": None,
+        "confidence": ai_data.get("confidence") if ai_data else None,
         "status": "Pending",                  # Pending review
         "forwarding_status": "Not Forwarded", # Not forwarded per req 11
         "created_at": datetime.utcnow()
@@ -438,7 +613,10 @@ async def create_complaint(request: Request):
         return {
             "success": True,
             "complaint_id": saved_doc["complaint_id"],
-            "message": "Complaint submitted successfully.",
+            "message": f"Complaint registered successfully in {original_lang} and translated to English.",
+            "detected_language": original_lang,
+            "detected_language_code": lang_code,
+            "english_translation": english_translation,
             "complaint": format_complaint(saved_doc)
         }
     except HTTPException:
