@@ -5,6 +5,7 @@ import {
   ClipboardList, 
   Search, 
   User, 
+  Headphones,
   Landmark,
   X,
   LogOut 
