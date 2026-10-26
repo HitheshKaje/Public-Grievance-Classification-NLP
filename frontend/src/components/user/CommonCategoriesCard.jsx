@@ -10,12 +10,15 @@ import {
   GraduationCap, 
   Trash2 
 } from 'lucide-react';
+import { useLanguage } from '../../context/LanguageContext';
 
 export default function CommonCategoriesCard({ onViewAll, onSelectCategory }) {
+  const { t } = useLanguage();
+
   const categories = [
     {
       id: 'water',
-      name: 'Water Supply',
+      name: t('cat_water', 'Water Supply'),
       icon: Droplets,
       bgColor: 'bg-[#eff6ff]',
       borderColor: 'border-blue-100',
@@ -24,7 +27,7 @@ export default function CommonCategoriesCard({ onViewAll, onSelectCategory }) {
     },
     {
       id: 'electricity',
-      name: 'Electricity',
+      name: t('cat_electricity', 'Electricity'),
       icon: Zap,
       bgColor: 'bg-[#fffbeb]',
       borderColor: 'border-amber-100',
@@ -33,7 +36,7 @@ export default function CommonCategoriesCard({ onViewAll, onSelectCategory }) {
     },
     {
       id: 'roads',
-      name: 'Roads & Infrastructure',
+      name: t('cat_roads', 'Roads & Infrastructure'),
       icon: Milestone,
       bgColor: 'bg-[#fff1f2]',
       borderColor: 'border-rose-100',
@@ -42,7 +45,7 @@ export default function CommonCategoriesCard({ onViewAll, onSelectCategory }) {
     },
     {
       id: 'lighting',
-      name: 'Street Lighting',
+      name: t('cat_lighting', 'Street Lighting'),
       icon: Lightbulb,
       bgColor: 'bg-[#faf5ff]',
       borderColor: 'border-purple-100',
@@ -51,7 +54,7 @@ export default function CommonCategoriesCard({ onViewAll, onSelectCategory }) {
     },
     {
       id: 'healthcare',
-      name: 'Public Healthcare',
+      name: t('cat_healthcare', 'Public Healthcare'),
       icon: Plus,
       bgColor: 'bg-[#fdf2f8]',
       borderColor: 'border-pink-100',
@@ -60,7 +63,7 @@ export default function CommonCategoriesCard({ onViewAll, onSelectCategory }) {
     },
     {
       id: 'education',
-      name: 'Public Education',
+      name: t('cat_education', 'Public Education'),
       icon: GraduationCap,
       bgColor: 'bg-[#ecfdf5]',
       borderColor: 'border-emerald-100',
@@ -69,7 +72,7 @@ export default function CommonCategoriesCard({ onViewAll, onSelectCategory }) {
     },
     {
       id: 'sanitation',
-      name: 'Sanitation & Garbage',
+      name: t('cat_sanitation', 'Sanitation & Garbage'),
       icon: Trash2,
       bgColor: 'bg-[#f0fdfa]',
       borderColor: 'border-teal-100',
@@ -85,7 +88,7 @@ export default function CommonCategoriesCard({ onViewAll, onSelectCategory }) {
         <div className="flex items-center gap-2">
           <Briefcase className="h-4.5 w-4.5 text-amber-500 stroke-[2.2]" />
           <h2 className="text-sm font-bold text-slate-800 tracking-tight">
-            Common Complaint Categories
+            {t('common_categories', 'Common Complaint Categories')}
           </h2>
         </div>
 
@@ -94,7 +97,7 @@ export default function CommonCategoriesCard({ onViewAll, onSelectCategory }) {
           onClick={onViewAll}
           className="text-xs font-semibold text-blue-600 hover:text-blue-700 flex items-center gap-1 transition-colors cursor-pointer"
         >
-          <span>View All</span>
+          <span>{t('view_all', 'View All')}</span>
           <ArrowRight className="h-3.5 w-3.5" />
         </button>
       </div>
