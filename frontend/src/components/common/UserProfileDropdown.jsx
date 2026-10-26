@@ -82,7 +82,7 @@ export default function UserProfileDropdown({ user, onLogout }) {
             <div className="mt-2 pt-2 border-t border-slate-100 flex items-center justify-between text-[10px]">
               <span className="inline-flex items-center gap-1 font-semibold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200/60">
                 <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                MongoDB Verified
+                {t('mongodb_verified', 'MongoDB Verified')}
               </span>
               <span className="text-slate-500 font-medium">
                 {user?.officer_id || user?.citizen_id || 'ID: PGMS-USR'}
@@ -108,7 +108,7 @@ export default function UserProfileDropdown({ user, onLogout }) {
               className="w-full text-left px-2.5 py-2 text-xs font-semibold text-red-600 hover:bg-red-50 rounded-xl flex items-center gap-2 transition-colors cursor-pointer"
             >
               <LogOut className="h-3.5 w-3.5" />
-              <span>Sign Out Session</span>
+              <span>{t('logout', 'Sign Out Session')}</span>
             </button>
           </div>
         </div>
