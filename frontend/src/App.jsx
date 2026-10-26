@@ -15,22 +15,27 @@ export default function App() {
     const hash = window.location.hash.toLowerCase();
     if (path.includes('admin') || hash.includes('admin')) return 'admin';
     if (path.includes('citizen') || path.includes('user') || hash.includes('citizen') || hash.includes('user')) return 'user';
-    return 'officer'; // default
+    if (path.includes('officer') || hash.includes('officer')) return 'officer';
+    return null;
   };
 
   const isLoginRoute = () => {
     const path = window.location.pathname.toLowerCase();
     const hash = window.location.hash.toLowerCase();
-    return path.includes('login') || hash.includes('login');
+    return path === '/' || path === '' || path.includes('login') || hash.includes('login');
   };
 
-  const [isExplicitLogin, setIsExplicitLogin] = useState(isLoginRoute);
   const [currentUser, setCurrentUser] = useState(getCurrentUser);
+  // Default to showing LoginPage if on root '/', '/login', or when user is not authenticated
+  const [isExplicitLogin, setIsExplicitLogin] = useState(() => isLoginRoute() || !getCurrentUser());
   const [currentPortal, setCurrentPortal] = useState(() => {
-    if (currentUser?.role === 'admin') return 'admin';
-    if (currentUser?.role === 'citizen') return 'user';
-    if (currentUser?.role === 'officer') return 'officer';
-    return getInitialPortal();
+    const portal = getInitialPortal();
+    if (portal) return portal;
+    const user = getCurrentUser();
+    if (user?.role === 'admin') return 'admin';
+    if (user?.role === 'citizen') return 'user';
+    if (user?.role === 'officer') return 'officer';
+    return 'officer';
   });
 
   const [officerTab, setOfficerTab] = useState('dashboard');
@@ -72,21 +77,34 @@ export default function App() {
     window.history.pushState({}, '', targetPath);
   };
 
+  // Enforce LoginPage when starting at root '/' or unauthenticated
+  useEffect(() => {
+    const path = window.location.pathname.toLowerCase();
+    if (path === '/' || path === '' || !currentUser) {
+      window.history.replaceState({}, '', '/login');
+      setIsExplicitLogin(true);
+    }
+  }, [currentUser]);
+
   // Listen for browser forward/back buttons
   useEffect(() => {
     const handlePopState = () => {
-      setIsExplicitLogin(isLoginRoute());
-      setCurrentPortal(getInitialPortal());
+      const loginRoute = isLoginRoute();
+      setIsExplicitLogin(loginRoute || !getCurrentUser());
+      const portal = getInitialPortal();
+      if (portal) {
+        setCurrentPortal(portal);
+      }
     };
     window.addEventListener('popstate', handlePopState);
     return () => window.removeEventListener('popstate', handlePopState);
   }, []);
 
-  // If not authenticated or on /login route, render LoginPage
+  // If not authenticated or on /login or root route, render LoginPage
   if (!currentUser || isExplicitLogin) {
     return (
       <LoginPage
-        initialPortal={currentPortal}
+        initialPortal={currentPortal || 'officer'}
         onLoginSuccess={handleLoginSuccess}
       />
     );
