@@ -15,7 +15,13 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 
 from database import get_db, init_db, hash_password, verify_password
-from gemini_service import extract_multimodal_complaint, classify_text_with_gemini
+from gemini_service import (
+    extract_multimodal_complaint,
+    process_multilingual_complaint,
+    classify_text_with_gemini,
+    detect_script_language,
+    get_language_code
+)
 from models import (
     ComplaintCreate, ComplaintResponse, ClassifyRequest, ClassifyResponse, 
     AnalyticsResponse, CategoryDistribution, ComplaintTrend,
