@@ -5,6 +5,8 @@ import UserLayout from './layouts/UserLayout';
 import UserDashboard from './pages/UserDashboard';
 import AdminLayout from './layouts/AdminLayout';
 import AdminDashboard from './pages/AdminDashboard';
+import LoginPage from './pages/LoginPage';
+import { getCurrentUser, logout } from './services/authService';
 
 export default function App() {
   // Determine initial portal based on URL path or hash
@@ -16,10 +18,42 @@ export default function App() {
     return 'officer'; // default
   };
 
-  const [currentPortal, setCurrentPortal] = useState(getInitialPortal);
+  const [currentUser, setCurrentUser] = useState(getCurrentUser);
+  const [currentPortal, setCurrentPortal] = useState(() => {
+    if (currentUser?.role === 'admin') return 'admin';
+    if (currentUser?.role === 'citizen') return 'user';
+    if (currentUser?.role === 'officer') return 'officer';
+    return getInitialPortal();
+  });
+
   const [officerTab, setOfficerTab] = useState('dashboard');
   const [userTab, setUserTab] = useState('dashboard');
   const [adminTab, setAdminTab] = useState('overview');
+
+  // Handle successful login
+  const handleLoginSuccess = (user, role) => {
+    setCurrentUser(user);
+    const targetRole = role || user?.role;
+    let targetPortal = 'officer';
+    let targetPath = '/officer';
+
+    if (targetRole === 'admin') {
+      targetPortal = 'admin';
+      targetPath = '/admin';
+    } else if (targetRole === 'citizen' || targetRole === 'user') {
+      targetPortal = 'user';
+      targetPath = '/citizen';
+    }
+
+    setCurrentPortal(targetPortal);
+    window.history.pushState({}, '', targetPath);
+  };
+
+  // Handle logout
+  const handleLogout = () => {
+    logout();
+    setCurrentUser(null);
+  };
 
   // Sync portal changes with browser history and URL
   const handleSelectPortal = (portalId) => {
@@ -37,6 +71,16 @@ export default function App() {
     return () => window.removeEventListener('popstate', handlePopState);
   }, []);
 
+  // If not authenticated, render LoginPage
+  if (!currentUser) {
+    return (
+      <LoginPage
+        initialPortal={currentPortal}
+        onLoginSuccess={handleLoginSuccess}
+      />
+    );
+  }
+
   // 1. Admin Portal
   if (currentPortal === 'admin') {
     return (
@@ -45,6 +89,8 @@ export default function App() {
         onSelectTab={setAdminTab}
         onSelectPortal={handleSelectPortal}
         currentPortal={currentPortal}
+        currentUser={currentUser}
+        onLogout={handleLogout}
       >
         <AdminDashboard 
           activeTab={adminTab} 
@@ -63,6 +109,8 @@ export default function App() {
         onSelectTab={setUserTab}
         onSelectPortal={handleSelectPortal}
         currentPortal={currentPortal}
+        currentUser={currentUser}
+        onLogout={handleLogout}
       >
         <UserDashboard
           activeTab={userTab}
@@ -73,18 +121,22 @@ export default function App() {
   }
 
   // 3. Officer Portal (Default)
+  const officerDepartment = currentUser?.department || "Water Supply Department";
+
   return (
     <OfficerLayout
       activeTab={officerTab}
       onSelectTab={setOfficerTab}
       onSelectPortal={handleSelectPortal}
       currentPortal={currentPortal}
-      departmentName="Water Supply Department"
+      departmentName={officerDepartment}
+      currentUser={currentUser}
+      onLogout={handleLogout}
     >
       <OfficerDashboard
         activeTab={officerTab}
         onNavigateTab={setOfficerTab}
-        departmentName="Water Supply Department"
+        departmentName={officerDepartment}
       />
     </OfficerLayout>
   );

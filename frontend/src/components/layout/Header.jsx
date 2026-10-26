@@ -1,8 +1,9 @@
 import React from 'react';
-import { Home, Search, Bell, ChevronDown } from 'lucide-react';
+import { Home, Search, Bell } from 'lucide-react';
 import PortalSwitcher from '../common/PortalSwitcher';
+import UserProfileDropdown from '../common/UserProfileDropdown';
 
-export default function Header({ onOpenSidebar, activeTabTitle = "Overview", onSelectPortal, currentPortal = 'admin' }) {
+export default function Header({ onOpenSidebar, activeTabTitle = "Overview", onSelectPortal, currentPortal = 'admin', currentUser, onLogout }) {
   return (
     <header className="h-16 px-6 lg:px-8 bg-transparent flex items-center justify-between">
       {/* Left: Breadcrumbs & Page Title */}
@@ -48,16 +49,12 @@ export default function Header({ onOpenSidebar, activeTabTitle = "Overview", onS
           <span className="absolute top-2 right-2 h-1.5 w-1.5 bg-blue-600 rounded-full" />
         </button>
 
-        {/* User Profile */}
-        <div className="flex items-center gap-2.5 pl-1 cursor-pointer">
-          <div className="h-8 w-8 rounded-full bg-[#0a1835] text-white flex items-center justify-center font-bold text-xs shadow-sm">
-            AD
-          </div>
-          <span className="text-xs font-semibold text-slate-800 hidden sm:inline-block">
-            Admin
-          </span>
-          <ChevronDown className="h-3.5 w-3.5 text-slate-400" />
-        </div>
+        {/* User Profile Dropdown */}
+        <UserProfileDropdown
+          user={currentUser || { name: 'System Admin', email: 'admin@gov.in', role: 'admin' }}
+          onLogout={onLogout}
+          onSelectPortal={onSelectPortal}
+        />
       </div>
     </header>
   );

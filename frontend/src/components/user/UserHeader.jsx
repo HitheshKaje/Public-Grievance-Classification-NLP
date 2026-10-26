@@ -1,8 +1,11 @@
 import React from 'react';
-import { Menu, Bell, User as UserIcon, ChevronDown } from 'lucide-react';
+import { Menu, Bell } from 'lucide-react';
 import PortalSwitcher from '../common/PortalSwitcher';
+import UserProfileDropdown from '../common/UserProfileDropdown';
 
-export default function UserHeader({ onOpenSidebar, onSelectPortal, currentPortal = 'user' }) {
+export default function UserHeader({ onOpenSidebar, onSelectPortal, currentPortal = 'user', currentUser, onLogout }) {
+  const citizenName = currentUser?.name || 'Citizen';
+
   return (
     <header className="h-16 px-6 lg:px-8 bg-transparent flex items-center justify-between">
       {/* Left: Mobile menu & Welcome Title */}
@@ -21,7 +24,7 @@ export default function UserHeader({ onOpenSidebar, onSelectPortal, currentPorta
             Welcome Back,
           </span>
           <h1 className="text-xl font-bold text-slate-900 tracking-tight mt-1 leading-none">
-            Citizen
+            {citizenName}
           </h1>
         </div>
       </div>
@@ -46,16 +49,12 @@ export default function UserHeader({ onOpenSidebar, onSelectPortal, currentPorta
           <span className="absolute top-2 right-2 h-1.5 w-1.5 bg-red-500 rounded-full" />
         </button>
 
-        {/* User Profile Area */}
-        <div className="flex items-center gap-2 pl-1 cursor-pointer">
-          <div className="h-8 w-8 rounded-full bg-slate-200 text-slate-700 flex items-center justify-center font-medium text-xs shadow-sm">
-            <UserIcon className="h-4.5 w-4.5 text-slate-600" />
-          </div>
-          <span className="text-xs font-semibold text-slate-800 hidden sm:inline-block">
-            User
-          </span>
-          <ChevronDown className="h-3.5 w-3.5 text-slate-400" />
-        </div>
+        {/* User Profile Dropdown */}
+        <UserProfileDropdown
+          user={currentUser || { name: 'Aarav Sharma', email: 'citizen@gmail.com', role: 'citizen', citizen_id: 'CIT-2026-001' }}
+          onLogout={onLogout}
+          onSelectPortal={onSelectPortal}
+        />
       </div>
     </header>
   );

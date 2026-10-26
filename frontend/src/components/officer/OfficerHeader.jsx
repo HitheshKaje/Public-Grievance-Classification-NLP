@@ -1,8 +1,11 @@
 import React from 'react';
-import { Menu, Search, Bell, Droplets, ChevronDown } from 'lucide-react';
+import { Menu, Search, Bell, Droplets } from 'lucide-react';
 import PortalSwitcher from '../common/PortalSwitcher';
+import UserProfileDropdown from '../common/UserProfileDropdown';
 
-export default function OfficerHeader({ onOpenSidebar, onSelectPortal, currentPortal = 'officer', departmentName = "Water Supply Department" }) {
+export default function OfficerHeader({ onOpenSidebar, onSelectPortal, currentPortal = 'officer', departmentName = "Water Supply Department", currentUser, onLogout }) {
+  const activeDept = currentUser?.department || departmentName;
+
   return (
     <header className="h-16 px-6 lg:px-8 bg-transparent flex items-center justify-between">
       {/* Left: Mobile menu & Department Badge + Title */}
@@ -25,7 +28,7 @@ export default function OfficerHeader({ onOpenSidebar, onSelectPortal, currentPo
               Department Officer
             </span>
             <h1 className="text-xl font-bold text-slate-900 tracking-tight mt-1 leading-none">
-              {departmentName}
+              {activeDept}
             </h1>
           </div>
         </div>
@@ -62,21 +65,12 @@ export default function OfficerHeader({ onOpenSidebar, onSelectPortal, currentPo
           <span className="absolute top-2 right-2 h-1.5 w-1.5 bg-red-500 rounded-full" />
         </button>
 
-        {/* Officer Profile Area */}
-        <div className="flex items-center gap-2.5 pl-1 cursor-pointer">
-          <div className="h-8 w-8 rounded-full bg-[#0a1835] text-white flex items-center justify-center font-bold text-xs shadow-sm">
-            W
-          </div>
-          <div className="hidden sm:block text-left">
-            <span className="text-xs font-semibold text-slate-800 block leading-tight">
-              Officer
-            </span>
-            <span className="text-[10px] text-slate-400 font-medium block leading-tight">
-              Water Supply Dept.
-            </span>
-          </div>
-          <ChevronDown className="h-3.5 w-3.5 text-slate-400" />
-        </div>
+        {/* Officer Profile Dropdown */}
+        <UserProfileDropdown
+          user={currentUser || { name: 'Er. Rajesh Kumar', email: 'officer.water@gov.in', role: 'officer', department: activeDept, officer_id: 'OFF-WTR-001' }}
+          onLogout={onLogout}
+          onSelectPortal={onSelectPortal}
+        />
       </div>
     </header>
   );

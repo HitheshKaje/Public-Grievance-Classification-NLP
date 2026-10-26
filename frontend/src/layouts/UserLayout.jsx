@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import UserSidebar from '../components/user/UserSidebar';
 import UserHeader from '../components/user/UserHeader';
 
-export default function UserLayout({ children, activeTab, onSelectTab, onSelectPortal, currentPortal = 'user' }) {
+export default function UserLayout({ children, activeTab, onSelectTab, onSelectPortal, currentPortal = 'user', currentUser, onLogout }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   return (
@@ -21,6 +21,8 @@ export default function UserLayout({ children, activeTab, onSelectTab, onSelectP
           onOpenSidebar={() => setSidebarOpen(true)}
           onSelectPortal={onSelectPortal}
           currentPortal={currentPortal}
+          currentUser={currentUser}
+          onLogout={onLogout}
         />
 
         <main className="flex-1 px-6 pb-8 pt-2 max-w-[1600px] w-full">
