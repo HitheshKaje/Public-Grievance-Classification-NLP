@@ -169,6 +169,12 @@ export default function LoginPage({ initialPortal = 'officer', onLoginSuccess })
       return;
     }
 
+    if (isRegister && selectedRole === 'admin' && !adminCapacity.registration_allowed) {
+      setErrorMsg('Maximum limit reached: Only 2 administrator accounts are permitted in the system. Further admin registrations are disabled.');
+      triggerShake();
+      return;
+    }
+
     setLoading(true);
 
     try {
