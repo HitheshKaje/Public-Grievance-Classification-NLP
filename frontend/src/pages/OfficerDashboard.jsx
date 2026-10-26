@@ -1,5 +1,8 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { FileText, Clock, CheckCircle2, AlertTriangle, RefreshCw } from 'lucide-react';
+import { 
+  FileText, Clock, CheckCircle2, AlertTriangle, RefreshCw,
+  Headphones, Phone, PhoneCall, Mail, Send, ShieldCheck, MapPin, HelpCircle
+} from 'lucide-react';
 import OfficerStatCard from '../components/officer/OfficerStatCard';
 import OfficerAssignedComplaintsCard from '../components/officer/OfficerAssignedComplaintsCard';
 import DepartmentInfoCard from '../components/officer/DepartmentInfoCard';
@@ -171,11 +174,266 @@ export default function OfficerDashboard({
     );
   }
 
-  if (['reports', 'profile', 'support'].includes(activeTab)) {
+  if (activeTab === 'support') {
+    return (
+      <div className="space-y-6">
+        {/* Support Header Banner */}
+        <div className="bg-gradient-to-r from-blue-800 to-indigo-900 rounded-3xl p-6 sm:p-8 text-white shadow-xl relative overflow-hidden">
+          <div className="absolute top-0 right-0 w-80 h-80 bg-white/10 rounded-full blur-3xl pointer-events-none" />
+          
+          <div className="relative z-10 max-w-2xl">
+            <span className="text-[11px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-white/20 border border-white/25">
+              Officer Help Desk & Escalation Matrix
+            </span>
+            <h1 className="text-2xl font-bold mt-2">Departmental Administrator Support</h1>
+            <p className="text-xs text-blue-100 mt-1 leading-relaxed">
+              Direct access to designated system administrators for complaint re-routing, SLA extension requests, and technical escalation.
+            </p>
+          </div>
+        </div>
+
+        {/* Two Admins Section: Ranjith Gowda & Hithesh Gowda */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div className="lg:col-span-2 bg-white rounded-2xl border border-slate-100 p-6 shadow-sm space-y-5">
+            <div className="border-b border-slate-100 pb-3 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+              <div>
+                <h2 className="text-base font-bold text-slate-800 flex items-center gap-2">
+                  <Headphones className="h-4.5 w-4.5 text-blue-600" />
+                  <span>Central System Administrators</span>
+                </h2>
+                <p className="text-xs text-slate-500 mt-0.5">
+                  Designated authorities for nodal officer assistance and system configuration.
+                </p>
+              </div>
+              <span className="px-2.5 py-1 rounded-full text-[11px] font-bold bg-blue-50 text-blue-700 border border-blue-200 self-start sm:self-auto">
+                2 Designated Admins
+              </span>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {/* Admin 1: Ranjith Gowda */}
+              <div className="p-4 bg-slate-50/90 rounded-2xl border border-slate-200/80 hover:border-blue-300 transition-all flex flex-col justify-between">
+                <div>
+                  <div className="flex items-center gap-2.5 mb-2">
+                    <div className="h-10 w-10 rounded-xl bg-[#0a1835] text-white flex items-center justify-center font-bold text-xs shadow-xs">
+                      RG
+                    </div>
+                    <div>
+                      <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-blue-100 text-blue-700">
+                        System Administrator
+                      </span>
+                      <h3 className="text-sm font-bold text-slate-900 mt-0.5">Ranjith Gowda</h3>
+                    </div>
+                  </div>
+                  <p className="text-[11px] text-slate-500 mb-3">
+                    Central Grievance Administration & Nodal Triage
+                  </p>
+                </div>
+
+                <div className="space-y-2 pt-2 border-t border-slate-200/70 text-xs">
+                  <div className="flex items-center justify-between">
+                    <span className="text-slate-500 flex items-center gap-1.5 text-[11px]">
+                      <Phone className="h-3 w-3 text-blue-600" />
+                      <span>Phone:</span>
+                    </span>
+                    <a 
+                      href="tel:8861731029" 
+                      className="font-mono font-bold text-blue-600 hover:text-blue-800 hover:underline flex items-center gap-1"
+                      title="Call Ranjith Gowda"
+                    >
+                      <span>8861731029</span>
+                      <PhoneCall className="h-3 w-3" />
+                    </a>
+                  </div>
+
+                  <div className="flex items-center justify-between">
+                    <span className="text-slate-500 flex items-center gap-1.5 text-[11px]">
+                      <Mail className="h-3 w-3 text-rose-500" />
+                      <span>Gmail:</span>
+                    </span>
+                    <a 
+                      href="mailto:ranjithgowda@gmail.com?subject=Officer%20Support%20Request%20-%20PGMS" 
+                      className="font-mono text-[11px] font-semibold text-slate-800 hover:text-blue-600 hover:underline flex items-center gap-1 truncate max-w-[170px]"
+                      title="Email Ranjith Gowda"
+                    >
+                      <span className="truncate">ranjithgowda@gmail.com</span>
+                      <Send className="h-2.5 w-2.5 text-blue-600 flex-shrink-0" />
+                    </a>
+                  </div>
+
+                  <div className="pt-2 flex gap-1.5">
+                    <a 
+                      href="tel:8861731029"
+                      className="flex-1 py-1 px-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-semibold text-[11px] flex items-center justify-center gap-1 transition-colors shadow-2xs"
+                    >
+                      <PhoneCall className="h-3 w-3" />
+                      <span>Call Admin</span>
+                    </a>
+                    <a 
+                      href="mailto:ranjithgowda@gmail.com?subject=Officer%20Support%20Request%20-%20PGMS"
+                      className="flex-1 py-1 px-2 rounded-lg bg-white hover:bg-slate-100 text-slate-700 border border-slate-200 font-semibold text-[11px] flex items-center justify-center gap-1 transition-colors shadow-2xs"
+                    >
+                      <Mail className="h-3 w-3 text-rose-500" />
+                      <span>Send Gmail</span>
+                    </a>
+                  </div>
+                </div>
+              </div>
+
+              {/* Admin 2: Hithesh Gowda */}
+              <div className="p-4 bg-slate-50/90 rounded-2xl border border-slate-200/80 hover:border-emerald-300 transition-all flex flex-col justify-between">
+                <div>
+                  <div className="flex items-center gap-2.5 mb-2">
+                    <div className="h-10 w-10 rounded-xl bg-[#0a1835] text-white flex items-center justify-center font-bold text-xs shadow-xs">
+                      HG
+                    </div>
+                    <div>
+                      <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700">
+                        System Administrator
+                      </span>
+                      <h3 className="text-sm font-bold text-slate-900 mt-0.5">Hithesh Gowda</h3>
+                    </div>
+                  </div>
+                  <p className="text-[11px] text-slate-500 mb-3">
+                    Technical Architecture & Grievance Operations
+                  </p>
+                </div>
+
+                <div className="space-y-2 pt-2 border-t border-slate-200/70 text-xs">
+                  <div className="flex items-center justify-between">
+                    <span className="text-slate-500 flex items-center gap-1.5 text-[11px]">
+                      <Phone className="h-3 w-3 text-emerald-600" />
+                      <span>Phone:</span>
+                    </span>
+                    <a 
+                      href="tel:8877665544" 
+                      className="font-mono font-bold text-emerald-600 hover:text-emerald-800 hover:underline flex items-center gap-1"
+                      title="Call Hithesh Gowda"
+                    >
+                      <span>8877665544</span>
+                      <PhoneCall className="h-3 w-3" />
+                    </a>
+                  </div>
+
+                  <div className="flex items-center justify-between">
+                    <span className="text-slate-500 flex items-center gap-1.5 text-[11px]">
+                      <Mail className="h-3 w-3 text-rose-500" />
+                      <span>Gmail:</span>
+                    </span>
+                    <a 
+                      href="mailto:hitheshgowda@gmail.com?subject=Officer%20Support%20Request%20-%20PGMS" 
+                      className="font-mono text-[11px] font-semibold text-slate-800 hover:text-emerald-600 hover:underline flex items-center gap-1 truncate max-w-[170px]"
+                      title="Email Hithesh Gowda"
+                    >
+                      <span className="truncate">hitheshgowda@gmail.com</span>
+                      <Send className="h-2.5 w-2.5 text-emerald-600 flex-shrink-0" />
+                    </a>
+                  </div>
+
+                  <div className="pt-2 flex gap-1.5">
+                    <a 
+                      href="tel:8877665544"
+                      className="flex-1 py-1 px-2 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-[11px] flex items-center justify-center gap-1 transition-colors shadow-2xs"
+                    >
+                      <PhoneCall className="h-3 w-3" />
+                      <span>Call Admin</span>
+                    </a>
+                    <a 
+                      href="mailto:hitheshgowda@gmail.com?subject=Officer%20Support%20Request%20-%20PGMS"
+                      className="flex-1 py-1 px-2 rounded-lg bg-white hover:bg-slate-100 text-slate-700 border border-slate-200 font-semibold text-[11px] flex items-center justify-center gap-1 transition-colors shadow-2xs"
+                    >
+                      <Mail className="h-3 w-3 text-rose-500" />
+                      <span>Send Gmail</span>
+                    </a>
+                  </div>
+                </div>
+              </div>
+
+              {/* Toll-Free Helpline */}
+              <div className="p-4 bg-emerald-50/60 rounded-2xl border border-emerald-100">
+                <span className="text-[11px] text-emerald-600 font-semibold block uppercase tracking-wider flex items-center gap-1">
+                  <PhoneCall className="h-3 w-3" />
+                  <span>National Grievance Toll-Free</span>
+                </span>
+                <p className="text-base font-extrabold text-emerald-900 mt-1 font-mono">
+                  1800-11-4000
+                </p>
+                <p className="text-[11px] text-emerald-700 mt-0.5">
+                  National departmental escalation line (Mon-Sat, 9 AM - 6 PM)
+                </p>
+              </div>
+
+              {/* Central Secretariat Desk */}
+              <div className="p-4 bg-slate-50/80 rounded-2xl border border-slate-100">
+                <span className="text-[11px] text-slate-400 font-semibold block uppercase tracking-wider flex items-center gap-1">
+                  <Phone className="h-3 w-3" />
+                  <span>Secretariat Phone Desk</span>
+                </span>
+                <p className="text-sm font-bold text-slate-900 mt-1 font-mono">
+                  +91 11 2436 0000 / 2436 1234
+                </p>
+                <p className="text-[11px] text-slate-500 mt-0.5">
+                  Direct administrative telephone line
+                </p>
+              </div>
+            </div>
+
+            {/* Office Address */}
+            <div className="p-4 bg-slate-50/80 rounded-2xl border border-slate-100 flex items-start gap-3">
+              <MapPin className="h-5 w-5 text-red-500 flex-shrink-0 mt-0.5" />
+              <div>
+                <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider block">
+                  Central Directorate Headquarters
+                </span>
+                <p className="text-xs text-slate-800 font-semibold mt-0.5">
+                  Department of Administrative Reforms & Public Grievances (DARPG)
+                </p>
+                <p className="text-xs text-slate-600 mt-0.5">
+                  5th Floor, Sardar Patel Bhavan, Parliament Street, New Delhi - 110001, India
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {/* Officer Operating Protocols FAQs */}
+          <div className="bg-white rounded-2xl border border-slate-100 p-6 shadow-sm space-y-4">
+            <h3 className="text-sm font-bold text-slate-800 border-b border-slate-100 pb-3 flex items-center gap-2">
+              <HelpCircle className="h-4 w-4 text-blue-600" />
+              <span>Officer Standard Operating Procedures</span>
+            </h3>
+
+            <div className="space-y-3 text-xs">
+              <div className="p-3 bg-slate-50 rounded-xl">
+                <p className="font-bold text-slate-800">How to reassign a misclassified complaint?</p>
+                <p className="text-slate-500 mt-1 leading-relaxed text-[11px]">
+                  Contact Admin <strong>Ranjith Gowda (8861731029)</strong> or <strong>Hithesh Gowda (8877665544)</strong> with the Complaint Reference ID for immediate department rerouting.
+                </p>
+              </div>
+
+              <div className="p-3 bg-slate-50 rounded-xl">
+                <p className="font-bold text-slate-800">What is the standard SLA for resolution?</p>
+                <p className="text-slate-500 mt-1 leading-relaxed text-[11px]">
+                  Emergency / high-priority grievances must receive initial action within 24 hours. Standard civic petitions have a 72-hour closure SLA.
+                </p>
+              </div>
+
+              <div className="p-3 bg-slate-50 rounded-xl">
+                <p className="font-bold text-slate-800">How to mark a grievance as resolved?</p>
+                <p className="text-slate-500 mt-1 leading-relaxed text-[11px]">
+                  Click on the complaint card in your Assigned Complaints tab, update the status to <strong>Resolved</strong>, and append resolution action notes.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (['reports', 'profile'].includes(activeTab)) {
     const titles = {
       reports: { name: 'Department Resolution Performance Reports', desc: 'SLA closure velocity and performance summaries for your jurisdiction.' },
       profile: { name: 'Officer Profile & Roster Credentials', desc: 'Officer ID, assigned zonal division, and nodal contact information.' },
-      support: { name: 'Officer Portal Help Desk', desc: 'Standard operating procedures, departmental escalation matrices, and system help.' },
     };
     const info = titles[activeTab] || { name: activeTab, desc: '' };
     return (

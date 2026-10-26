@@ -350,55 +350,163 @@ export default function UserDashboard({ activeTab = 'dashboard', onNavigateTab, 
           </div>
         </div>
 
-        {/* Central Administration Contact Details (User Requested) */}
+        {/* Central Administration Contact Details (Two Admins: Ranjith Gowda & Hithesh Gowda) */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Main Administrator Card */}
           <div className="lg:col-span-2 bg-white rounded-2xl border border-slate-100 p-6 shadow-sm space-y-5">
-            <div className="border-b border-slate-100 pb-3 flex items-center justify-between">
+            <div className="border-b border-slate-100 pb-3 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
               <div>
                 <h2 className="text-base font-bold text-slate-800 flex items-center gap-2">
                   <Headphones className="h-4.5 w-4.5 text-blue-600" />
-                  <span>Central Grievance Administrator Contacts</span>
+                  <span>Central Grievance Administrators</span>
                 </h2>
                 <p className="text-xs text-slate-500 mt-0.5">
-                  Direct administrative authority over public grievance triage and department dispatch.
+                  Direct administrative authority over public grievance triage, verification, and department dispatch.
                 </p>
               </div>
-              <span className="px-2.5 py-1 rounded-full text-[11px] font-bold bg-purple-50 text-purple-700 border border-purple-200">
-                Official Directory
+              <span className="px-2.5 py-1 rounded-full text-[11px] font-bold bg-blue-50 text-blue-700 border border-blue-200 self-start sm:self-auto">
+                2 Designated Admins
               </span>
             </div>
 
+            {/* Two Admins Grid: Ranjith Gowda & Hithesh Gowda */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              {/* Administrator Name */}
-              <div className="p-4 bg-slate-50/80 rounded-2xl border border-slate-100">
-                <span className="text-[11px] text-slate-400 font-semibold block uppercase tracking-wider">
-                  System Administrator
-                </span>
-                <p className="text-sm font-bold text-slate-900 mt-1">
-                  System Administrator (Central PGMS Cell)
-                </p>
-                <p className="text-xs text-slate-500 mt-0.5">
-                  Directorate of Public Grievance Redressal
-                </p>
+              {/* Admin 1: Ranjith Gowda */}
+              <div className="p-4 bg-slate-50/90 rounded-2xl border border-slate-200/80 hover:border-blue-300 transition-all flex flex-col justify-between">
+                <div>
+                  <div className="flex items-center gap-2.5 mb-2">
+                    <div className="h-10 w-10 rounded-xl bg-[#0a1835] text-white flex items-center justify-center font-bold text-xs shadow-xs">
+                      RG
+                    </div>
+                    <div>
+                      <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-blue-100 text-blue-700">
+                        System Administrator
+                      </span>
+                      <h3 className="text-sm font-bold text-slate-900 mt-0.5">Ranjith Gowda</h3>
+                    </div>
+                  </div>
+                  <p className="text-[11px] text-slate-500 mb-3">
+                    Central Grievance Administration & Nodal Triage
+                  </p>
+                </div>
+
+                <div className="space-y-2 pt-2 border-t border-slate-200/70 text-xs">
+                  <div className="flex items-center justify-between">
+                    <span className="text-slate-500 flex items-center gap-1.5 text-[11px]">
+                      <Phone className="h-3 w-3 text-blue-600" />
+                      <span>Phone:</span>
+                    </span>
+                    <a 
+                      href="tel:8861731029" 
+                      className="font-mono font-bold text-blue-600 hover:text-blue-800 hover:underline flex items-center gap-1"
+                      title="Call Ranjith Gowda"
+                    >
+                      <span>8861731029</span>
+                      <PhoneCall className="h-3 w-3" />
+                    </a>
+                  </div>
+
+                  <div className="flex items-center justify-between">
+                    <span className="text-slate-500 flex items-center gap-1.5 text-[11px]">
+                      <Mail className="h-3 w-3 text-rose-500" />
+                      <span>Gmail:</span>
+                    </span>
+                    <a 
+                      href="mailto:ranjithgowda@gmail.com?subject=Grievance%20Support%20Request%20-%20PGMS" 
+                      className="font-mono text-[11px] font-semibold text-slate-800 hover:text-blue-600 hover:underline flex items-center gap-1 truncate max-w-[170px]"
+                      title="Email Ranjith Gowda"
+                    >
+                      <span className="truncate">ranjithgowda@gmail.com</span>
+                      <Send className="h-2.5 w-2.5 text-blue-600 flex-shrink-0" />
+                    </a>
+                  </div>
+
+                  <div className="pt-2 flex gap-1.5">
+                    <a 
+                      href="tel:8861731029"
+                      className="flex-1 py-1 px-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-semibold text-[11px] flex items-center justify-center gap-1 transition-colors shadow-2xs"
+                    >
+                      <PhoneCall className="h-3 w-3" />
+                      <span>Call</span>
+                    </a>
+                    <a 
+                      href="mailto:ranjithgowda@gmail.com?subject=Grievance%20Support%20Request%20-%20PGMS"
+                      className="flex-1 py-1 px-2 rounded-lg bg-white hover:bg-slate-100 text-slate-700 border border-slate-200 font-semibold text-[11px] flex items-center justify-center gap-1 transition-colors shadow-2xs"
+                    >
+                      <Mail className="h-3 w-3 text-rose-500" />
+                      <span>Gmail</span>
+                    </a>
+                  </div>
+                </div>
               </div>
 
-              {/* Admin Email */}
-              <div className="p-4 bg-blue-50/60 rounded-2xl border border-blue-100">
-                <span className="text-[11px] text-blue-500 font-semibold block uppercase tracking-wider flex items-center gap-1">
-                  <Mail className="h-3 w-3" />
-                  <span>Official Admin Email</span>
-                </span>
-                <p className="text-sm font-bold text-blue-900 mt-1 font-mono">
-                  admin@gov.in
-                </p>
-                <a 
-                  href="mailto:admin@gov.in?subject=Grievance%20Support%20Request"
-                  className="mt-2 inline-flex items-center gap-1 text-[11px] font-bold text-blue-600 hover:text-blue-800 cursor-pointer"
-                >
-                  <Send className="h-3 w-3" />
-                  <span>Send Direct Email &rarr;</span>
-                </a>
+              {/* Admin 2: Hithesh Gowda */}
+              <div className="p-4 bg-slate-50/90 rounded-2xl border border-slate-200/80 hover:border-emerald-300 transition-all flex flex-col justify-between">
+                <div>
+                  <div className="flex items-center gap-2.5 mb-2">
+                    <div className="h-10 w-10 rounded-xl bg-[#0a1835] text-white flex items-center justify-center font-bold text-xs shadow-xs">
+                      HG
+                    </div>
+                    <div>
+                      <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700">
+                        System Administrator
+                      </span>
+                      <h3 className="text-sm font-bold text-slate-900 mt-0.5">Hithesh Gowda</h3>
+                    </div>
+                  </div>
+                  <p className="text-[11px] text-slate-500 mb-3">
+                    Technical Architecture & Grievance Operations
+                  </p>
+                </div>
+
+                <div className="space-y-2 pt-2 border-t border-slate-200/70 text-xs">
+                  <div className="flex items-center justify-between">
+                    <span className="text-slate-500 flex items-center gap-1.5 text-[11px]">
+                      <Phone className="h-3 w-3 text-emerald-600" />
+                      <span>Phone:</span>
+                    </span>
+                    <a 
+                      href="tel:8877665544" 
+                      className="font-mono font-bold text-emerald-600 hover:text-emerald-800 hover:underline flex items-center gap-1"
+                      title="Call Hithesh Gowda"
+                    >
+                      <span>8877665544</span>
+                      <PhoneCall className="h-3 w-3" />
+                    </a>
+                  </div>
+
+                  <div className="flex items-center justify-between">
+                    <span className="text-slate-500 flex items-center gap-1.5 text-[11px]">
+                      <Mail className="h-3 w-3 text-rose-500" />
+                      <span>Gmail:</span>
+                    </span>
+                    <a 
+                      href="mailto:hitheshgowda@gmail.com?subject=Grievance%20Support%20Request%20-%20PGMS" 
+                      className="font-mono text-[11px] font-semibold text-slate-800 hover:text-emerald-600 hover:underline flex items-center gap-1 truncate max-w-[170px]"
+                      title="Email Hithesh Gowda"
+                    >
+                      <span className="truncate">hitheshgowda@gmail.com</span>
+                      <Send className="h-2.5 w-2.5 text-emerald-600 flex-shrink-0" />
+                    </a>
+                  </div>
+
+                  <div className="pt-2 flex gap-1.5">
+                    <a 
+                      href="tel:8877665544"
+                      className="flex-1 py-1 px-2 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-[11px] flex items-center justify-center gap-1 transition-colors shadow-2xs"
+                    >
+                      <PhoneCall className="h-3 w-3" />
+                      <span>Call</span>
+                    </a>
+                    <a 
+                      href="mailto:hitheshgowda@gmail.com?subject=Grievance%20Support%20Request%20-%20PGMS"
+                      className="flex-1 py-1 px-2 rounded-lg bg-white hover:bg-slate-100 text-slate-700 border border-slate-200 font-semibold text-[11px] flex items-center justify-center gap-1 transition-colors shadow-2xs"
+                    >
+                      <Mail className="h-3 w-3 text-rose-500" />
+                      <span>Gmail</span>
+                    </a>
+                  </div>
+                </div>
               </div>
 
               {/* Toll-Free Helpline */}
