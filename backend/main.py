@@ -831,7 +831,8 @@ async def get_categories():
 @app.post("/api/classify", response_model=ClassifyResponse)
 async def classify_complaint(request: ClassifyRequest):
     """
-    Classifies grievance text using Gemini AI into category, department, and confidence.
+    Classifies grievance text (Hindi, Kannada, or English) using Gemini AI
+    into category, department, priority, and returns English translation.
     """
     if not request.text or not request.text.strip():
         raise HTTPException(status_code=422, detail="Text is required for classification.")
@@ -842,7 +843,11 @@ async def classify_complaint(request: ClassifyRequest):
         category=result.get("category", "General Civic Administration"),
         confidence=float(result.get("confidence", 0.95)),
         status="Classified",
-        department=result.get("department", "General Civic Administration")
+        department=result.get("department", "General Civic Administration"),
+        priority=result.get("priority", "Normal"),
+        detected_language=result.get("detected_language"),
+        detected_language_code=result.get("detected_language_code"),
+        english_translation=result.get("english_translation")
     )
 
 class StatusUpdate(BaseModel):
@@ -1375,19 +1380,39 @@ async def extract_complaint_ai(complaint_id: str):
         }
 
     extracted = result.get("extracted", {})
+    update_fields = {
+        "ai_extracted": extracted,
+        "ai_extracted_at": datetime.utcnow()
+    }
+    if extracted.get("detected_language"):
+        update_fields["detected_language"] = extracted["detected_language"]
+    if extracted.get("detected_language_code"):
+        update_fields["detected_language_code"] = extracted["detected_language_code"]
+    if extracted.get("original_language_text"):
+        update_fields["original_language_text"] = extracted["original_language_text"]
+    if extracted.get("english_sentence"):
+        update_fields["english_translation"] = extracted["english_sentence"]
+    if extracted.get("structured_title"):
+        update_fields["title"] = extracted["structured_title"]
+    if extracted.get("structured_description"):
+        update_fields["description"] = extracted["structured_description"]
+        update_fields["text"] = extracted["structured_description"]
+    if extracted.get("priority"):
+        update_fields["priority"] = extracted["priority"]
+
     # Persist extracted details into MongoDB document
     await db.complaints.update_one(
         {"$or": query},
-        {"$set": {
-            "ai_extracted": extracted,
-            "ai_extracted_at": datetime.utcnow()
-        }}
+        {"$set": update_fields}
     )
+
+    updated_complaint = await db.complaints.find_one({"$or": query})
 
     return {
         "success": True,
         "extracted": extracted,
-        "message": "Multimodal grievance successfully transcribed and structured via Gemini AI."
+        "complaint": format_complaint(updated_complaint),
+        "message": f"Multimodal grievance successfully transcribed from {extracted.get('detected_language', 'native')} and structured into English via Gemini AI."
     }
 
 
