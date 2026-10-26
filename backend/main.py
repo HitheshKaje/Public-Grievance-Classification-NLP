@@ -414,7 +414,8 @@ async def process_multimodal_grievance_endpoint(request: Request):
         "file_references": file_references
     }
 
-    result = process_multilingual_complaint(
+    result = await asyncio.to_thread(
+        process_multilingual_complaint,
         complaint_data,
         uploads_dir=Path(UPLOAD_DIR),
         raw_files=raw_files if raw_files else None
@@ -537,7 +538,8 @@ async def create_complaint(request: Request):
                 "method": method,
                 "file_references": file_references
             }
-            ai_result = process_multilingual_complaint(
+            ai_result = await asyncio.to_thread(
+                process_multilingual_complaint,
                 complaint_payload,
                 uploads_dir=Path(UPLOAD_DIR),
                 raw_files=in_memory_files if in_memory_files else None
@@ -838,7 +840,7 @@ async def classify_complaint(request: ClassifyRequest):
     if not request.text or not request.text.strip():
         raise HTTPException(status_code=422, detail="Text is required for classification.")
     
-    result = classify_text_with_gemini(request.text.strip())
+    result = await asyncio.to_thread(classify_text_with_gemini, request.text.strip())
     return ClassifyResponse(
         id=secrets.token_hex(4),
         category=result.get("category", "General Civic Administration"),
@@ -1372,7 +1374,7 @@ async def extract_complaint_ai(complaint_id: str):
     if not complaint:
         raise HTTPException(status_code=404, detail="Complaint not found")
 
-    result = extract_multimodal_complaint(complaint, Path(UPLOAD_DIR))
+    result = await asyncio.to_thread(extract_multimodal_complaint, complaint, Path(UPLOAD_DIR))
     if not result.get("success"):
         return {
             "success": False,
