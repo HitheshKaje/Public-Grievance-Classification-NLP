@@ -1,7 +1,9 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { LogOut, ChevronDown } from 'lucide-react';
+import { useLanguage } from '../../context/LanguageContext';
 
 export default function UserProfileDropdown({ user, onLogout }) {
+  const { t } = useLanguage();
   const [open, setOpen] = useState(false);
   const ref = useRef(null);
 
@@ -34,9 +36,9 @@ export default function UserProfileDropdown({ user, onLogout }) {
   };
 
   const roleLabels = {
-    admin: 'System Admin',
-    officer: 'Nodal Officer',
-    citizen: 'Citizen',
+    admin: t('admin_title', 'System Admin'),
+    officer: t('officer_title', 'Nodal Officer'),
+    citizen: t('citizen_title', 'Citizen'),
   };
 
   return (
