@@ -68,7 +68,7 @@ export default function ComplaintStatusCard({ stats = {}, loading = false }) {
         {inProgressCount > 0 && (
           <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-blue-700 bg-blue-50 px-2 py-0.5 rounded-full border border-blue-100">
             <span className="w-1.5 h-1.5 rounded-full bg-blue-600 animate-pulse"></span>
-            {inProgressCount} active
+            {inProgressCount} {t('active_count', 'active')}
           </span>
         )}
       </div>

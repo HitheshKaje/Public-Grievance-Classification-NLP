@@ -36,7 +36,7 @@ export default function MyComplaintsStatCard({
                 {loading ? '—' : totalCount}
               </span>
               <span className="text-xs text-slate-500 font-medium">
-                {totalCount === 1 ? 'grievance filed' : 'grievances filed'}
+                {totalCount === 1 ? t('grievance_filed_single', 'grievance filed') : t('grievances_filed', 'grievances filed')}
               </span>
             </div>
           </div>
@@ -84,7 +84,7 @@ export default function MyComplaintsStatCard({
           onClick={onViewAll}
           className="text-xs font-semibold text-blue-600 hover:text-blue-700 flex items-center gap-1 transition-colors cursor-pointer"
         >
-          <span>{t('view_all', 'View All Grievances')}</span>
+          <span>{t('view_all_grievances', 'View All Grievances')}</span>
           <ArrowRight className="h-3.5 w-3.5" />
         </button>
       </div>
