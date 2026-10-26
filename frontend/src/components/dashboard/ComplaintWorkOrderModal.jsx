@@ -5,7 +5,7 @@ import {
   ExternalLink, Calendar, ChevronRight, Sparkles, Image,
   Mic, Paperclip, Download, Eye, FileDown
 } from 'lucide-react';
-import { forwardComplaintWithWorkOrder, extractComplaintAI } from '../../services/complaintService';
+import { forwardComplaintWithWorkOrder, extractComplaintAI, updateComplaintStatus } from '../../services/complaintService';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api';
 const BACKEND_URL = API_BASE_URL.replace('/api', '');
@@ -15,14 +15,33 @@ export default function ComplaintWorkOrderModal({
   officers = [],
   onClose,
   onForwardSuccess,
+  onStatusUpdated,
   onOpenAddOfficer
 }) {
   const [activeTab, setActiveTab] = useState(complaint?.initialTab || 'parameters'); // 'parameters' | 'pdf_preview'
+  const [currentStatus, setCurrentStatus] = useState(complaint.status || 'Pending');
+  const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
   const [department, setDepartment] = useState(
     complaint.assigned_department || complaint.department || 'Water Supply Department'
   );
   const [selectedOfficerId, setSelectedOfficerId] = useState('');
   const [priority, setPriority] = useState(complaint.work_order?.priority || 'Normal');
+
+  const handleStatusChange = async (newStatus) => {
+    setIsUpdatingStatus(true);
+    setError(null);
+    try {
+      await updateComplaintStatus(complaint.complaint_id || complaint.id, newStatus);
+      setCurrentStatus(newStatus);
+      if (onStatusUpdated) {
+        onStatusUpdated(complaint.complaint_id || complaint.id, newStatus);
+      }
+    } catch (err) {
+      setError(err.message || 'Failed to update complaint status.');
+    } finally {
+      setIsUpdatingStatus(false);
+    }
+  };
   const [deadline, setDeadline] = useState(complaint.work_order?.resolution_deadline || '72 hours');
   const [directives, setDirectives] = useState(complaint.work_order?.action_directives || '');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -267,6 +286,53 @@ export default function ComplaintWorkOrderModal({
           {/* TAB 1: PARAMETERS & DIRECTIVES */}
           {activeTab === 'parameters' && (
             <div className="space-y-6">
+              {/* Live Grievance Status & Resolution Control Bar */}
+              <div className="p-3.5 rounded-2xl bg-white border border-slate-200/90 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-xs">
+                <div className="flex items-center gap-2.5">
+                  <span className="text-xs font-bold text-slate-700">Administrative Status:</span>
+                  <span className={`px-2.5 py-0.5 rounded-full text-[11px] font-bold border ${
+                    currentStatus === 'Resolved' ? 'bg-emerald-50 text-emerald-700 border-emerald-300' :
+                    currentStatus === 'In Progress' ? 'bg-blue-50 text-blue-700 border-blue-300' :
+                    'bg-amber-50 text-amber-800 border-amber-300'
+                  }`}>
+                    {currentStatus}
+                  </span>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  {currentStatus !== 'In Progress' && currentStatus !== 'Resolved' && (
+                    <button
+                      type="button"
+                      disabled={isUpdatingStatus}
+                      onClick={() => handleStatusChange('In Progress')}
+                      className="px-3.5 py-1.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs flex items-center gap-1.5 transition-colors cursor-pointer shadow-xs disabled:opacity-50"
+                    >
+                      <Clock className="h-3.5 w-3.5" />
+                      <span>Mark In Progress</span>
+                    </button>
+                  )}
+
+                  {currentStatus === 'In Progress' && (
+                    <button
+                      type="button"
+                      disabled={isUpdatingStatus}
+                      onClick={() => handleStatusChange('Resolved')}
+                      className="px-3.5 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-xs flex items-center gap-1.5 transition-colors cursor-pointer shadow-xs disabled:opacity-50"
+                    >
+                      <CheckCircle2 className="h-3.5 w-3.5" />
+                      <span>Mark as Resolved</span>
+                    </button>
+                  )}
+
+                  {currentStatus === 'Resolved' && (
+                    <span className="px-2.5 py-1 rounded-xl bg-emerald-50 text-emerald-800 border border-emerald-300 font-bold text-xs inline-flex items-center gap-1">
+                      <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600" />
+                      <span>Resolved in Central System</span>
+                    </span>
+                  )}
+                </div>
+              </div>
+
               {/* Multimodal Citizen Ingestion Summary */}
               <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200/80 space-y-3.5">
                 <div className="flex items-center justify-between">
