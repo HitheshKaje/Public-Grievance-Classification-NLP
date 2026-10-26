@@ -124,7 +124,7 @@ export default function UserRecentComplaintsCard({
         <div className="flex items-center gap-2">
           <FileText className="h-4.5 w-4.5 text-blue-600 stroke-[2.2]" />
           <h2 className="text-sm font-bold text-slate-800 tracking-tight">
-            My Registered Complaints
+            {t('recent_grievances', 'Recent Grievances')}
           </h2>
           {complaints.length > 0 && (
             <span className="px-2 py-0.5 rounded-full text-[11px] font-bold bg-slate-100 text-slate-600">
@@ -139,7 +139,7 @@ export default function UserRecentComplaintsCard({
             onClick={onViewAll}
             className="text-xs font-semibold text-blue-600 hover:text-blue-700 flex items-center gap-1 transition-colors cursor-pointer"
           >
-            <span>View All</span>
+            <span>{t('view_all', 'View All')}</span>
             <ArrowRight className="h-3.5 w-3.5" />
           </button>
         )}
@@ -151,11 +151,11 @@ export default function UserRecentComplaintsCard({
           <thead>
             <tr className="bg-[#f4f7fb] text-slate-700 font-semibold border-b border-slate-100">
               <th className="py-2.5 px-4 font-semibold">ID</th>
-              <th className="py-2.5 px-4 font-semibold">Complaint</th>
-              <th className="py-2.5 px-4 font-semibold">Department</th>
+              <th className="py-2.5 px-4 font-semibold">{t('submit', 'Complaint')}</th>
+              <th className="py-2.5 px-4 font-semibold">{t('civic_departments', 'Department')}</th>
               <th className="py-2.5 px-4 font-semibold">Date</th>
               <th className="py-2.5 px-4 font-semibold">Status</th>
-              <th className="py-2.5 px-4 font-semibold text-center">Actions</th>
+              <th className="py-2.5 px-4 font-semibold text-center">{t('delete', 'Actions')}</th>
             </tr>
           </thead>
           <tbody>
@@ -176,10 +176,10 @@ export default function UserRecentComplaintsCard({
                       <FileText className="h-5 w-5 stroke-[1.5]" />
                     </div>
                     <span className="text-xs font-bold text-slate-800">
-                      No complaints yet
+                      {t('no_complaints_found', 'No complaints yet')}
                     </span>
                     <p className="text-[11px] text-slate-400 mt-0.5 max-w-xs mx-auto">
-                      Whenever you submit a grievance, it will appear here with live tracking.
+                      {t('no_complaints_desc', 'Whenever you submit a grievance, it will appear here with live tracking.')}
                     </p>
                     {onSubmitNew && (
                       <button
@@ -302,17 +302,14 @@ export default function UserRecentComplaintsCard({
               </div>
               <div className="flex-1">
                 <h3 className="text-base font-bold text-slate-900">
-                  Delete Grievance Petition?
+                  {t('delete_confirm_title', 'Delete Grievance Petition?')}
                 </h3>
                 <p className="text-xs text-slate-500 mt-1.5 leading-relaxed">
-                  Are you sure you want to permanently delete complaint <strong className="text-slate-800 font-mono">#{deleteModal.id}</strong>?
+                  {t('delete_confirm_desc', 'This complaint will be permanently removed from MongoDB and your dashboard.')} <strong className="text-slate-800 font-mono">#{deleteModal.id}</strong>
                 </p>
                 <div className="mt-2 p-2 bg-slate-50 rounded-lg border border-slate-100 text-xs text-slate-600 truncate font-medium">
                   "{deleteModal.title}"
                 </div>
-                <p className="text-[11px] text-red-500 mt-2 font-medium">
-                  This action will delete the grievance from MongoDB and cannot be undone.
-                </p>
               </div>
             </div>
 
@@ -323,7 +320,7 @@ export default function UserRecentComplaintsCard({
                 onClick={() => setDeleteModal({ open: false, id: null, title: '' })}
                 className="px-4 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-100 rounded-xl transition-colors cursor-pointer"
               >
-                Cancel
+                {t('cancel', 'Cancel')}
               </button>
               <button
                 type="button"
@@ -334,12 +331,12 @@ export default function UserRecentComplaintsCard({
                 {deleting ? (
                   <>
                     <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                    <span>Deleting...</span>
+                    <span>{t('deleting', 'Deleting...')}</span>
                   </>
                 ) : (
                   <>
                     <Trash2 className="h-3.5 w-3.5" />
-                    <span>Yes, Delete</span>
+                    <span>{t('confirm_delete', 'Yes, Delete')}</span>
                   </>
                 )}
               </button>
