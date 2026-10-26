@@ -1,5 +1,6 @@
 import React from 'react';
 import { FileText, ArrowRight, Loader2, Clock } from 'lucide-react';
+import { useLanguage } from '../../context/LanguageContext';
 
 export default function MyComplaintsStatCard({
   totalCount = 0,
@@ -8,6 +9,8 @@ export default function MyComplaintsStatCard({
   loading = false,
   onViewAll
 }) {
+  const { t } = useLanguage();
+
   return (
     <div className="bg-white rounded-2xl border border-slate-100 p-5 shadow-[0_2px_10px_-3px_rgba(6,81,237,0.06)] flex flex-col justify-between">
       <div>
@@ -20,7 +23,7 @@ export default function MyComplaintsStatCard({
           <div className="flex-1 min-w-0">
             <div className="flex items-center justify-between">
               <span className="text-xs font-semibold text-slate-700 block">
-                My Complaints
+                {t('my_complaints', 'My Complaints')}
               </span>
               {loading && (
                 <Loader2 className="h-3.5 w-3.5 text-slate-400 animate-spin" />
@@ -60,7 +63,7 @@ export default function MyComplaintsStatCard({
               ></span>
             </span>
             <span>
-              {loading ? '...' : inProcessingCount} In Processing
+              {loading ? '...' : inProcessingCount} {t('in_processing', 'In Processing')}
             </span>
           </div>
 
@@ -68,7 +71,7 @@ export default function MyComplaintsStatCard({
           <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold bg-amber-50/80 text-amber-800 border border-amber-200/60">
             <Clock className="h-3 w-3 text-amber-600" />
             <span>
-              {loading ? '...' : pendingCount} Pending
+              {loading ? '...' : pendingCount} {t('pending_review', 'Pending')}
             </span>
           </div>
         </div>
@@ -81,7 +84,7 @@ export default function MyComplaintsStatCard({
           onClick={onViewAll}
           className="text-xs font-semibold text-blue-600 hover:text-blue-700 flex items-center gap-1 transition-colors cursor-pointer"
         >
-          <span>View All Grievances</span>
+          <span>{t('view_all', 'View All Grievances')}</span>
           <ArrowRight className="h-3.5 w-3.5" />
         </button>
       </div>

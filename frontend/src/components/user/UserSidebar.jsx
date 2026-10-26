@@ -10,6 +10,7 @@ import {
   X,
   LogOut 
 } from 'lucide-react';
+import { useLanguage } from '../../context/LanguageContext';
 
 export const USER_SIDEBAR_ITEMS = [
   { id: 'dashboard', label: 'Dashboard', icon: Home },
@@ -21,6 +22,7 @@ export const USER_SIDEBAR_ITEMS = [
 ];
 
 export default function UserSidebar({ activeTab, onSelectTab, isOpen, onClose, onLogout }) {
+  const { t } = useLanguage();
   return (
     <>
       {/* Mobile backdrop */}
@@ -88,7 +90,7 @@ export default function UserSidebar({ activeTab, onSelectTab, isOpen, onClose, o
                   }`}
                 >
                   <Icon className={`h-4.5 w-4.5 stroke-[2] ${isActive ? 'text-white' : 'text-slate-400'}`} />
-                  <span className="text-[13px]">{item.label}</span>
+                  <span className="text-[13px]">{t(item.id, item.label)}</span>
                 </button>
               );
             })}
@@ -104,7 +106,7 @@ export default function UserSidebar({ activeTab, onSelectTab, isOpen, onClose, o
                 className="w-full flex items-center gap-3.5 px-4 py-2.5 rounded-xl text-xs font-semibold text-rose-300 hover:text-white hover:bg-rose-500/20 transition-all text-left group cursor-pointer active:scale-95"
               >
                 <LogOut className="h-4 w-4 text-rose-400 group-hover:text-rose-200 transition-colors" />
-                <span className="text-[13px]">Log Out</span>
+                <span className="text-[13px]">{t('logout', 'Log Out')}</span>
               </button>
             </div>
           )}
@@ -127,8 +129,7 @@ export default function UserSidebar({ activeTab, onSelectTab, isOpen, onClose, o
             <polygon points="150,112 100,126 200,126" />
           </svg>
           <div className="text-center mt-2">
-            <p className="text-xs font-semibold text-slate-200">Your Voice</p>
-            <p className="text-[11px] text-slate-400">for a Better Community</p>
+            <p className="text-xs font-semibold text-slate-200">{t('motto', 'Your Voice for a Better Community')}</p>
             <div className="w-8 h-0.5 bg-blue-500/60 mx-auto mt-2 rounded-full" />
           </div>
         </div>

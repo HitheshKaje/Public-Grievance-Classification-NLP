@@ -1,16 +1,19 @@
 import React from 'react';
 import { Plus } from 'lucide-react';
+import { useLanguage } from '../../context/LanguageContext';
 
 export default function ReportProblemHero({ onSubmitClick }) {
+  const { t } = useLanguage();
+
   return (
     <div className="bg-gradient-to-r from-[#eef4ff] via-[#e8f1ff] to-[#e0edff] rounded-2xl border border-blue-100 p-6 sm:p-7 shadow-[0_2px_12px_-4px_rgba(30,107,243,0.08)] flex flex-col sm:flex-row sm:items-center justify-between gap-6 relative overflow-hidden">
       {/* Left Text & CTA */}
       <div className="z-10 max-w-md">
         <h2 className="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight leading-tight">
-          Report a Problem
+          {t('hero_title', 'Report a Problem')}
         </h2>
         <p className="text-xs sm:text-sm text-slate-600 mt-1 font-medium">
-          Help us build a better and cleaner community
+          {t('hero_subtitle', 'Help us build a better and cleaner community')}
         </p>
 
         <button
@@ -19,7 +22,7 @@ export default function ReportProblemHero({ onSubmitClick }) {
           className="mt-5 bg-[#1e6bf3] hover:bg-blue-700 text-white rounded-xl px-5 py-2.5 flex items-center gap-2 text-xs font-semibold shadow-md shadow-blue-600/25 transition-all cursor-pointer"
         >
           <Plus className="h-4 w-4 stroke-[2.5]" />
-          <span>Submit Complaint</span>
+          <span>{t('submit', 'Submit Complaint')}</span>
         </button>
       </div>
 
