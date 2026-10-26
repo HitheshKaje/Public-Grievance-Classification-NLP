@@ -39,25 +39,57 @@ def fallback_nlp_extraction(complaint_data: Dict[str, Any]) -> Dict[str, Any]:
     loc = complaint_data.get("location") or "the reported incident area"
     combined = f"{title} {desc}".lower()
 
-    # Department taxonomy matching
+    # Multilingual Department taxonomy matching (English, Kannada, Hindi)
     dept = "General Civic Administration"
-    if any(k in combined for k in ["water", "pipeline", "leak", "tap", "drinking", "sewage", "drainage", "pipe", "borewell"]):
+    if any(k in combined for k in [
+        "water", "pipeline", "leak", "tap", "drinking", "sewage", "drainage", "pipe", "borewell",
+        "ನೀರು", "ಪೈಪ್", "ಸೋರಿಕೆ", "ಕೊಳಾಯಿ", "ಚರಂಡಿ", "ಬೋರ್‌ವೆಲ್", "ಕುಡಿಯುವ ನೀರು", "ಜಲ",
+        "पानी", "जल", "पाइप", "लीकेज", "सीवर", "नाली", "नल", "बोरवेल", "पेयजल"
+    ]):
         dept = "Water Supply Department"
-    elif any(k in combined for k in ["street light", "streetlight", "lamp", "pole light", "dark road"]):
+    elif any(k in combined for k in [
+        "street light", "streetlight", "lamp", "pole light", "dark road",
+        "ಬೀದಿ ದೀಪ", "ಕಂಬ", "ದೀಪ", "ಬೆಳಕು", "ಕತ್ತಲೆ",
+        "स्ट्रीट लाइट", "खंभा", "बत्ती", "अंधेरा", "स्ट्रीटलाइट", "रोशनी"
+    ]):
         dept = "Municipal Lighting Division"
-    elif any(k in combined for k in ["power", "electricity", "wire", "transformer", "voltage", "blackout", "current", "shock"]):
+    elif any(k in combined for k in [
+        "power", "electricity", "wire", "transformer", "voltage", "blackout", "current", "shock",
+        "ವಿದ್ಯುತ್", "ಕರೆಂಟ್", "ವೈರ್", "ಟ್ರಾನ್ಸ್‌ಫಾರ್ಮರ್", "ವೋಲ್ಟೇಜ್", "ಕರೆಂಟು",
+        "बिजली", "करंट", "तार", "ट्रांसफॉर्मर", "वोल्टेज", "शॉक"
+    ]):
         dept = "Power & Electricity Board"
-    elif any(k in combined for k in ["road", "pothole", "tar", "asphalt", "bridge", "footpath", "highway", "flyover"]):
+    elif any(k in combined for k in [
+        "road", "pothole", "tar", "asphalt", "bridge", "footpath", "highway", "flyover",
+        "ರಸ್ತೆ", "ಗುಂಡಿ", "ಡಾಂಬರು", "ಸೇತುವೆ", "ಕಾಲುದಾರಿ", "ಹೈವೇ",
+        "सड़क", "गड्ढा", "डामर", "पुल", "फुटपाथ", "हाईवे", "फ्लाईओवर"
+    ]):
         dept = "Public Works Department"
-    elif any(k in combined for k in ["garbage", "trash", "waste", "dustbin", "dump", "litter", "debris"]):
+    elif any(k in combined for k in [
+        "garbage", "trash", "waste", "dustbin", "dump", "litter", "debris",
+        "ಕಸ", "ತ್ಯಾಜ್ಯ", "ಕಸದ ಬುಟ್ಟಿ", "ಕಸದ ತೊಟ್ಟಿ",
+        "कचरा", "कूड़ा", "कचरे", "डस्टबिन", "गंदगी"
+    ]):
         dept = "Solid Waste Management"
-    elif any(k in combined for k in ["hospital", "clinic", "health", "mosquito", "dengue", "disease", "epidemic", "sanitization"]):
+    elif any(k in combined for k in [
+        "hospital", "clinic", "health", "mosquito", "dengue", "disease", "epidemic", "sanitization",
+        "ಆಸ್ಪತ್ರೆ", "ಆರೋಗ್ಯ", "ಸೊಳ್ಳೆ", "ಡೆಂಗ್ಯೂ", "ರೋಗ", "ಸ್ವಚ್ಛತೆ",
+        "अस्पताल", "स्वास्थ्य", "मच्छर", "डेंगू", "बीमारी", "सफाई", "स्वच्छता"
+    ]):
         dept = "Health & Sanitation Department"
-    elif any(k in combined for k in ["school", "college", "teacher", "classroom", "student", "education"]):
+    elif any(k in combined for k in [
+        "school", "college", "teacher", "classroom", "student", "education",
+        "ಶಾಲೆ", "ಕಾಲೇಜು", "ಶಿಕ್ಷಕ", "ತರಗತಿ", "ವಿದ್ಯಾರ್ಥಿ", "ಶಿಕ್ಷಣ",
+        "स्कूल", "कॉलेज", "शिक्षक", "कक्षा", "छात्र", "शिक्षा"
+    ]):
         dept = "Department of Public Instruction"
 
-    # Priority determination
-    is_high = any(k in combined for k in ["urgent", "emergency", "danger", "hazard", "spark", "overflow", "burst", "live wire", "flood", "critical", "risk"])
+    # Priority determination (English, Kannada, Hindi)
+    is_high = any(k in combined for k in [
+        "urgent", "emergency", "danger", "hazard", "spark", "overflow", "burst", "live wire", "flood", "critical", "risk",
+        "ತುರ್ತು", "ಅಪಾಯ", "ಬೆಂಕಿ", "ಪ್ರವಾಹ", "ಗಂಭೀರ",
+        "आपातकालीन", "खतरा", "आग", "बाढ़", "गंभीर", "जल्द", "तुरंत"
+    ])
     priority = "High" if is_high else "Normal"
 
     directives = (
@@ -76,7 +108,7 @@ def fallback_nlp_extraction(complaint_data: Dict[str, Any]) -> Dict[str, Any]:
         "priority": priority,
         "directives": directives,
         "is_fallback": True,
-        "note": "Structured via built-in NLP heuristics. Add GEMINI_API_KEY in backend/.env for multimodal audio/photo OCR."
+        "note": "Structured via built-in multilingual NLP heuristics. Gemini AI available for multimodal audio/photo OCR."
     }
 
 def _parse_json_response(raw_text: str) -> dict:
