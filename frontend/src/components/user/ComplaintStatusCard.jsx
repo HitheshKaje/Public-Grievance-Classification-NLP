@@ -1,7 +1,9 @@
 import React from 'react';
 import { PieChart, Hourglass, Loader2, CheckCircle2, XCircle } from 'lucide-react';
+import { useLanguage } from '../../context/LanguageContext';
 
 export default function ComplaintStatusCard({ stats = {}, loading = false }) {
+  const { t } = useLanguage();
   const pendingCount = stats.pending ?? 0;
   const inProgressCount = stats.in_progress ?? stats.in_processing ?? 0;
   const resolvedCount = stats.resolved ?? 0;
@@ -10,7 +12,7 @@ export default function ComplaintStatusCard({ stats = {}, loading = false }) {
   const statusItems = [
     {
       id: 'pending',
-      label: 'Pending',
+      label: t('status_pending', 'Pending'),
       count: pendingCount,
       icon: Hourglass,
       bgColor: 'bg-[#fffbeb]',
@@ -20,7 +22,7 @@ export default function ComplaintStatusCard({ stats = {}, loading = false }) {
     },
     {
       id: 'in_progress',
-      label: 'In Progress',
+      label: t('status_in_progress', 'In Progress'),
       sublabel: '(Processing)',
       count: inProgressCount,
       icon: Loader2,
@@ -32,7 +34,7 @@ export default function ComplaintStatusCard({ stats = {}, loading = false }) {
     },
     {
       id: 'resolved',
-      label: 'Resolved',
+      label: t('status_resolved', 'Resolved'),
       count: resolvedCount,
       icon: CheckCircle2,
       bgColor: 'bg-[#ecfdf5]',
@@ -42,7 +44,7 @@ export default function ComplaintStatusCard({ stats = {}, loading = false }) {
     },
     {
       id: 'rejected',
-      label: 'Rejected',
+      label: t('status_rejected', 'Rejected'),
       count: rejectedCount,
       icon: XCircle,
       bgColor: 'bg-[#fff1f2]',
@@ -59,7 +61,7 @@ export default function ComplaintStatusCard({ stats = {}, loading = false }) {
         <div className="flex items-center gap-2">
           <PieChart className="h-4.5 w-4.5 text-blue-600 stroke-[2.2]" />
           <h2 className="text-sm font-bold text-slate-800 tracking-tight">
-            Complaint Status
+            {t('complaint_status', 'Complaint Status')}
           </h2>
         </div>
 

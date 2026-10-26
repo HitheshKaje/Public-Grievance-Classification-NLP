@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
-import { Search, Plus } from 'lucide-react';
+import { Search, ArrowRight } from 'lucide-react';
+import { useLanguage } from '../../context/LanguageContext';
 
 export default function TrackComplaintCard({ onTrack }) {
   const [complaintId, setComplaintId] = useState('');
+  const { t } = useLanguage();
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -17,7 +19,7 @@ export default function TrackComplaintCard({ onTrack }) {
       <div className="flex items-center gap-2 mb-3.5">
         <Search className="h-4.5 w-4.5 text-blue-600 stroke-[2.2]" />
         <h2 className="text-sm font-bold text-slate-800 tracking-tight">
-          Track Your Complaints
+          {t('track_grievance', 'Track Your Complaints')}
         </h2>
       </div>
 
@@ -29,7 +31,7 @@ export default function TrackComplaintCard({ onTrack }) {
             type="text"
             value={complaintId}
             onChange={(e) => setComplaintId(e.target.value)}
-            placeholder="Enter Complaint ID"
+            placeholder={t('track_placeholder', 'Enter Complaint ID')}
             className="w-full pl-10 pr-4 py-2.5 text-xs bg-white border border-slate-200 rounded-xl text-slate-800 placeholder-slate-400 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all shadow-sm"
           />
         </div>
@@ -38,8 +40,8 @@ export default function TrackComplaintCard({ onTrack }) {
           type="submit"
           className="bg-[#1e6bf3] hover:bg-blue-700 text-white rounded-xl px-6 py-2.5 flex items-center justify-center gap-1.5 text-xs font-semibold shadow-sm shadow-blue-600/20 transition-all flex-shrink-0 cursor-pointer"
         >
-          <Plus className="h-3.5 w-3.5 stroke-[2.5]" />
-          <span>Track</span>
+          <span>{t('track_status', 'Track')}</span>
+          <ArrowRight className="h-3.5 w-3.5" />
         </button>
       </form>
     </div>
