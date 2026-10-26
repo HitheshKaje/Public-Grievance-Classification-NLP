@@ -1,14 +1,22 @@
 import React, { useState } from 'react';
-import { FileText, ArrowRight, Search, Copy, Check, Plus, Loader2 } from 'lucide-react';
+import { 
+  FileText, ArrowRight, Search, Copy, Check, Plus, 
+  Loader2, Trash2, AlertTriangle, X 
+} from 'lucide-react';
+import { deleteComplaint } from '../../services/complaintService';
 
 export default function UserRecentComplaintsCard({
   complaints = [],
   loading = false,
   onViewAll,
   onTrack,
-  onSubmitNew
+  onSubmitNew,
+  onComplaintDeleted
 }) {
   const [copiedId, setCopiedId] = useState(null);
+  const [deleteModal, setDeleteModal] = useState({ open: false, id: null, title: '' });
+  const [deleting, setDeleting] = useState(false);
+  const [toastMsg, setToastMsg] = useState('');
 
   const handleCopyId = async (id, e) => {
     e.stopPropagation();
@@ -31,6 +39,34 @@ export default function UserRecentComplaintsCard({
       });
     } catch {
       return dateStr;
+    }
+  };
+
+  const openDeleteDialog = (complaint, e) => {
+    e.stopPropagation();
+    const id = complaint.complaint_id || complaint.id;
+    setDeleteModal({
+      open: true,
+      id: id,
+      title: complaint.title || complaint.text || 'Grievance Petition'
+    });
+  };
+
+  const confirmDelete = async () => {
+    if (!deleteModal.id) return;
+    setDeleting(true);
+    try {
+      await deleteComplaint(deleteModal.id);
+      setToastMsg(`Complaint #${deleteModal.id} was successfully deleted.`);
+      setDeleteModal({ open: false, id: null, title: '' });
+      if (onComplaintDeleted) {
+        onComplaintDeleted(deleteModal.id);
+      }
+      setTimeout(() => setToastMsg(''), 3000);
+    } catch (err) {
+      alert(err.message || 'Failed to delete complaint.');
+    } finally {
+      setDeleting(false);
     }
   };
 
@@ -60,7 +96,6 @@ export default function UserRecentComplaintsCard({
         </span>
       );
     }
-    // Default Pending
     return (
       <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold bg-amber-50 text-amber-700 border border-amber-200/80 shadow-2xs">
         <span className="w-1.5 h-1.5 rounded-full bg-amber-500"></span>
@@ -70,13 +105,24 @@ export default function UserRecentComplaintsCard({
   };
 
   return (
-    <div className="bg-white rounded-2xl border border-slate-100 p-5 shadow-[0_2px_10px_-3px_rgba(6,81,237,0.06)] flex flex-col justify-between">
+    <div className="bg-white rounded-2xl border border-slate-100 p-5 shadow-[0_2px_10px_-3px_rgba(6,81,237,0.06)] flex flex-col justify-between relative">
+      
+      {/* Toast Notification */}
+      {toastMsg && (
+        <div className="mb-4 p-3 bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-semibold rounded-xl flex items-center justify-between animate-in fade-in duration-200">
+          <span>{toastMsg}</span>
+          <button type="button" onClick={() => setToastMsg('')} className="text-emerald-600 hover:text-emerald-800">
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+      )}
+
       {/* Header */}
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-2">
           <FileText className="h-4.5 w-4.5 text-blue-600 stroke-[2.2]" />
           <h2 className="text-sm font-bold text-slate-800 tracking-tight">
-            My Recent Complaints
+            My Registered Complaints
           </h2>
           {complaints.length > 0 && (
             <span className="px-2 py-0.5 rounded-full text-[11px] font-bold bg-slate-100 text-slate-600">
@@ -107,7 +153,7 @@ export default function UserRecentComplaintsCard({
               <th className="py-2.5 px-4 font-semibold">Department</th>
               <th className="py-2.5 px-4 font-semibold">Date</th>
               <th className="py-2.5 px-4 font-semibold">Status</th>
-              <th className="py-2.5 px-4 font-semibold text-center">Action</th>
+              <th className="py-2.5 px-4 font-semibold text-center">Actions</th>
             </tr>
           </thead>
           <tbody>
@@ -209,18 +255,32 @@ export default function UserRecentComplaintsCard({
                       {renderStatusBadge(c.status)}
                     </td>
 
-                    {/* Action */}
+                    {/* Action Column: Track and Delete Options */}
                     <td className="py-3 px-4 text-center whitespace-nowrap">
-                      {onTrack && (
+                      <div className="inline-flex items-center gap-1.5">
+                        {onTrack && (
+                          <button
+                            type="button"
+                            onClick={() => onTrack(id)}
+                            className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-semibold text-blue-600 hover:text-blue-700 bg-blue-50/70 hover:bg-blue-100 border border-blue-200/50 transition-colors cursor-pointer"
+                            title="Track live status"
+                          >
+                            <Search className="h-3 w-3" />
+                            <span>Track</span>
+                          </button>
+                        )}
+
+                        {/* Delete Complaint Option */}
                         <button
                           type="button"
-                          onClick={() => onTrack(id)}
-                          className="inline-flex items-center gap-1 px-3 py-1 rounded-lg text-xs font-semibold text-blue-600 hover:text-blue-700 bg-blue-50/60 hover:bg-blue-100/70 border border-blue-200/50 transition-colors cursor-pointer"
+                          onClick={(e) => openDeleteDialog(c, e)}
+                          className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-semibold text-red-600 hover:text-red-700 bg-red-50/70 hover:bg-red-100 border border-red-200/50 transition-colors cursor-pointer"
+                          title="Delete this complaint"
                         >
-                          <Search className="h-3 w-3" />
-                          <span>Track</span>
+                          <Trash2 className="h-3 w-3" />
+                          <span>Delete</span>
                         </button>
-                      )}
+                      </div>
                     </td>
                   </tr>
                 );
@@ -229,6 +289,62 @@ export default function UserRecentComplaintsCard({
           </tbody>
         </table>
       </div>
+
+      {/* Confirmation Modal for Deleting Complaint */}
+      {deleteModal.open && (
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 z-50 animate-in fade-in duration-150">
+          <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-slate-200">
+            <div className="flex items-start gap-3.5">
+              <div className="p-2.5 rounded-xl bg-red-50 text-red-600 border border-red-100 flex-shrink-0">
+                <AlertTriangle className="h-6 w-6" />
+              </div>
+              <div className="flex-1">
+                <h3 className="text-base font-bold text-slate-900">
+                  Delete Grievance Petition?
+                </h3>
+                <p className="text-xs text-slate-500 mt-1.5 leading-relaxed">
+                  Are you sure you want to permanently delete complaint <strong className="text-slate-800 font-mono">#{deleteModal.id}</strong>?
+                </p>
+                <div className="mt-2 p-2 bg-slate-50 rounded-lg border border-slate-100 text-xs text-slate-600 truncate font-medium">
+                  "{deleteModal.title}"
+                </div>
+                <p className="text-[11px] text-red-500 mt-2 font-medium">
+                  This action will delete the grievance from MongoDB and cannot be undone.
+                </p>
+              </div>
+            </div>
+
+            <div className="mt-6 flex items-center justify-end gap-2.5">
+              <button
+                type="button"
+                disabled={deleting}
+                onClick={() => setDeleteModal({ open: false, id: null, title: '' })}
+                className="px-4 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-100 rounded-xl transition-colors cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                disabled={deleting}
+                onClick={confirmDelete}
+                className="px-4 py-2 text-xs font-bold text-white bg-red-600 hover:bg-red-700 rounded-xl transition-colors shadow-sm flex items-center gap-1.5 cursor-pointer disabled:opacity-60"
+              >
+                {deleting ? (
+                  <>
+                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                    <span>Deleting...</span>
+                  </>
+                ) : (
+                  <>
+                    <Trash2 className="h-3.5 w-3.5" />
+                    <span>Yes, Delete</span>
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
