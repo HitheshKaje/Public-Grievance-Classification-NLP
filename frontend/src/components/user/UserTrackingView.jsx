@@ -7,8 +7,10 @@ import {
 } from 'lucide-react';
 import TrackComplaintCard from './TrackComplaintCard';
 import { trackGrievance } from '../../services/complaintService';
+import { useLanguage } from '../../context/LanguageContext';
 
 export default function UserTrackingView({ initialTrackedId = null }) {
+  const { t } = useLanguage();
   const [searchedId, setSearchedId] = useState(initialTrackedId || '');
   const [complaint, setComplaint] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -75,10 +77,10 @@ export default function UserTrackingView({ initialTrackedId = null }) {
       {/* Title & Context */}
       <div className="bg-white rounded-2xl border border-slate-100 p-6 shadow-sm">
         <h2 className="text-base font-bold text-slate-800">
-          Track Grievance Status
+          {t('track_status_title', 'Track Grievance Status')}
         </h2>
         <p className="text-xs text-slate-500 mt-1">
-          Query the live PGMS database for verified complaint details, department routing, and processing status.
+          {t('track_status_desc', 'Query the live PGMS database for verified complaint details, department routing, and processing status.')}
         </p>
       </div>
 
