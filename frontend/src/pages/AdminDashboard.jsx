@@ -29,7 +29,8 @@ import EmptyState from '../components/common/EmptyState';
 import { 
   fetchAdminStats, 
   fetchComplaints, 
-  fetchOfficers 
+  fetchOfficers,
+  updateComplaintStatus
 } from '../services/complaintService';
 
 export default function AdminDashboard({ 
@@ -139,10 +140,22 @@ export default function AdminDashboard({
       } else {
         setIsAddOfficerModalOpen(true);
       }
-    } else if (actionId === 'view_settings' || actionId === 'view_reports') {
+    } else if (actionId === 'view_settings') {
       if (onNavigateTab) {
         onNavigateTab('settings');
       }
+    }
+  };
+
+  const handleUpdateStatus = async (complaintId, newStatus, remarks = '') => {
+    try {
+      await updateComplaintStatus(complaintId, newStatus, remarks);
+      setNotification(`Complaint ${complaintId} status updated to "${newStatus}"!`);
+      setTimeout(() => setNotification(null), 4000);
+      await Promise.all([loadComplaints(), loadStats()]);
+    } catch (err) {
+      console.error('Failed to update status in MongoDB:', err);
+      alert(`Error updating complaint: ${err.message}`);
     }
   };
 

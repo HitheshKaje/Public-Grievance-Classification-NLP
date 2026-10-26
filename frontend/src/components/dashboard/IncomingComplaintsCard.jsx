@@ -16,10 +16,22 @@ export default function IncomingComplaintsCard({
   statusFilter = 'All',
   onStatusFilterChange,
   onOpenWorkOrderModal,
+  onUpdateStatus,
   onRefresh
 }) {
   const [deptDropdownOpen, setDeptDropdownOpen] = useState(false);
   const [statusDropdownOpen, setStatusDropdownOpen] = useState(false);
+  const [updatingId, setUpdatingId] = useState(null);
+
+  const handleStatusChange = async (complaintId, newStatus) => {
+    if (!onUpdateStatus) return;
+    setUpdatingId(complaintId);
+    try {
+      await onUpdateStatus(complaintId, newStatus);
+    } finally {
+      setUpdatingId(null);
+    }
+  };
 
   const departmentsList = [
     'All',
@@ -280,6 +292,41 @@ export default function IncomingComplaintsCard({
                     </td>
                     <td className="py-3 px-3 text-center whitespace-nowrap">
                       <div className="flex items-center justify-center gap-1.5">
+                        {/* Status Transition Action: Click Progress -> marks as In Progress */}
+                        {c.status !== 'In Progress' && c.status !== 'Resolved' && (
+                          <button
+                            type="button"
+                            disabled={updatingId === c.complaint_id}
+                            onClick={() => handleStatusChange(c.complaint_id, 'In Progress')}
+                            className="px-2.5 py-1 text-[11px] font-semibold bg-blue-50 hover:bg-blue-100 text-blue-700 rounded-lg border border-blue-200 transition-colors cursor-pointer inline-flex items-center gap-1"
+                            title="Mark complaint as In Progress"
+                          >
+                            <Clock className="h-3 w-3 text-blue-600" />
+                            <span>Progress</span>
+                          </button>
+                        )}
+
+                        {/* Status Transition Action: Click Resolve -> marks as Resolved */}
+                        {c.status === 'In Progress' && (
+                          <button
+                            type="button"
+                            disabled={updatingId === c.complaint_id}
+                            onClick={() => handleStatusChange(c.complaint_id, 'Resolved')}
+                            className="px-2.5 py-1 text-[11px] font-semibold bg-emerald-50 hover:bg-emerald-100 text-emerald-700 rounded-lg border border-emerald-200 transition-colors cursor-pointer inline-flex items-center gap-1"
+                            title="Mark complaint as Resolved"
+                          >
+                            <CheckCircle2 className="h-3 w-3 text-emerald-600" />
+                            <span>Resolve</span>
+                          </button>
+                        )}
+
+                        {c.status === 'Resolved' && (
+                          <span className="px-2 py-0.5 text-[10px] font-bold bg-emerald-50 text-emerald-700 rounded-lg border border-emerald-200 inline-flex items-center gap-1">
+                            <Check className="h-3 w-3 text-emerald-600" />
+                            <span>Resolved</span>
+                          </span>
+                        )}
+
                         <button
                           type="button"
                           onClick={() => onOpenWorkOrderModal && onOpenWorkOrderModal({ ...c, initialTab: 'pdf_preview' })}
