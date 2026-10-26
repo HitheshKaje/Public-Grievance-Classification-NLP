@@ -188,12 +188,13 @@ export default function LoginPage({ initialPortal = 'officer', onLoginSuccess })
           phone: phone || undefined
         });
 
-        setSuccessMsg(`Welcome, ${result.user?.name}!`);
-        setTimeout(() => {
-          if (onLoginSuccess) {
-            onLoginSuccess(result.user, selectedRole);
-          }
-        }, 500);
+        // Switch to Sign In tab with credentials already preserved in state
+        setIsRegister(false);
+        setSuccessMsg(
+          `Registration successful for ${result.user?.name || 'your account'}! Your credentials are pre-filled below. Please click "Sign In" to access your dashboard.`
+        );
+        setErrorMsg('');
+        setTouched({ email: true, password: true });
       } else {
         const result = await login({
           email,

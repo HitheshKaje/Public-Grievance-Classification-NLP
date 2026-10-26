@@ -66,10 +66,7 @@ export async function register({ name, email, password, role = 'citizen', depart
     throw new Error(errorMsg);
   }
 
-  if (data?.user && data?.token) {
-    setCurrentUser(data.user, data.token);
-  }
-
+  // Session is not set upon registration; user must sign in with their registered credentials
   return data;
 }
 
