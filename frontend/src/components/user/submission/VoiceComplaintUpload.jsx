@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { 
-  Mic, MicOff, Square, Play, Pause, RotateCcw, UploadCloud, 
-  Trash2, Volume2, MapPin, User, Phone, Mail, ArrowRight, 
+import {
+  Mic, MicOff, Square, Play, Pause, RotateCcw, UploadCloud,
+  Trash2, Volume2, MapPin, User, Phone, Mail, ArrowRight,
   Info, AlertCircle, CheckCircle2, FileAudio, Sparkles, RefreshCw
 } from 'lucide-react';
 import SupportingDocumentsDropzone from './SupportingDocumentsDropzone';
@@ -26,20 +26,20 @@ function formatTimer(seconds) {
 export default function VoiceComplaintUpload({ formData, onUpdateFormData, onProceedToReview }) {
   // Mode: 'record' (Live Mic) or 'upload' (Audio File)
   const [voiceMode, setVoiceMode] = useState('record');
-  
+
   // Recording State
   const [isRecording, setIsRecording] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
   const [recordingDuration, setRecordingDuration] = useState(0);
   const [audioUrl, setAudioUrl] = useState(null);
   const [speechTranscript, setSpeechTranscript] = useState('');
-  
+
   // Real-time Mic Level & Diagnostics
   const [micLevel, setMicLevel] = useState(0);
   const [isMicSilent, setIsMicSilent] = useState(false);
   const [waveBars, setWaveBars] = useState([10, 15, 10, 20, 15, 10, 25, 15, 10, 20, 15, 10]);
   const [volumeBoost, setVolumeBoost] = useState(1); // 1 = 1x, 1.5 = 1.5x, 2 = 2x, 3 = 3x
-  
+
   // General validation & upload errors
   const [uploadError, setUploadError] = useState('');
   const [errors, setErrors] = useState({});
@@ -51,7 +51,7 @@ export default function VoiceComplaintUpload({ formData, onUpdateFormData, onPro
   const durationRef = useRef(0);
   const fileInputRef = useRef(null);
   const speechRecognitionRef = useRef(null);
-  
+
   // Web Audio Refs for live analysis & boost
   const audioContextRef = useRef(null);
   const analyserRef = useRef(null);
@@ -91,13 +91,13 @@ export default function VoiceComplaintUpload({ formData, onUpdateFormData, onPro
         streamRef.current.getTracks().forEach((t) => t.stop());
       }
       if (audioContextRef.current && audioContextRef.current.state !== 'closed') {
-        audioContextRef.current.close().catch(() => {});
+        audioContextRef.current.close().catch(() => { });
       }
       if (playbackCtxRef.current && playbackCtxRef.current.state !== 'closed') {
-        playbackCtxRef.current.close().catch(() => {});
+        playbackCtxRef.current.close().catch(() => { });
       }
       if (speechRecognitionRef.current) {
-        try { speechRecognitionRef.current.stop(); } catch {}
+        try { speechRecognitionRef.current.stop(); } catch { }
       }
     };
   }, []);
@@ -198,7 +198,7 @@ export default function VoiceComplaintUpload({ formData, onUpdateFormData, onPro
 
         const updateMeter = () => {
           if (!analyserRef.current) return;
-          
+
           // Time domain is much more accurate for voice volume than small FFT bins
           analyserRef.current.getByteTimeDomainData(timeData);
           analyserRef.current.getByteFrequencyData(freqData);
@@ -264,18 +264,18 @@ export default function VoiceComplaintUpload({ formData, onUpdateFormData, onPro
       mediaRecorder.onstop = () => {
         if (animFrameRef.current) cancelAnimationFrame(animFrameRef.current);
         if (audioContextRef.current && audioContextRef.current.state !== 'closed') {
-          audioContextRef.current.close().catch(() => {});
+          audioContextRef.current.close().catch(() => { });
         }
 
         const actualMime = mediaRecorder.mimeType || selectedMime || 'audio/webm';
         const audioBlob = new Blob(audioChunksRef.current, { type: actualMime });
         const ext = actualMime.includes('ogg') ? 'ogg' : actualMime.includes('mp4') ? 'mp4' : 'webm';
         const file = new File([audioBlob], `grievance_voice_${Date.now()}.${ext}`, { type: actualMime });
-        
-        onUpdateFormData({ 
-          audioFile: file, 
+
+        onUpdateFormData({
+          audioFile: file,
           audioBlob: audioBlob,
-          audioDuration: durationRef.current 
+          audioDuration: durationRef.current
         });
 
         // Release mic stream
@@ -312,10 +312,10 @@ export default function VoiceComplaintUpload({ formData, onUpdateFormData, onPro
             }
           };
 
-          recognition.onerror = () => {};
+          recognition.onerror = () => { };
           recognition.start();
           speechRecognitionRef.current = recognition;
-        } catch {}
+        } catch { }
       }
 
     } catch (err) {
@@ -330,7 +330,7 @@ export default function VoiceComplaintUpload({ formData, onUpdateFormData, onPro
       mediaRecorderRef.current.stop();
     }
     if (speechRecognitionRef.current) {
-      try { speechRecognitionRef.current.stop(); } catch {}
+      try { speechRecognitionRef.current.stop(); } catch { }
     }
     if (timerIntervalRef.current) {
       clearInterval(timerIntervalRef.current);
@@ -428,11 +428,10 @@ export default function VoiceComplaintUpload({ formData, onUpdateFormData, onPro
           <button
             type="button"
             onClick={() => setVoiceMode('record')}
-            className={`px-3 py-1 rounded-lg font-medium transition-all cursor-pointer flex items-center gap-1.5 ${
-              voiceMode === 'record'
+            className={`px-3 py-1 rounded-lg font-medium transition-all cursor-pointer flex items-center gap-1.5 ${voiceMode === 'record'
                 ? 'bg-white text-blue-600 shadow-xs font-semibold'
                 : 'text-slate-600 hover:text-slate-900'
-            }`}
+              }`}
           >
             <Mic className="h-3.5 w-3.5" />
             <span>Record Voice</span>
@@ -440,11 +439,10 @@ export default function VoiceComplaintUpload({ formData, onUpdateFormData, onPro
           <button
             type="button"
             onClick={() => setVoiceMode('upload')}
-            className={`px-3 py-1 rounded-lg font-medium transition-all cursor-pointer flex items-center gap-1.5 ${
-              voiceMode === 'upload'
+            className={`px-3 py-1 rounded-lg font-medium transition-all cursor-pointer flex items-center gap-1.5 ${voiceMode === 'upload'
                 ? 'bg-white text-blue-600 shadow-xs font-semibold'
                 : 'text-slate-600 hover:text-slate-900'
-            }`}
+              }`}
           >
             <UploadCloud className="h-3.5 w-3.5" />
             <span>Upload Audio File</span>
@@ -486,11 +484,10 @@ export default function VoiceComplaintUpload({ formData, onUpdateFormData, onPro
                     Recording In Progress
                   </span>
                 </div>
-                <span className={`text-[11px] font-semibold px-2 py-0.5 rounded-full flex items-center gap-1.5 ${
-                  isMicSilent 
-                    ? 'bg-amber-100 text-amber-800 border border-amber-300' 
+                <span className={`text-[11px] font-semibold px-2 py-0.5 rounded-full flex items-center gap-1.5 ${isMicSilent
+                    ? 'bg-amber-100 text-amber-800 border border-amber-300'
                     : 'bg-emerald-100 text-emerald-800 border border-emerald-300'
-                }`}>
+                  }`}>
                   <span className={`w-2 h-2 rounded-full ${isMicSilent ? 'bg-amber-500' : 'bg-emerald-500 animate-pulse'}`} />
                   <span>{isMicSilent ? 'Low / Silent Mic' : `Sound Detected (${micLevel}%)`}</span>
                 </span>
@@ -519,10 +516,9 @@ export default function VoiceComplaintUpload({ formData, onUpdateFormData, onPro
                   <span className={micLevel > 5 ? 'text-emerald-600' : 'text-amber-600'}>{micLevel}%</span>
                 </div>
                 <div className="w-full h-2 bg-slate-200 rounded-full overflow-hidden">
-                  <div 
-                    className={`h-full transition-all duration-75 ${
-                      micLevel > 15 ? 'bg-emerald-500' : micLevel > 4 ? 'bg-amber-500' : 'bg-rose-500'
-                    }`}
+                  <div
+                    className={`h-full transition-all duration-75 ${micLevel > 15 ? 'bg-emerald-500' : micLevel > 4 ? 'bg-amber-500' : 'bg-rose-500'
+                      }`}
                     style={{ width: `${Math.max(2, micLevel)}%` }}
                   />
                 </div>
@@ -601,11 +597,11 @@ export default function VoiceComplaintUpload({ formData, onUpdateFormData, onPro
               {/* HTML5 Audio Player */}
               {audioUrl && (
                 <div className="pt-1 space-y-2">
-                  <audio 
+                  <audio
                     ref={audioElRef}
-                    controls 
-                    src={audioUrl} 
-                    className="w-full h-10 rounded-lg" 
+                    controls
+                    src={audioUrl}
+                    className="w-full h-10 rounded-lg"
                   />
 
                   {/* Volume Booster & Speaker Diagnostic Tool */}
@@ -619,11 +615,10 @@ export default function VoiceComplaintUpload({ formData, onUpdateFormData, onPro
                             key={mult}
                             type="button"
                             onClick={() => setGainBoost(mult)}
-                            className={`px-2 py-0.5 rounded text-[10px] font-bold cursor-pointer transition-colors ${
-                              volumeBoost === mult
+                            className={`px-2 py-0.5 rounded text-[10px] font-bold cursor-pointer transition-colors ${volumeBoost === mult
                                 ? 'bg-violet-600 text-white shadow-xs'
                                 : 'text-slate-600 hover:text-slate-900'
-                            }`}
+                              }`}
                           >
                             {mult === 1 ? '1x Normal' : `${mult}x`}
                           </button>
@@ -768,11 +763,10 @@ export default function VoiceComplaintUpload({ formData, onUpdateFormData, onPro
             if (errors.title) setErrors((prev) => ({ ...prev, title: '' }));
           }}
           placeholder="Brief topic of the spoken grievance (e.g., Street drainage overflow)"
-          className={`w-full px-3.5 py-2.5 text-xs rounded-xl border bg-white text-slate-800 placeholder-slate-400 focus:outline-none transition-all ${
-            errors.title
+          className={`w-full px-3.5 py-2.5 text-xs rounded-xl border bg-white text-slate-800 placeholder-slate-400 focus:outline-none transition-all ${errors.title
               ? 'border-rose-400 focus:ring-1 focus:ring-rose-400 bg-rose-50/30'
               : 'border-slate-200 focus:border-blue-500 focus:ring-1 focus:ring-blue-500'
-          }`}
+            }`}
         />
         {errors.title && (
           <p className="mt-1 text-[11px] text-rose-600 flex items-center gap-1">
@@ -817,11 +811,10 @@ export default function VoiceComplaintUpload({ formData, onUpdateFormData, onPro
               if (errors.location) setErrors((prev) => ({ ...prev, location: '' }));
             }}
             placeholder="Ward number, street name, area, or nearest civic landmark"
-            className={`w-full pl-9 pr-3.5 py-2.5 text-xs rounded-xl border bg-white text-slate-800 placeholder-slate-400 focus:outline-none transition-all ${
-              errors.location
+            className={`w-full pl-9 pr-3.5 py-2.5 text-xs rounded-xl border bg-white text-slate-800 placeholder-slate-400 focus:outline-none transition-all ${errors.location
                 ? 'border-rose-400 focus:ring-1 focus:ring-rose-400 bg-rose-50/30'
                 : 'border-slate-200 focus:border-blue-500 focus:ring-1 focus:ring-blue-500'
-            }`}
+              }`}
           />
         </div>
         {errors.location && (
@@ -907,3 +900,4 @@ export default function VoiceComplaintUpload({ formData, onUpdateFormData, onPro
     </form>
   );
 }
+
