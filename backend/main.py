@@ -940,7 +940,8 @@ async def get_officer_stats(department: str = "All"):
     recent_docs = await recent_cursor.to_list(length=5)
 
     # If department filter matched specific records, use them.
-    # Otherwise, fall back to overall active queue counts so cards stay consistent.
+    # When department is specified, return actual department counts (never leak unrelated department data).
+    is_all = (not department) or department == "All"
     if total_assigned > 0:
         return {
             "department": department,
@@ -957,15 +958,15 @@ async def get_officer_stats(department: str = "All"):
     else:
         return {
             "department": department,
-            "total_assigned": total_system,
+            "total_assigned": total_system if is_all else 0,
             "department_count": 0,
-            "in_progress": system_in_progress,
-            "resolved": system_resolved,
-            "overdue": system_overdue,
-            "pending": system_pending,
+            "in_progress": system_in_progress if is_all else 0,
+            "resolved": system_resolved if is_all else 0,
+            "overdue": system_overdue if is_all else 0,
+            "pending": system_pending if is_all else 0,
             "total_system": total_system,
             "unassigned_count": unassigned_count,
-            "recent_updates": [format_complaint(doc) for doc in recent_docs]
+            "recent_updates": [format_complaint(doc) for doc in recent_docs] if is_all else []
         }
 
 
@@ -1244,7 +1245,9 @@ async def get_officers(department: Optional[str] = None):
 @app.post("/api/officers")
 async def create_officer(officer: OfficerCreate):
     """
-    Creates a new officer record in MongoDB from the Admin Panel.
+    Creates a new officer record in MongoDB from the Admin Panel,
+    AND provisions their login account in the 'users' collection
+    so the officer can sign in with their assigned credentials.
     """
     db = get_db()
     
@@ -1255,12 +1258,28 @@ async def create_officer(officer: OfficerCreate):
         rand_suffix = "".join(secrets.choice(string.digits) for _ in range(3))
         officer_id = f"OFF-{dept_abbr}-{rand_suffix}"
 
+    email = (officer.email or "").strip().lower()
+    if not email or not EMAIL_REGEX.match(email):
+        raise HTTPException(
+            status_code=422,
+            detail="A valid official email address is required so the officer can log in."
+        )
+
+    password = (officer.password or "").strip()
+    if not password:
+        password = "Officer@123"
+    elif len(password) < 6:
+        raise HTTPException(
+            status_code=422,
+            detail="Officer password must be at least 6 characters long."
+        )
+
     doc = {
         "officer_id": officer_id,
         "name": officer.name.strip(),
         "department": officer.department.strip(),
         "designation": (officer.designation or "Nodal Officer").strip(),
-        "email": (officer.email or "").strip(),
+        "email": email,
         "phone": (officer.phone or "").strip(),
         "zone": (officer.zone or "Headquarters").strip(),
         "status": "Active",
@@ -1268,12 +1287,43 @@ async def create_officer(officer: OfficerCreate):
     }
 
     try:
-        result = await db.officers.insert_one(doc)
-        doc["_id"] = result.inserted_id
+        # 1. Update / Insert into officers collection
+        await db.officers.update_one(
+            {"officer_id": officer_id},
+            {"$set": doc},
+            upsert=True
+        )
+
+        # 2. Hash password and provision in users collection for authentication
+        pw_hash, salt = hash_password(password)
+        user_doc = {
+            "name": doc["name"],
+            "email": email,
+            "password_hash": pw_hash,
+            "password_salt": salt,
+            "role": "officer",
+            "department": doc["department"],
+            "designation": doc["designation"],
+            "officer_id": officer_id,
+            "citizen_id": None,
+            "phone": doc["phone"] or None,
+            "zone": doc["zone"],
+            "created_at": datetime.utcnow()
+        }
+        await db.users.update_one(
+            {"email": email},
+            {"$set": user_doc},
+            upsert=True
+        )
+
         return {
             "success": True,
-            "message": "Officer registered successfully in MongoDB.",
-            "officer": format_officer(doc)
+            "message": f"Officer {doc['name']} registered successfully. Login credentials active.",
+            "officer": format_officer(doc),
+            "credentials": {
+                "email": email,
+                "password": password
+            }
         }
     except DuplicateKeyError:
         raise HTTPException(
@@ -1284,17 +1334,22 @@ async def create_officer(officer: OfficerCreate):
 @app.delete("/api/officers/{id}")
 async def delete_officer(id: str):
     """
-    Deletes an officer record from MongoDB.
+    Deletes an officer record from MongoDB and revokes their user login access.
     """
     db = get_db()
     query = [{"officer_id": id}, {"officer_id": id.upper()}]
     if ObjectId.is_valid(id):
         query.append({"_id": ObjectId(id)})
 
-    result = await db.officers.delete_one({"$or": query})
-    if result.deleted_count == 0:
+    officer = await db.officers.find_one({"$or": query})
+    if not officer:
         raise HTTPException(status_code=404, detail="Officer not found")
-    return {"success": True, "message": "Officer removed from directory"}
+
+    await db.officers.delete_one({"$or": query})
+    if officer.get("email"):
+        await db.users.delete_one({"email": officer["email"].lower(), "role": "officer"})
+
+    return {"success": True, "message": "Officer removed from directory and user credentials revoked"}
 
 # ==========================================
 # CONVERT TO DOCUMENT STRUCTURE & FORWARD

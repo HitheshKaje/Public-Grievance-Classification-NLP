@@ -276,6 +276,9 @@ export default function LoginPage({ initialPortal = 'officer', onLoginSuccess })
                     setSelectedRole(portal.id);
                     setErrorMsg('');
                     setSuccessMsg('');
+                    if (portal.id === 'admin' || portal.id === 'officer') {
+                      setIsRegister(false);
+                    }
                   }}
                   className={`flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl text-xs sm:text-sm font-bold transition-all duration-200 cursor-pointer ${
                     isSelected
@@ -304,7 +307,12 @@ export default function LoginPage({ initialPortal = 'officer', onLoginSuccess })
                 </h2>
                 {selectedRole === 'admin' && (
                   <span className="text-[10px] font-semibold bg-purple-100 text-purple-700 px-2 py-0.5 rounded-full border border-purple-200">
-                    2 Admins Max
+                    Dual Admin
+                  </span>
+                )}
+                {selectedRole === 'officer' && (
+                  <span className="text-[10px] font-semibold bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full border border-blue-200">
+                    Admin Provisioned
                   </span>
                 )}
               </div>
@@ -325,40 +333,56 @@ export default function LoginPage({ initialPortal = 'officer', onLoginSuccess })
           )}
         </div>
 
-        {/* Sign In vs Register Toggle */}
+        {/* Sign In vs Register Toggle - Only Citizen can self-register; Admin and Officer register button is removed */}
         <div className="px-7 sm:px-9 mt-4">
-          <div className="flex border-b border-slate-200 text-sm font-bold relative font-display">
-            <button
-              type="button"
-              id="tab-signin"
-              onClick={() => {
-                setIsRegister(false);
-                setErrorMsg('');
-              }}
-              className={`pb-3 mr-7 transition-all duration-200 cursor-pointer tracking-tight ${
-                !isRegister 
-                  ? 'text-slate-900 border-b-2 border-slate-900 font-extrabold' 
-                  : 'text-slate-400 hover:text-slate-600'
-              }`}
-            >
-              Sign In
-            </button>
-            <button
-              type="button"
-              id="tab-register"
-              onClick={() => {
-                setIsRegister(true);
-                setErrorMsg('');
-              }}
-              className={`pb-3 transition-all duration-200 cursor-pointer tracking-tight ${
-                isRegister 
-                  ? 'text-slate-900 border-b-2 border-slate-900 font-extrabold' 
-                  : 'text-slate-400 hover:text-slate-600'
-              }`}
-            >
-              Register New
-            </button>
-          </div>
+          {selectedRole === 'citizen' ? (
+            <div className="flex border-b border-slate-200 text-sm font-bold relative font-display">
+              <button
+                type="button"
+                id="tab-signin"
+                onClick={() => {
+                  setIsRegister(false);
+                  setErrorMsg('');
+                }}
+                className={`pb-3 mr-7 transition-all duration-200 cursor-pointer tracking-tight ${
+                  !isRegister 
+                    ? 'text-slate-900 border-b-2 border-slate-900 font-extrabold' 
+                    : 'text-slate-400 hover:text-slate-600'
+                }`}
+              >
+                Sign In
+              </button>
+              <button
+                type="button"
+                id="tab-register"
+                onClick={() => {
+                  setIsRegister(true);
+                  setErrorMsg('');
+                }}
+                className={`pb-3 transition-all duration-200 cursor-pointer tracking-tight ${
+                  isRegister 
+                    ? 'text-slate-900 border-b-2 border-slate-900 font-extrabold' 
+                    : 'text-slate-400 hover:text-slate-600'
+                }`}
+              >
+                Register New
+              </button>
+            </div>
+          ) : selectedRole === 'officer' ? (
+            <div className="p-3 bg-blue-50/80 border border-blue-200/70 rounded-xl text-blue-900 text-xs flex items-center gap-2">
+              <Shield className="h-4 w-4 text-blue-600 flex-shrink-0" />
+              <span>
+                <strong>Officer Access:</strong> Accounts are provisioned exclusively by Administrators in the Admin Dashboard. Sign in with the credentials assigned by your administrator.
+              </span>
+            </div>
+          ) : (
+            <div className="p-3 bg-purple-50/80 border border-purple-200/70 rounded-xl text-purple-900 text-xs flex items-center gap-2">
+              <Shield className="h-4 w-4 text-purple-600 flex-shrink-0" />
+              <span>
+                <strong>System Administrator Portal:</strong> Enter your designated administrator credentials to access the central governance dashboard.
+              </span>
+            </div>
+          )}
         </div>
 
         {/* Dynamic Alerts */}
