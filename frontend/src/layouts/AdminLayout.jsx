@@ -23,8 +23,6 @@ export default function AdminLayout({ children, activeTab, onSelectTab, onSelect
         <Header
           onOpenSidebar={() => setSidebarOpen(true)}
           activeTabTitle={activeTitle}
-          onSelectPortal={onSelectPortal}
-          currentPortal={currentPortal}
           currentUser={currentUser}
           onLogout={onLogout}
         />

@@ -19,8 +19,6 @@ export default function UserLayout({ children, activeTab, onSelectTab, onSelectP
       <div className="flex-1 lg:pl-64 flex flex-col min-w-0">
         <UserHeader
           onOpenSidebar={() => setSidebarOpen(true)}
-          onSelectPortal={onSelectPortal}
-          currentPortal={currentPortal}
           currentUser={currentUser}
           onLogout={onLogout}
         />

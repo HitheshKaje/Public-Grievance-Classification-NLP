@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { User, LogOut, Shield, ChevronDown, CheckCircle2, Building2, Key } from 'lucide-react';
+import { LogOut, ChevronDown } from 'lucide-react';
 
-export default function UserProfileDropdown({ user, onLogout, onSelectPortal }) {
+export default function UserProfileDropdown({ user, onLogout }) {
   const [open, setOpen] = useState(false);
   const ref = useRef(null);
 
@@ -93,48 +93,6 @@ export default function UserProfileDropdown({ user, onLogout, onSelectPortal }) 
               </p>
             )}
           </div>
-
-          {/* Role Switching shortcuts */}
-          {onSelectPortal && (
-            <div className="px-2 py-1.5 border-b border-slate-100">
-              <div className="px-2 py-1 text-[10px] font-bold text-slate-400 uppercase tracking-wider">
-                Switch Portal
-              </div>
-              <button
-                type="button"
-                onClick={() => {
-                  onSelectPortal('user');
-                  setOpen(false);
-                }}
-                className="w-full text-left px-2.5 py-1.5 text-xs text-slate-700 hover:bg-slate-50 rounded-lg flex items-center gap-2"
-              >
-                <User className="h-3.5 w-3.5 text-emerald-600" />
-                <span>Citizen Portal</span>
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  onSelectPortal('officer');
-                  setOpen(false);
-                }}
-                className="w-full text-left px-2.5 py-1.5 text-xs text-slate-700 hover:bg-slate-50 rounded-lg flex items-center gap-2"
-              >
-                <Building2 className="h-3.5 w-3.5 text-blue-600" />
-                <span>Officer Portal</span>
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  onSelectPortal('admin');
-                  setOpen(false);
-                }}
-                className="w-full text-left px-2.5 py-1.5 text-xs text-slate-700 hover:bg-slate-50 rounded-lg flex items-center gap-2"
-              >
-                <Shield className="h-3.5 w-3.5 text-purple-600" />
-                <span>Admin Portal</span>
-              </button>
-            </div>
-          )}
 
           {/* Sign Out Action */}
           <div className="px-2 pt-1">

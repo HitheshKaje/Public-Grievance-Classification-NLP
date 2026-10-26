@@ -129,9 +129,7 @@ export default function AdminDashboard({
   // Handle Quick Actions from bottom card
   const handleQuickAction = (actionId) => {
     if (actionId === 'new_complaint') {
-      if (onSelectPortal) {
-        onSelectPortal('user');
-      } else if (onNavigateTab) {
+      if (onNavigateTab) {
         onNavigateTab('incoming');
       }
     } else if (actionId === 'manage_officers') {
