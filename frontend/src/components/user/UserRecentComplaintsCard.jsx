@@ -78,7 +78,7 @@ export default function UserRecentComplaintsCard({
       return (
         <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold bg-blue-50 text-blue-700 border border-blue-200/80 shadow-2xs">
           <span className="w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse"></span>
-          <span>In Processing</span>
+          <span>{t('status_in_progress', 'In Processing')}</span>
         </span>
       );
     }
@@ -86,7 +86,7 @@ export default function UserRecentComplaintsCard({
       return (
         <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200/80 shadow-2xs">
           <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
-          <span>Resolved</span>
+          <span>{t('status_resolved', 'Resolved')}</span>
         </span>
       );
     }
@@ -94,14 +94,14 @@ export default function UserRecentComplaintsCard({
       return (
         <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold bg-rose-50 text-rose-700 border border-rose-200/80 shadow-2xs">
           <span className="w-1.5 h-1.5 rounded-full bg-rose-500"></span>
-          <span>Rejected</span>
+          <span>{t('status_rejected', 'Rejected')}</span>
         </span>
       );
     }
     return (
       <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold bg-amber-50 text-amber-700 border border-amber-200/80 shadow-2xs">
         <span className="w-1.5 h-1.5 rounded-full bg-amber-500"></span>
-        <span>Pending Review</span>
+        <span>{t('status_pending', 'Pending Review')}</span>
       </span>
     );
   };
@@ -150,12 +150,12 @@ export default function UserRecentComplaintsCard({
         <table className="w-full text-left border-collapse text-xs">
           <thead>
             <tr className="bg-[#f4f7fb] text-slate-700 font-semibold border-b border-slate-100">
-              <th className="py-2.5 px-4 font-semibold">ID</th>
-              <th className="py-2.5 px-4 font-semibold">{t('submit', 'Complaint')}</th>
-              <th className="py-2.5 px-4 font-semibold">{t('civic_departments', 'Department')}</th>
-              <th className="py-2.5 px-4 font-semibold">Date</th>
-              <th className="py-2.5 px-4 font-semibold">Status</th>
-              <th className="py-2.5 px-4 font-semibold text-center">{t('delete', 'Actions')}</th>
+              <th className="py-2.5 px-4 font-semibold">{t('col_id', 'ID')}</th>
+              <th className="py-2.5 px-4 font-semibold">{t('col_title', 'Complaint Title')}</th>
+              <th className="py-2.5 px-4 font-semibold">{t('col_dept', 'Department')}</th>
+              <th className="py-2.5 px-4 font-semibold">{t('col_date', 'Date')}</th>
+              <th className="py-2.5 px-4 font-semibold">{t('col_status', 'Status')}</th>
+              <th className="py-2.5 px-4 font-semibold text-center">{t('col_actions', 'Actions')}</th>
             </tr>
           </thead>
           <tbody>
@@ -188,7 +188,7 @@ export default function UserRecentComplaintsCard({
                         className="mt-3.5 inline-flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-semibold text-white bg-blue-600 hover:bg-blue-700 rounded-xl shadow-xs transition-colors cursor-pointer"
                       >
                         <Plus className="h-3.5 w-3.5" />
-                        <span>Submit a Grievance</span>
+                        <span>{t('submit_grievance_btn', '+ Submit a Grievance')}</span>
                       </button>
                     )}
                   </div>
@@ -242,7 +242,7 @@ export default function UserRecentComplaintsCard({
                         <span className="font-medium text-slate-700">{dept}</span>
                       ) : (
                         <span className="text-[11px] text-slate-400 italic">
-                          Triage Pending
+                          {t('triage_pending', 'Triage Pending')}
                         </span>
                       )}
                     </td>
@@ -268,7 +268,7 @@ export default function UserRecentComplaintsCard({
                             title="Track live status"
                           >
                             <Search className="h-3 w-3" />
-                            <span>Track</span>
+                            <span>{t('track_btn', 'Track')}</span>
                           </button>
                         )}
 
@@ -280,7 +280,7 @@ export default function UserRecentComplaintsCard({
                           title="Delete this complaint"
                         >
                           <Trash2 className="h-3 w-3" />
-                          <span>Delete</span>
+                          <span>{t('delete', 'Delete')}</span>
                         </button>
                       </div>
                     </td>

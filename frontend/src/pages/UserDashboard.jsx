@@ -490,7 +490,7 @@ export default function UserDashboard({ activeTab = 'dashboard', onNavigateTab, 
       {/* Scope Selector & Quick Refresh Bar */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white/70 backdrop-blur-xs p-3.5 px-4 rounded-2xl border border-slate-100 shadow-xs">
         <div className="flex items-center gap-2">
-          <span className="text-xs font-semibold text-slate-500">Dashboard View:</span>
+          <span className="text-xs font-semibold text-slate-500">{t('dashboard_view', 'Dashboard View:')}</span>
           <div className="inline-flex p-1 bg-slate-100/90 rounded-xl text-xs font-semibold">
             <button
               type="button"
@@ -521,7 +521,7 @@ export default function UserDashboard({ activeTab = 'dashboard', onNavigateTab, 
 
         <div className="flex items-center gap-3 text-xs text-slate-500">
           <span className="hidden sm:inline">
-            Live MongoDB sync &bull; {userStats.in_processing} in processing
+            {t('live_sync', 'Live MongoDB sync')} &bull; {userStats.in_processing} {t('in_processing', 'in processing')}
           </span>
           <button
             type="button"
