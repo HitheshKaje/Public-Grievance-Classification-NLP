@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
 import { MapPin, User, Phone, Mail, ArrowRight, Info, AlertCircle } from 'lucide-react';
 import SupportingDocumentsDropzone from './SupportingDocumentsDropzone';
+import { useLanguage } from '../../../context/LanguageContext';
 
 export default function WriteComplaintForm({ formData, onUpdateFormData, onProceedToReview }) {
+  const { t } = useLanguage();
   const [errors, setErrors] = useState({});
 
   const validate = () => {
@@ -47,7 +49,7 @@ export default function WriteComplaintForm({ formData, onUpdateFormData, onProce
       {/* Complaint Title */}
       <div>
         <label className="text-xs font-semibold text-slate-700 block mb-1">
-          Complaint Title <span className="text-rose-500">*</span>
+          {t('form_title_label', 'Complaint Title')} <span className="text-rose-500">*</span>
         </label>
         <input
           type="text"
@@ -56,10 +58,10 @@ export default function WriteComplaintForm({ formData, onUpdateFormData, onProce
             onUpdateFormData({ title: e.target.value });
             if (errors.title) setErrors({ ...errors, title: '' });
           }}
-          placeholder="Brief summary of the issue (e.g., Major drinking water pipeline leakage in 4th Block)"
+          placeholder={t('form_title_placeholder', 'Brief summary of the issue (e.g., Major drinking water pipeline leakage in 4th Block)')}
           className={`w-full px-3.5 py-2.5 text-xs rounded-xl border bg-white text-slate-800 placeholder-slate-400 focus:outline-none transition-all ${
             errors.title
-              ? 'border-rose-400 focus:ring-1 focus:ring-rose-400 bg-rose-50/30'
+               ? 'border-rose-400 focus:ring-1 focus:ring-rose-400 bg-rose-50/30'
               : 'border-slate-200 focus:border-blue-500 focus:ring-1 focus:ring-blue-500'
           }`}
         />
@@ -75,7 +77,7 @@ export default function WriteComplaintForm({ formData, onUpdateFormData, onProce
       <div>
         <div className="flex items-center justify-between mb-1">
           <label className="text-xs font-semibold text-slate-700">
-            Complaint Description <span className="text-rose-500">*</span>
+            {t('form_desc_label', 'Complaint Description')} <span className="text-rose-500">*</span>
           </label>
           <span className={`text-[11px] font-mono ${
             (formData.description?.length || 0) < 20 ? 'text-amber-600' : 'text-slate-400'
@@ -91,7 +93,7 @@ export default function WriteComplaintForm({ formData, onUpdateFormData, onProce
             onUpdateFormData({ description: e.target.value });
             if (errors.description) setErrors({ ...errors, description: '' });
           }}
-          placeholder="Describe the problem clearly. Mention when it started, how it affects residents, and specific context to assist department officers..."
+          placeholder={t('form_desc_placeholder', 'Describe the problem clearly. Mention when it started, how it affects residents, and specific context to assist department officers...')}
           className={`w-full px-3.5 py-2.5 text-xs rounded-xl border bg-white text-slate-800 placeholder-slate-400 focus:outline-none transition-all leading-relaxed ${
             errors.description
               ? 'border-rose-400 focus:ring-1 focus:ring-rose-400 bg-rose-50/30'
@@ -109,7 +111,7 @@ export default function WriteComplaintForm({ formData, onUpdateFormData, onProce
       {/* Incident Location */}
       <div>
         <label className="text-xs font-semibold text-slate-700 block mb-1">
-          Incident / Problem Location <span className="text-rose-500">*</span>
+          {t('form_location_label', 'Incident / Problem Location')} <span className="text-rose-500">*</span>
         </label>
         <div className="relative">
           <MapPin className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
@@ -120,7 +122,7 @@ export default function WriteComplaintForm({ formData, onUpdateFormData, onProce
               onUpdateFormData({ location: e.target.value });
               if (errors.location) setErrors({ ...errors, location: '' });
             }}
-            placeholder="Street name, landmark, Ward number, locality, or pin code"
+            placeholder={t('form_location_placeholder', 'Street name, landmark, Ward number, locality, or pin code')}
             className={`w-full pl-9 pr-3.5 py-2.5 text-xs rounded-xl border bg-white text-slate-800 placeholder-slate-400 focus:outline-none transition-all ${
               errors.location
                 ? 'border-rose-400 focus:ring-1 focus:ring-rose-400 bg-rose-50/30'
@@ -139,12 +141,12 @@ export default function WriteComplaintForm({ formData, onUpdateFormData, onProce
       {/* Contact Details (Optional / Updates) */}
       <div className="p-4 rounded-xl border border-slate-100 bg-slate-50/60 space-y-3">
         <span className="text-xs font-semibold text-slate-800 block">
-          Citizen Contact Details
+          {t('form_contact_header', 'Citizen Contact Details')}
         </span>
 
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
           <div>
-            <label className="text-[11px] font-medium text-slate-600 block mb-1">Citizen Name</label>
+            <label className="text-[11px] font-medium text-slate-600 block mb-1">{t('full_name', 'Citizen Name')}</label>
             <div className="relative">
               <User className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400" />
               <input
@@ -158,7 +160,7 @@ export default function WriteComplaintForm({ formData, onUpdateFormData, onProce
           </div>
 
           <div>
-            <label className="text-[11px] font-medium text-slate-600 block mb-1">Mobile Number</label>
+            <label className="text-[11px] font-medium text-slate-600 block mb-1">{t('phone', 'Mobile Number')}</label>
             <div className="relative">
               <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400" />
               <input
@@ -176,7 +178,7 @@ export default function WriteComplaintForm({ formData, onUpdateFormData, onProce
           </div>
 
           <div>
-            <label className="text-[11px] font-medium text-slate-600 block mb-1">Email Address</label>
+            <label className="text-[11px] font-medium text-slate-600 block mb-1">{t('email', 'Email Address')}</label>
             <div className="relative">
               <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400" />
               <input
@@ -207,7 +209,7 @@ export default function WriteComplaintForm({ formData, onUpdateFormData, onProce
           type="submit"
           className="bg-[#1e6bf3] hover:bg-blue-700 text-white rounded-xl px-6 py-2.5 flex items-center gap-2 text-xs font-semibold shadow-md shadow-blue-600/20 transition-all cursor-pointer"
         >
-          <span>Review Complaint</span>
+          <span>{t('review_submission_btn', 'Review Complaint')}</span>
           <ArrowRight className="h-4 w-4" />
         </button>
       </div>

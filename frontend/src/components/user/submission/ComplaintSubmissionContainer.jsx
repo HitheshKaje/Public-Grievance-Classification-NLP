@@ -7,6 +7,7 @@ import VoiceComplaintUpload from './VoiceComplaintUpload';
 import ComplaintReviewStep from './ComplaintReviewStep';
 import ComplaintConfirmationView from './ComplaintConfirmationView';
 import { submitGrievance, saveLocalUserComplaintId } from '../../../services/complaintService';
+import { useLanguage } from '../../../context/LanguageContext';
 
 const INITIAL_FORM_DATA = {
   title: '',
@@ -24,6 +25,7 @@ const INITIAL_FORM_DATA = {
 };
 
 export default function ComplaintSubmissionContainer({ onNavigateTab, onTrackGrievance }) {
+  const { t } = useLanguage();
   const [method, setMethod] = useState('write'); // 'write' | 'pdf' | 'image' | 'voice'
   const [currentLanguage, setCurrentLanguage] = useState('en'); // 'en' | 'kn' | 'hi'
   const [step, setStep] = useState('fill'); // 'fill' | 'review' | 'confirmed'
@@ -83,7 +85,7 @@ export default function ComplaintSubmissionContainer({ onNavigateTab, onTrackGri
       <div className="bg-white rounded-2xl border border-slate-100 p-5 shadow-sm flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
           <h2 className="text-base font-bold text-slate-800">
-            Submit a Public Grievance
+            {t('submit_grievance_title', 'Submit a Public Grievance')}
           </h2>
         </div>
 
@@ -92,19 +94,19 @@ export default function ComplaintSubmissionContainer({ onNavigateTab, onTrackGri
           <div className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold ${
             step === 'fill' ? 'bg-blue-50 text-blue-700 border border-blue-200' : 'bg-slate-50 text-slate-500'
           }`}>
-            <span>1. Details</span>
+            <span>{t('step_details', '1. Details')}</span>
           </div>
           <span className="text-slate-300">&rarr;</span>
           <div className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold ${
             step === 'review' ? 'bg-blue-50 text-blue-700 border border-blue-200' : 'bg-slate-50 text-slate-500'
           }`}>
-            <span>2. Review</span>
+            <span>{t('step_review', '2. Review')}</span>
           </div>
           <span className="text-slate-300">&rarr;</span>
           <div className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold ${
             step === 'confirmed' ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-slate-50 text-slate-500'
           }`}>
-            <span>3. Confirmation</span>
+            <span>{t('step_confirmation', '3. Confirmation')}</span>
           </div>
         </div>
       </div>
