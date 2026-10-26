@@ -265,6 +265,92 @@ export default function PdfComplaintUpload({ formData, onUpdateFormData, onProce
           </div>
         )}
 
+        {/* AI PDF Petition Extraction & Translation Card */}
+        {selectedPdf && (
+          <div className="mt-3 p-4 rounded-2xl bg-gradient-to-br from-rose-50/90 via-orange-50/60 to-slate-50/90 border border-rose-200/90 shadow-sm space-y-3">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+              <div>
+                <div className="flex items-center gap-2">
+                  <Sparkles className="h-4 w-4 text-rose-600" />
+                  <span className="text-xs font-bold text-rose-950">
+                    Multilingual PDF Petition Extraction & English Conversion
+                  </span>
+                </div>
+                <p className="text-[11px] text-rose-700 mt-0.5">
+                  Extracts scanned or digital petition text in Hindi (हिन्दी), Kannada (ಕನ್ನಡ), or English, and converts the grievance to English sentences.
+                </p>
+              </div>
+
+              <button
+                type="button"
+                disabled={isTranslating}
+                onClick={handleAiAnalyzePdf}
+                className="px-4 py-2 bg-gradient-to-r from-rose-600 to-amber-600 hover:from-rose-700 hover:to-amber-700 text-white rounded-xl text-xs font-semibold shadow-sm flex items-center justify-center gap-2 transition-all cursor-pointer disabled:opacity-60 self-start sm:self-center"
+              >
+                {isTranslating ? (
+                  <>
+                    <RefreshCw className="h-3.5 w-3.5 animate-spin" />
+                    <span>Extracting Petition...</span>
+                  </>
+                ) : (
+                  <>
+                    <Sparkles className="h-3.5 w-3.5 text-amber-200" />
+                    <span>{translationResult ? 'Re-extract Petition' : '✨ Extract Petition & Convert to English'}</span>
+                  </>
+                )}
+              </button>
+            </div>
+
+            {translationError && (
+              <p className="text-[11px] text-rose-600 flex items-center gap-1 bg-white/70 p-2 rounded-lg border border-rose-200">
+                <AlertCircle className="h-3.5 w-3.5 flex-shrink-0" />
+                <span>{translationError}</span>
+              </p>
+            )}
+
+            {translationResult && (
+              <div className="bg-white/95 rounded-xl border border-rose-100 p-3.5 space-y-2.5 text-xs shadow-xs">
+                <div className="flex items-center justify-between pb-1 border-b border-slate-100">
+                  <span className="font-bold text-emerald-700 flex items-center gap-1.5 text-xs">
+                    <CheckCircle2 className="h-4 w-4 text-emerald-600" />
+                    <span>PDF Petition Successfully Extracted & Converted to English</span>
+                  </span>
+                  <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-rose-100 text-rose-800 border border-rose-200">
+                    Detected Language: {translationResult.detected_language}
+                  </span>
+                </div>
+
+                {translationResult.original_transcription && (
+                  <div className="p-2 bg-slate-50 rounded-lg">
+                    <span className="text-[10px] uppercase font-bold text-slate-400 block mb-0.5">
+                      Extracted Petition Content ({translationResult.detected_language})
+                    </span>
+                    <p className="text-slate-800 italic">
+                      "{translationResult.original_transcription}"
+                    </p>
+                  </div>
+                )}
+
+                <div className="p-2.5 bg-rose-50/70 border border-rose-200/60 rounded-lg space-y-1">
+                  <span className="text-[10px] uppercase font-bold text-rose-700 block">
+                    Converted English Sentence (Official Administrative Record)
+                  </span>
+                  <p className="text-slate-900 font-semibold leading-relaxed">
+                    "{translationResult.english_sentence}"
+                  </p>
+                </div>
+
+                <div className="flex flex-wrap items-center gap-x-4 gap-y-1 pt-1 text-[11px] text-slate-600">
+                  <span>Dept: <strong className="text-slate-800">{translationResult.detected_department}</strong></span>
+                  <span>&bull;</span>
+                  <span>Priority: <strong className={translationResult.priority === 'High' ? 'text-rose-600' : 'text-slate-800'}>{translationResult.priority}</strong></span>
+                </div>
+                <p className="text-[10px] text-emerald-600 font-medium">✓ Title, English description, and landmark are auto-synced below.</p>
+              </div>
+            )}
+          </div>
+        )}
+
         {/* Upload Error */}
         {uploadError && (
           <p className="mt-1.5 text-[11px] text-rose-600 flex items-center gap-1">

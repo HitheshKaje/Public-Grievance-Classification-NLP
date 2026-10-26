@@ -2,7 +2,7 @@ import React, { useMemo } from 'react';
 import { 
   ArrowLeft, Send, CheckCircle2, FileText, Image as ImageIcon, 
   MapPin, User, Phone, Mail, Paperclip, AlertTriangle, ShieldCheck,
-  Volume2, FileAudio
+  Volume2, FileAudio, Sparkles, Globe
 } from 'lucide-react';
 
 function formatBytes(bytes) {
