@@ -1,9 +1,11 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { 
   Camera, UploadCloud, Trash2, RefreshCw, AlertCircle, 
-  MapPin, User, Phone, Mail, ArrowRight, Info, Eye, Image as ImageIcon
+  MapPin, User, Phone, Mail, ArrowRight, Info, Eye, Image as ImageIcon,
+  Sparkles, CheckCircle2
 } from 'lucide-react';
 import SupportingDocumentsDropzone from './SupportingDocumentsDropzone';
+import { processMultimodalComplaint } from '../../../services/complaintService';
 
 const ALLOWED_IMAGE_TYPES = ['image/jpeg', 'image/jpg', 'image/png'];
 const MAX_IMAGE_SIZE = 10 * 1024 * 1024; // 10MB
