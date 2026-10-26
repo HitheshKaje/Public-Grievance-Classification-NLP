@@ -326,6 +326,18 @@ async def get_current_user_profile(email: Optional[str] = Query(None)):
         "user": format_user(user_doc)
     }
 
+@app.get("/api/auth/admin-slot-status")
+async def get_admin_slot_status():
+    """Returns the current admin capacity status (strict maximum of 2 admins allowed)."""
+    db = get_db()
+    count = await db.users.count_documents({"role": "admin"})
+    return {
+        "max_admins": 2,
+        "current_admins": count,
+        "slots_available": max(0, 2 - count),
+        "registration_allowed": count < 2
+    }
+
 @app.post("/api/complaints")
 async def create_complaint(request: Request):
     """
