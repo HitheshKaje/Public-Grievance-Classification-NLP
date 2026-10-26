@@ -2,12 +2,20 @@ import React, { useState, useRef, useEffect } from 'react';
 import {
   Mic, MicOff, Square, Play, Pause, RotateCcw, UploadCloud,
   Trash2, Volume2, MapPin, User, Phone, Mail, ArrowRight,
-  Info, AlertCircle, CheckCircle2, FileAudio, Sparkles, RefreshCw
+  Info, AlertCircle, CheckCircle2, FileAudio, Sparkles, RefreshCw,
+  Globe, Languages
 } from 'lucide-react';
 import SupportingDocumentsDropzone from './SupportingDocumentsDropzone';
+import { processMultimodalComplaint } from '../../../services/complaintService';
 
 const ALLOWED_AUDIO_EXTENSIONS = ['.mp3', '.wav', '.m4a', '.ogg', '.webm', '.aac'];
 const MAX_AUDIO_SIZE = 10 * 1024 * 1024; // 10MB
+
+const VOICE_LANGUAGES = [
+  { code: 'hi-IN', id: 'hi', label: 'हिन्दी (Hindi)', badge: 'Hindi' },
+  { code: 'kn-IN', id: 'kn', label: 'ಕನ್ನಡ (Kannada)', badge: 'Kannada' },
+  { code: 'en-IN', id: 'en', label: 'English', badge: 'English' },
+];
 
 function formatBytes(bytes) {
   if (!bytes || bytes === 0) return '0 Bytes';
@@ -26,6 +34,10 @@ function formatTimer(seconds) {
 export default function VoiceComplaintUpload({ formData, onUpdateFormData, onProceedToReview }) {
   // Mode: 'record' (Live Mic) or 'upload' (Audio File)
   const [voiceMode, setVoiceMode] = useState('record');
+  const [selectedVoiceLang, setSelectedVoiceLang] = useState('hi-IN');
+  const [isTranslating, setIsTranslating] = useState(false);
+  const [translationResult, setTranslationResult] = useState(null);
+  const [translationError, setTranslationError] = useState('');
 
   // Recording State
   const [isRecording, setIsRecording] = useState(false);
@@ -299,7 +311,7 @@ export default function VoiceComplaintUpload({ formData, onUpdateFormData, onPro
           const recognition = new SpeechRecognition();
           recognition.continuous = true;
           recognition.interimResults = true;
-          recognition.lang = 'en-IN';
+          recognition.lang = selectedVoiceLang;
 
           recognition.onresult = (event) => {
             let transcript = '';
@@ -380,6 +392,33 @@ export default function VoiceComplaintUpload({ formData, onUpdateFormData, onPro
     }
   };
 
+  // AI Multilingual Voice Grasp & Translation Handler
+  const handleAiGraspAndTranslate = async () => {
+    if (!formData.audioFile && !formData.audioBlob) return;
+    setIsTranslating(true);
+    setTranslationError('');
+    try {
+      const result = await processMultimodalComplaint(formData, 'voice');
+      setTranslationResult(result);
+      onUpdateFormData({
+        title: result.structured_title || formData.title,
+        description: result.english_sentence || result.structured_description || formData.description,
+        location: (result.incident_location && result.incident_location !== 'Reported Incident Site') ? result.incident_location : (formData.location || 'Reported Incident Site'),
+        detectedLanguage: result.detected_language,
+        detectedLanguageCode: result.detected_language_code,
+        originalLanguageText: result.original_transcription,
+        englishTranslation: result.english_sentence
+      });
+      if (errors.title) setErrors((prev) => ({ ...prev, title: '' }));
+      if (errors.location) setErrors((prev) => ({ ...prev, location: '' }));
+    } catch (err) {
+      console.error('Translation error:', err);
+      setTranslationError(err.message || 'AI speech conversion could not be completed. The backend will process and translate upon submission.');
+    } finally {
+      setIsTranslating(false);
+    }
+  };
+
   // FORM VALIDATION
   const validate = () => {
     const errs = {};
@@ -388,14 +427,27 @@ export default function VoiceComplaintUpload({ formData, onUpdateFormData, onPro
     if (!hasAudio) {
       errs.audio = 'Please record your voice complaint or upload an audio file before proceeding.';
     }
+
+    // Auto-fill title if citizen only spoke and didn't write English title
     if (!formData.title?.trim()) {
-      errs.title = 'Complaint title / topic is required.';
-    } else if (formData.title.trim().length < 5) {
-      errs.title = 'Title must be at least 5 characters long.';
+      if (translationResult?.structured_title) {
+        onUpdateFormData({ title: translationResult.structured_title });
+      } else if (hasAudio) {
+        const langObj = VOICE_LANGUAGES.find((l) => l.code === selectedVoiceLang);
+        onUpdateFormData({ title: `Voice Grievance (${langObj?.badge || 'Spoken Audio'})` });
+      } else {
+        errs.title = 'Complaint title / topic is required.';
+      }
     }
+
     if (!formData.location?.trim()) {
-      errs.location = 'Incident location or landmark is required.';
+      if (translationResult?.incident_location && translationResult.incident_location !== 'Reported Incident Site') {
+        onUpdateFormData({ location: translationResult.incident_location });
+      } else {
+        errs.location = 'Incident location or landmark is required.';
+      }
     }
+
     if (formData.phone && !/^[0-9+\-\s]{8,15}$/.test(formData.phone.trim())) {
       errs.phone = 'Please enter a valid phone number or leave blank.';
     }
@@ -418,6 +470,40 @@ export default function VoiceComplaintUpload({ formData, onUpdateFormData, onPro
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
+      {/* 3-Language Spoken Voice Selector (Hindi, Kannada, English) */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 p-3 bg-gradient-to-r from-violet-50/80 via-indigo-50/50 to-blue-50/80 border border-violet-200/80 rounded-2xl">
+        <div className="flex items-center gap-2">
+          <div className="w-7 h-7 rounded-lg bg-violet-600 text-white flex items-center justify-center flex-shrink-0">
+            <Globe className="h-4 w-4" />
+          </div>
+          <div>
+            <span className="text-xs font-bold text-violet-950 block">
+              Spoken Voice Language
+            </span>
+            <span className="text-[10px] text-violet-700">
+              ಮಾತನಾಡುವ ಭಾಷೆ &bull; बोलने की भाषा (Hindi, Kannada, English)
+            </span>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-1.5 self-start sm:self-center">
+          {VOICE_LANGUAGES.map((lang) => (
+            <button
+              key={lang.code}
+              type="button"
+              onClick={() => setSelectedVoiceLang(lang.code)}
+              className={`px-3 py-1 text-xs rounded-xl font-semibold transition-all cursor-pointer ${
+                selectedVoiceLang === lang.code
+                  ? 'bg-violet-600 text-white shadow-sm ring-2 ring-violet-400/40'
+                  : 'bg-white text-slate-700 hover:bg-slate-50 border border-slate-200'
+              }`}
+            >
+              {lang.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
       {/* Voice Mode Selector: Mic Recording vs File Upload */}
       <div className="flex items-center justify-between border-b border-slate-100 pb-2">
         <label className="text-xs font-semibold text-slate-700">
@@ -731,6 +817,98 @@ export default function VoiceComplaintUpload({ formData, onUpdateFormData, onPro
                   </div>
                 </div>
               )}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* AI Grasp Voice & English Translation Action & Results Card */}
+      {hasAudioSaved && (
+        <div className="p-4 rounded-2xl bg-gradient-to-br from-violet-50/90 via-indigo-50/70 to-blue-50/90 border border-violet-200/90 shadow-sm space-y-3">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+            <div>
+              <div className="flex items-center gap-2">
+                <Sparkles className="h-4 w-4 text-violet-600" />
+                <span className="text-xs font-bold text-violet-950">
+                  Multilingual AI Speech Grasp & English Conversion
+                </span>
+              </div>
+              <p className="text-[11px] text-violet-700 mt-0.5">
+                Automatically converts Hindi (हिन्दी) or Kannada (ಕನ್ನಡ) spoken complaints into clear English sentences.
+              </p>
+            </div>
+
+            <button
+              type="button"
+              disabled={isTranslating}
+              onClick={handleAiGraspAndTranslate}
+              className="px-4 py-2 bg-gradient-to-r from-violet-600 via-indigo-600 to-blue-600 hover:from-violet-700 hover:to-indigo-700 text-white rounded-xl text-xs font-semibold shadow-sm flex items-center justify-center gap-2 transition-all cursor-pointer disabled:opacity-60 self-start sm:self-center"
+            >
+              {isTranslating ? (
+                <>
+                  <RefreshCw className="h-3.5 w-3.5 animate-spin" />
+                  <span>Grasping Voice Audio...</span>
+                </>
+              ) : (
+                <>
+                  <Sparkles className="h-3.5 w-3.5 text-amber-300" />
+                  <span>{translationResult ? 'Re-grasp & Translate' : '✨ Grasp Voice & Convert to English'}</span>
+                </>
+              )}
+            </button>
+          </div>
+
+          {translationError && (
+            <p className="text-[11px] text-rose-600 flex items-center gap-1 bg-white/70 p-2 rounded-lg border border-rose-200">
+              <AlertCircle className="h-3.5 w-3.5 flex-shrink-0" />
+              <span>{translationError}</span>
+            </p>
+          )}
+
+          {translationResult && (
+            <div className="bg-white/95 rounded-xl border border-violet-100 p-3.5 space-y-2.5 text-xs shadow-xs">
+              <div className="flex items-center justify-between pb-1 border-b border-slate-100">
+                <span className="font-bold text-emerald-700 flex items-center gap-1.5 text-xs">
+                  <CheckCircle2 className="h-4 w-4 text-emerald-600" />
+                  <span>Grasped Voice Successfully Converted to English Sentence</span>
+                </span>
+                <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-violet-100 text-violet-800 border border-violet-200">
+                  Detected Language: {translationResult.detected_language}
+                </span>
+              </div>
+
+              {translationResult.original_transcription && (
+                <div className="p-2 bg-slate-50 rounded-lg">
+                  <span className="text-[10px] uppercase font-bold text-slate-400 block mb-0.5">
+                    Original Spoken Transcript ({translationResult.detected_language})
+                  </span>
+                  <p className="text-slate-800 italic">
+                    "{translationResult.original_transcription}"
+                  </p>
+                </div>
+              )}
+
+              <div className="p-2.5 bg-violet-50/70 border border-violet-200/60 rounded-lg space-y-1">
+                <span className="text-[10px] uppercase font-bold text-violet-700 block">
+                  Converted English Sentence (Official Administrative Record)
+                </span>
+                <p className="text-slate-900 font-semibold leading-relaxed">
+                  "{translationResult.english_sentence}"
+                </p>
+              </div>
+
+              <div className="flex flex-wrap items-center gap-x-4 gap-y-1 pt-1 text-[11px] text-slate-600">
+                <span>Dept: <strong className="text-slate-800">{translationResult.detected_department}</strong></span>
+                <span>&bull;</span>
+                <span>Priority: <strong className={translationResult.priority === 'High' ? 'text-rose-600' : 'text-slate-800'}>{translationResult.priority}</strong></span>
+                {translationResult.incident_location && (
+                  <>
+                    <span>&bull;</span>
+                    <span>Landmark: <strong className="text-slate-800">{translationResult.incident_location}</strong></span>
+                  </>
+                )}
+              </div>
+              <p className="text-[10px] text-emerald-600 font-medium">✓ Title, English description, and landmark are auto-synced to your complaint below.</p>
             </div>
           )}
         </div>

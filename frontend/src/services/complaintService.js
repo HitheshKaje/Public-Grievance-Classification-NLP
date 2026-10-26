@@ -418,3 +418,40 @@ export async function deleteComplaint(complaintId) {
     throw error;
   }
 }
+
+/**
+ * Processes a multimodal grievance (Voice audio, Photo image, PDF, or Text in Hindi, Kannada, or English).
+ * Grasps speech, OCRs images/PDFs, and converts them to English sentences with auto-generated title & department.
+ */
+export async function processMultimodalComplaint(formData, method = 'voice') {
+  const payload = new FormData();
+  if (formData.title?.trim()) payload.append('title', formData.title.trim());
+  if (formData.description?.trim()) payload.append('description', formData.description.trim());
+  if (formData.location?.trim()) payload.append('location', formData.location.trim());
+  if (formData.citizenName?.trim()) payload.append('citizen_name', formData.citizenName.trim());
+  payload.append('method', method);
+
+  if (formData.audioFile instanceof File) {
+    payload.append('audioFile', formData.audioFile);
+  } else if (formData.audioBlob instanceof Blob) {
+    payload.append('audioFile', formData.audioBlob, `voice_grievance_${Date.now()}.webm`);
+  }
+  if (formData.imageFile instanceof File) {
+    payload.append('imageFile', formData.imageFile);
+  }
+  if (formData.pdfFile instanceof File) {
+    payload.append('pdfFile', formData.pdfFile);
+  }
+
+  const response = await fetch(`${API_BASE_URL}/multimodal/process`, {
+    method: 'POST',
+    body: payload
+  });
+
+  const data = await response.json().catch(() => null);
+  if (!response.ok) {
+    throw new Error(data?.detail || 'Multimodal translation processing failed.');
+  }
+  return data;
+}
+
