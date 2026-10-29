@@ -48,6 +48,13 @@ export default function UserDashboard({ activeTab = 'dashboard', onNavigateTab, 
       if (scope === 'my') {
         if (storedIds.length > 0) {
           const data = await fetchUserStats({ complaintIds: storedIds.join(',') });
+          if ((data.total ?? 0) === 0 && (data.recent_complaints || []).length === 0) {
+            try {
+              localStorage.removeItem('pgms_citizen_submitted_ids');
+            } catch (e) {
+              console.error('Failed to clear stored complaint IDs:', e);
+            }
+          }
           setUserStats({
             total: data.total ?? 0,
             in_progress: data.in_progress ?? 0,
