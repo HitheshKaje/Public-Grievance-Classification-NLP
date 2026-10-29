@@ -22,13 +22,15 @@ export default function WriteComplaintForm({ formData, onUpdateFormData, onProce
       const result = await processMultimodalComplaint(formData, 'write');
       setTranslationResult(result);
       onUpdateFormData({
-        title: result.structured_title || formData.title,
-        description: result.english_sentence || result.structured_description || formData.description,
+        // Only set title if user hasn't already provided one
+        title: formData.title?.trim() ? formData.title : (result.structured_title || formData.title),
+        // Preserve original user message in the top description box
+        description: formData.description,
         location: (result.incident_location && result.incident_location !== 'Reported Incident Site') ? result.incident_location : (formData.location || 'Reported Incident Site'),
         detectedLanguage: result.detected_language,
         detectedLanguageCode: result.detected_language_code,
-        originalLanguageText: result.original_transcription || formData.description,
-        englishTranslation: result.english_sentence
+        originalLanguageText: formData.description,
+        englishTranslation: result.english_sentence || result.structured_description
       });
       if (errors.title) setErrors((prev) => ({ ...prev, title: '' }));
       if (errors.description) setErrors((prev) => ({ ...prev, description: '' }));
@@ -180,9 +182,9 @@ export default function WriteComplaintForm({ formData, onUpdateFormData, onProce
               </span>
             </div>
             <p className="text-slate-800 italic bg-white/80 p-2 rounded-lg border border-violet-100">
-              "{translationResult.english_sentence}"
+              "{translationResult.english_sentence || translationResult.structured_description}"
             </p>
-            <p className="text-[10px] text-emerald-700">✓ English title and description are auto-filled.</p>
+            <p className="text-[10px] text-emerald-700">✓ English translation generated below. Your original message above is preserved.</p>
           </div>
         )}
       </div>

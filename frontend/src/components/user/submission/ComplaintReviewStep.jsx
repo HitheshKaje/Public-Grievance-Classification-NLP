@@ -112,26 +112,28 @@ export default function ComplaintReviewStep({
           </div>
 
           {/* Original Statement if in Hindi or Kannada */}
-          {formData.originalLanguageText && formData.detectedLanguage !== 'English' && (
+          {(formData.originalLanguageText || (formData.detectedLanguage && formData.detectedLanguage !== 'English')) && (
             <div className="p-3 bg-slate-50 rounded-xl border border-slate-200 space-y-1">
               <span className="text-[10px] uppercase font-bold text-slate-400 block">
-                Original Citizen Statement ({formData.detectedLanguage})
+                Original Citizen Statement {formData.detectedLanguage ? `(${formData.detectedLanguage})` : ''}
               </span>
               <p className="text-xs text-slate-700 italic">
-                "{formData.originalLanguageText}"
+                "{formData.originalLanguageText || formData.description}"
               </p>
             </div>
           )}
 
           {/* Converted English Sentence */}
-          {formData.description?.trim() ? (
+          {(formData.englishTranslation || formData.description)?.trim() ? (
             <div className="p-3.5 bg-violet-50/50 rounded-xl border border-violet-100 text-xs text-slate-800 whitespace-pre-wrap leading-relaxed space-y-1">
               {formData.detectedLanguage && formData.detectedLanguage !== 'English' && (
                 <span className="text-[10px] uppercase font-bold text-violet-700 block mb-0.5">
                   Official Converted English Statement
                 </span>
               )}
-              <p className="font-medium text-slate-800">{formData.description}</p>
+              <p className="font-medium text-slate-800">
+                {formData.englishTranslation || formData.description}
+              </p>
             </div>
           ) : (
             <p className="text-xs text-slate-400 italic">
