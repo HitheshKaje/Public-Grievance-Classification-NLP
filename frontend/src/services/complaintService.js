@@ -24,6 +24,15 @@ export async function submitGrievance(formData, method = 'write') {
   if (formData.email?.trim()) {
     payload.append('email', formData.email.trim());
   }
+  if (formData.englishTranslation?.trim()) {
+    payload.append('english_translation', formData.englishTranslation.trim());
+  }
+  if (formData.originalLanguageText?.trim()) {
+    payload.append('original_language_text', formData.originalLanguageText.trim());
+  }
+  if (formData.detectedLanguage?.trim()) {
+    payload.append('detected_language', formData.detectedLanguage.trim());
+  }
 
   // Primary attached files
   if (formData.pdfFile instanceof File) {
