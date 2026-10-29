@@ -6,6 +6,7 @@ import UserDashboard from './pages/UserDashboard';
 import AdminLayout from './layouts/AdminLayout';
 import AdminDashboard from './pages/AdminDashboard';
 import LoginPage from './pages/LoginPage';
+import LandingPage from './pages/LandingPage';
 import { getCurrentUser, logout } from './services/authService';
 
 export default function App() {
@@ -22,12 +23,12 @@ export default function App() {
   const isLoginRoute = () => {
     const path = window.location.pathname.toLowerCase();
     const hash = window.location.hash.toLowerCase();
-    return path === '/' || path === '' || path.includes('login') || hash.includes('login');
+    return path.includes('login') || hash.includes('login');
   };
 
   const [currentUser, setCurrentUser] = useState(getCurrentUser);
-  // Default to showing LoginPage if on root '/', '/login', or when user is not authenticated
-  const [isExplicitLogin, setIsExplicitLogin] = useState(() => isLoginRoute() || !getCurrentUser());
+  const [showLogin, setShowLogin] = useState(() => isLoginRoute());
+  const [loginRegister, setLoginRegister] = useState(false);
   const [currentPortal, setCurrentPortal] = useState(() => {
     const portal = getInitialPortal();
     if (portal) return portal;
@@ -42,9 +43,24 @@ export default function App() {
   const [userTab, setUserTab] = useState('dashboard');
   const [adminTab, setAdminTab] = useState('overview');
 
+  // Handle navigation from Landing Page to Login
+  const handleNavigateToLogin = (role = 'officer', isRegister = false) => {
+    const targetPortal = role === 'citizen' ? 'user' : role;
+    setCurrentPortal(targetPortal);
+    setLoginRegister(isRegister);
+    setShowLogin(true);
+    window.history.pushState({}, '', '/login');
+  };
+
+  // Return to landing page
+  const handleBackToLanding = () => {
+    setShowLogin(false);
+    window.history.pushState({}, '', '/');
+  };
+
   // Handle successful login
   const handleLoginSuccess = (user, role) => {
-    setIsExplicitLogin(false);
+    setShowLogin(false);
     setCurrentUser(user);
     const targetRole = role || user?.role;
     let targetPortal = 'officer';
@@ -66,8 +82,8 @@ export default function App() {
   const handleLogout = () => {
     logout();
     setCurrentUser(null);
-    setIsExplicitLogin(true);
-    window.history.pushState({}, '', '/login');
+    setShowLogin(false);
+    window.history.pushState({}, '', '/');
   };
 
   // Sync portal changes with browser history and URL
@@ -77,20 +93,11 @@ export default function App() {
     window.history.pushState({}, '', targetPath);
   };
 
-  // Enforce LoginPage when starting at root '/' or unauthenticated
-  useEffect(() => {
-    const path = window.location.pathname.toLowerCase();
-    if (path === '/' || path === '' || !currentUser) {
-      window.history.replaceState({}, '', '/login');
-      setIsExplicitLogin(true);
-    }
-  }, [currentUser]);
-
   // Listen for browser forward/back buttons
   useEffect(() => {
     const handlePopState = () => {
       const loginRoute = isLoginRoute();
-      setIsExplicitLogin(loginRoute || !getCurrentUser());
+      setShowLogin(loginRoute);
       const portal = getInitialPortal();
       if (portal) {
         setCurrentPortal(portal);
@@ -100,12 +107,34 @@ export default function App() {
     return () => window.removeEventListener('popstate', handlePopState);
   }, []);
 
-  // If not authenticated or on /login or root route, render LoginPage
-  if (!currentUser || isExplicitLogin) {
+  // 1. Unauthenticated: Show Landing Page by default, or LoginPage if login requested
+  if (!currentUser) {
+    if (showLogin) {
+      return (
+        <LoginPage
+          initialPortal={currentPortal === 'user' ? 'citizen' : currentPortal || 'officer'}
+          initialRegister={loginRegister}
+          onLoginSuccess={handleLoginSuccess}
+          onBackToHome={handleBackToLanding}
+        />
+      );
+    }
+
+    return (
+      <LandingPage 
+        onNavigateToLogin={handleNavigateToLogin}
+      />
+    );
+  }
+
+  // 2. If authenticated user explicitly opens /login
+  if (showLogin) {
     return (
       <LoginPage
-        initialPortal={currentPortal || 'officer'}
+        initialPortal={currentPortal === 'user' ? 'citizen' : currentPortal || 'officer'}
+        initialRegister={loginRegister}
         onLoginSuccess={handleLoginSuccess}
+        onBackToHome={() => setShowLogin(false)}
       />
     );
   }

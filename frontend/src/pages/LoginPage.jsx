@@ -2,16 +2,21 @@ import React, { useState, useEffect, useRef } from 'react';
 import { 
   Shield, User, Building2, Lock, Mail, Eye, EyeOff, 
   CheckCircle2, AlertCircle, Sparkles, LogIn, UserPlus, 
-  Phone, Briefcase, Check, ArrowRight
+  Phone, Briefcase, Check, ArrowRight, ArrowLeft
 } from 'lucide-react';
 import { login, register, getAdminSlotStatus } from '../services/authService';
 
-export default function LoginPage({ initialPortal = 'officer', onLoginSuccess }) {
+export default function LoginPage({ 
+  initialPortal = 'officer', 
+  initialRegister = false,
+  onLoginSuccess,
+  onBackToHome
+}) {
   const [selectedRole, setSelectedRole] = useState(
     initialPortal === 'user' ? 'citizen' : initialPortal
   );
   
-  const [isRegister, setIsRegister] = useState(false);
+  const [isRegister, setIsRegister] = useState(Boolean(initialRegister));
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -41,6 +46,18 @@ export default function LoginPage({ initialPortal = 'officer', onLoginSuccess })
       if (status) setAdminCapacity(status);
     });
   }, [selectedRole]);
+
+  useEffect(() => {
+    if (initialPortal) {
+      setSelectedRole(initialPortal === 'user' ? 'citizen' : initialPortal);
+    }
+  }, [initialPortal]);
+
+  useEffect(() => {
+    if (typeof initialRegister === 'boolean') {
+      setIsRegister(initialRegister);
+    }
+  }, [initialRegister]);
 
   // Mouse move handler for interactive dynamic ambient glow
   const handleMouseMove = (e) => {
@@ -243,6 +260,26 @@ export default function LoginPage({ initialPortal = 'officer', onLoginSuccess })
       {/* Floating Ambient Glow Orbs */}
       <div className="absolute top-1/4 -left-20 w-80 h-80 bg-blue-600/10 rounded-full blur-[110px] pointer-events-none animate-pulse-subtle" />
       <div className="absolute bottom-1/4 -right-20 w-80 h-80 bg-purple-600/10 rounded-full blur-[110px] pointer-events-none animate-pulse-subtle" />
+
+      {/* Back to Home Button */}
+      {onBackToHome && (
+        <div className="w-full max-w-lg mb-4 flex items-center justify-between relative z-20">
+          <button
+            type="button"
+            id="back-to-landing-btn"
+            onClick={onBackToHome}
+            className="inline-flex items-center gap-2 text-xs font-bold text-slate-300 hover:text-white bg-slate-900/80 hover:bg-slate-800 px-4 py-2 rounded-xl border border-slate-700/80 hover:border-slate-500 transition-all cursor-pointer shadow-lg shadow-black/30 backdrop-blur-md active:scale-95 group font-display"
+          >
+            <ArrowLeft className="h-4 w-4 text-slate-400 group-hover:-translate-x-1 group-hover:text-white transition-all" />
+            <span>Back to Portal Overview</span>
+          </button>
+          
+          <div className="hidden sm:inline-flex items-center gap-1.5 text-[11px] text-slate-400 font-semibold bg-slate-900/60 px-3 py-1 rounded-full border border-slate-800">
+            <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+            <span>Secure SSL Encrypted</span>
+          </div>
+        </div>
+      )}
 
       {/* Brand Header */}
       <div className="text-center mb-6 relative z-10">
