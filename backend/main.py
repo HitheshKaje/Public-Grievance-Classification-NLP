@@ -479,6 +479,9 @@ async def create_complaint(request: Request):
         email = form.get("email")
         citizen_id = form.get("citizen_id") or form.get("citizenId")
         method = form.get("method") or "write"
+        english_translation_in = form.get("english_translation") or form.get("englishTranslation")
+        original_language_text_in = form.get("original_language_text") or form.get("originalLanguageText")
+        detected_language_in = form.get("detected_language") or form.get("detectedLanguage")
 
         # Process any uploaded files (Voice webm/mp3/wav, photo jpeg/png, or petition pdf)
         for key, value in form.multi_items():
@@ -515,6 +518,9 @@ async def create_complaint(request: Request):
         email = body.get("email")
         citizen_id = body.get("citizen_id") or body.get("citizenId")
         method = body.get("method") or "write"
+        english_translation_in = body.get("english_translation") or body.get("englishTranslation")
+        original_language_text_in = body.get("original_language_text") or body.get("originalLanguageText")
+        detected_language_in = body.get("detected_language") or body.get("detectedLanguage")
         file_references = body.get("file_references", [])
 
     # Check if this complaint involves audio, image, PDF, or non-English text (Hindi or Kannada)
@@ -525,21 +531,22 @@ async def create_complaint(request: Request):
             detail="Complaint title or description is required when no attachments are provided."
         )
 
-    detected_script = detect_script_language(f"{title} {description}")
+    detected_script = detected_language_in or detect_script_language(f"{title} {description}")
     is_non_english = detected_script in ["Hindi", "Kannada"]
     is_voice_or_media = method in ["voice", "image", "pdf"] or has_files
 
     # Multilingual & Multimodal conversion engine
     ai_data = None
     original_lang = detected_script
-    original_text = description or title or ""
-    english_translation = description or title or ""
+    original_text = original_language_text_in or description or title or ""
+    english_translation = english_translation_in or description or title or ""
     structured_title = title
-    structured_desc = description
+    structured_desc = english_translation_in or description
     suggested_dept = None
     priority = "Normal"
 
-    if is_voice_or_media or is_non_english:
+    # If already translated from frontend in write mode, skip duplicate AI call
+    if (is_voice_or_media or is_non_english) and not (method == "write" and english_translation_in):
         try:
             complaint_payload = {
                 "title": title,
