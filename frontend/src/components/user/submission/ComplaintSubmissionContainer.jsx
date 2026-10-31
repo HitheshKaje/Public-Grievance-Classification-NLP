@@ -24,12 +24,23 @@ const INITIAL_FORM_DATA = {
   attachments: []
 };
 
-export default function ComplaintSubmissionContainer({ onNavigateTab, onTrackGrievance }) {
+export default function ComplaintSubmissionContainer({
+  onNavigateTab,
+  onTrackGrievance,
+  onGrievanceSubmitted,
+  currentUser
+}) {
   const { t } = useLanguage();
   const [method, setMethod] = useState('write'); // 'write' | 'pdf' | 'image' | 'voice'
   const [currentLanguage, setCurrentLanguage] = useState('en'); // 'en' | 'kn' | 'hi'
   const [step, setStep] = useState('fill'); // 'fill' | 'review' | 'confirmed'
-  const [formData, setFormData] = useState(INITIAL_FORM_DATA);
+  const [formData, setFormData] = useState(() => ({
+    ...INITIAL_FORM_DATA,
+    citizenName: currentUser?.name || '',
+    phone: currentUser?.phone || '',
+    email: currentUser?.email || '',
+    citizenId: currentUser?.id || currentUser?.citizen_id || ''
+  }));
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState(null);
   const [submittedComplaint, setSubmittedComplaint] = useState(null);
@@ -39,7 +50,13 @@ export default function ComplaintSubmissionContainer({ onNavigateTab, onTrackGri
   };
 
   const handleResetForm = () => {
-    setFormData(INITIAL_FORM_DATA);
+    setFormData({
+      ...INITIAL_FORM_DATA,
+      citizenName: currentUser?.name || '',
+      phone: currentUser?.phone || '',
+      email: currentUser?.email || '',
+      citizenId: currentUser?.id || currentUser?.citizen_id || ''
+    });
     setSubmitError(null);
     setSubmittedComplaint(null);
     setStep('fill');
@@ -55,6 +72,9 @@ export default function ComplaintSubmissionContainer({ onNavigateTab, onTrackGri
         saveLocalUserComplaintId(complaintData.complaint_id);
       }
       setSubmittedComplaint(complaintData);
+      if (onGrievanceSubmitted) {
+        onGrievanceSubmitted(complaintData);
+      }
       setStep('confirmed');
     } catch (err) {
       setSubmitError(
