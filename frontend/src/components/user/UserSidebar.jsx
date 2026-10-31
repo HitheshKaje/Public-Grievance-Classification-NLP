@@ -50,13 +50,13 @@ export default function UserSidebar({ activeTab, onSelectTab, isOpen, onClose, o
 
               <div>
                 <h1 className="text-base font-extrabold tracking-tight text-slate-900 leading-tight">
-                  {t('portal_name', 'PGMS')}
+                  {t('portal_name', 'CiviQ')}
                 </h1>
                 <p className="text-[11px] text-slate-500 font-medium leading-tight">
-                  {t('portal_sub_line1', 'Public Grievance')}
+                  {t('portal_sub_line1', 'Civic Grievance')}
                 </p>
                 <p className="text-[11px] text-slate-500 font-medium leading-tight">
-                  {t('portal_sub_line2', 'Management System')}
+                  {t('portal_sub_line2', 'Redressal Portal')}
                 </p>
               </div>
             </div>

@@ -16,10 +16,10 @@ export const TRANSLATIONS = {
     profile: 'Profile',
     support: 'Help & Support',
     logout: 'Logout',
-    portal_name: 'PGMS',
-    portal_sub: 'Public Grievance Management System',
-    portal_sub_line1: 'Public Grievance',
-    portal_sub_line2: 'Management System',
+    portal_name: 'CiviQ',
+    portal_sub: 'CiviQ - Civic Grievance & Redressal Portal',
+    portal_sub_line1: 'CiviQ',
+    portal_sub_line2: 'Civic Grievance Portal',
     motto: 'Your Voice for a Better Community',
 
     // Header
@@ -60,10 +60,10 @@ export const TRANSLATIONS = {
 
     // Track Card
     track_grievance: 'Track Your Grievance',
-    track_placeholder: 'Enter Complaint ID (e.g., PGMS-20261024-PUAVG2)...',
+    track_placeholder: 'Enter Complaint ID (e.g., CIVIQ-20261024-PUAVG2)...',
     enter_valid_id: 'Please enter a valid Complaint ID',
     track_status_title: 'Track Grievance Status',
-    track_status_desc: 'Query the live PGMS database for verified complaint details, department routing, and processing status.',
+    track_status_desc: 'Query the live CiviQ database for verified complaint details, department routing, and processing status.',
 
     // Recent Complaints Table & Modal
     recent_grievances: 'Recent Grievances',
@@ -159,10 +159,10 @@ export const TRANSLATIONS = {
     profile: 'ಪ್ರೊಫೈಲ್',
     support: 'ಸಹಾಯ ಮತ್ತು ಬೆಂಬಲ',
     logout: 'ಲಾಗ್ ಔಟ್',
-    portal_name: 'ಪಿ.ಜಿ.ಎಂ.ಎಸ್',
-    portal_sub: 'ಸಾರ್ವಜನಿಕ ಕುಂದುಕೊರತೆ ನಿರ್ವಹಣಾ ವ್ಯವಸ್ಥೆ',
-    portal_sub_line1: 'ಸಾರ್ವಜನಿಕ ಕುಂದುಕೊರತೆ',
-    portal_sub_line2: 'ನಿರ್ವಹಣಾ ವ್ಯವಸ್ಥೆ',
+    portal_name: 'CiviQ',
+    portal_sub: 'CiviQ - ಸಾರ್ವಜನಿಕ ಕುಂದುಕೊರತೆ ನಿರ್ವಹಣಾ ವ್ಯವಸ್ಥೆ',
+    portal_sub_line1: 'CiviQ',
+    portal_sub_line2: 'ಕುಂದುಕೊರತೆ ಪೋರ್ಟಲ್',
     motto: 'ಉತ್ತಮ ಸಮುದಾಯಕ್ಕಾಗಿ ನಿಮ್ಮ ಧ್ವನಿ',
 
     // Header
@@ -203,7 +203,7 @@ export const TRANSLATIONS = {
 
     // Track Card
     track_grievance: 'ನಿಮ್ಮ ಕುಂದುಕೊರತೆಯನ್ನು ಟ್ರ್ಯಾಕ್ ಮಾಡಿ',
-    track_placeholder: 'ದೂರು ಐಡಿ ನಮೂದಿಸಿ (ಉದಾ: PGMS-20261024-PUAVG2)...',
+    track_placeholder: 'ದೂರು ಐಡಿ ನಮೂದಿಸಿ (ಉದಾ: CIVIQ-20261024-PUAVG2)...',
     enter_valid_id: 'ದಯವಿಟ್ಟು ಮಾನ್ಯವಾದ ದೂರು ಐಡಿಯನ್ನು ನಮೂದಿಸಿ',
     track_status_title: 'ಕುಂದುಕೊರತೆಯ ಸ್ಥಿತಿ ಟ್ರ್ಯಾಕ್ ಮಾಡಿ',
     track_status_desc: 'ದೃಢೀಕೃತ ದೂರಿನ ವಿವರಗಳು, ಇಲಾಖಾ ವಿತರಣೆ ಮತ್ತು ಪ್ರಕ್ರಿಯೆಯ ಸ್ಥಿತಿಯನ್ನು ನೈಜ ಸಮಯದಲ್ಲಿ ವೀಕ್ಷಿಸಿ.',
@@ -302,10 +302,10 @@ export const TRANSLATIONS = {
     profile: 'प्रोफ़ाइल',
     support: 'सहायता और समर्थन',
     logout: 'लॉग आउट',
-    portal_name: 'पीजीएमएस',
-    portal_sub: 'लोक शिकायत प्रबंधन प्रणाली',
-    portal_sub_line1: 'सार्वजनिक शिकायत',
-    portal_sub_line2: 'प्रबंधन प्रणाली',
+    portal_name: 'CiviQ',
+    portal_sub: 'CiviQ - लोक शिकायत व निवारण प्रणाली',
+    portal_sub_line1: 'CiviQ',
+    portal_sub_line2: 'शिकायत निवारण पोर्टल',
     motto: 'बेहतर समाज के लिए आपकी आवाज़',
 
     // Header

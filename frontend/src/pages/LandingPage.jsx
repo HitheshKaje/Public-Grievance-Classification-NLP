@@ -110,8 +110,8 @@ export default function LandingPage({ onNavigateToLogin }) {
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <span className="text-base sm:text-lg font-extrabold tracking-tight text-white font-display">
-                  Public Grievance Portal
+                <span className="text-xl sm:text-2xl font-black tracking-tight text-white font-display">
+                  CiviQ
                 </span>
                 <span className="hidden sm:inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">
                   <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-ping mr-1.5"></span>
@@ -119,7 +119,7 @@ export default function LandingPage({ onNavigateToLogin }) {
                 </span>
               </div>
               <p className="text-xs text-slate-400 hidden sm:block">
-                National AI Redressal & NLP Classification System
+                AI-Powered Civic Intelligence &amp; Grievance Redressal
               </p>
             </div>
           </div>
@@ -153,22 +153,22 @@ export default function LandingPage({ onNavigateToLogin }) {
         <div className="inline-flex items-center gap-2.5 px-4 py-1.5 rounded-full bg-slate-900/90 border border-slate-700/80 shadow-inner mb-6 backdrop-blur-md">
           <span className="h-2 w-2 rounded-full bg-blue-400 animate-pulse"></span>
           <span className="text-xs sm:text-sm font-semibold text-slate-300">
-            Citizen First &bull; AI-Powered Natural Language Processing
+            CiviQ Platform &bull; Citizen First &bull; AI-Powered Natural Language Processing
           </span>
           <Sparkles className="h-3.5 w-3.5 text-amber-400 ml-0.5" />
         </div>
 
         {/* Hero Headline */}
         <h1 className="text-3xl sm:text-5xl lg:text-6xl font-black tracking-tight text-white max-w-4xl leading-tight sm:leading-tight lg:leading-[1.15] mb-6 font-display">
-          Intelligent Public Grievance <br className="hidden sm:inline" />
+          CiviQ: Intelligent Civic <br className="hidden sm:inline" />
           <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-indigo-300 to-purple-400">
-            Classification &amp; Redressal
+            Issue Classification &amp; Redressal
           </span>
         </h1>
 
         {/* Hero Subtitle */}
         <p className="text-base sm:text-lg text-slate-300 max-w-2xl mx-auto mb-10 leading-relaxed font-normal">
-          A centralized, government-grade civic grievance platform. Automatically classifies 
+          A centralized, government-grade civic intelligence platform powered by CiviQ. Automatically classifies 
           citizen issues using state-of-the-art NLP models, dispatches formal work orders, and ensures 
           100% accountability across municipal departments.
         </p>
@@ -241,7 +241,7 @@ export default function LandingPage({ onNavigateToLogin }) {
               Select Your Gateway
             </h2>
             <p className="text-sm text-slate-400 mt-2 max-w-xl mx-auto">
-              Choose your role below to jump directly into your dedicated grievance portal interface.
+              Choose your role below to jump directly into your dedicated CiviQ portal interface.
             </p>
           </div>
 
@@ -471,7 +471,7 @@ export default function LandingPage({ onNavigateToLogin }) {
             <span className="text-xl">🏛️</span>
             <div>
               <p className="font-semibold text-slate-300">
-                Central Public Grievance Redress &amp; Monitoring System (CPGRAMS - AI)
+                CiviQ &bull; Central Civic Redress &amp; Monitoring System
               </p>
               <p className="text-[11px] text-slate-500">
                 Department of Administrative Reforms &amp; Public Grievances &bull; Government Services

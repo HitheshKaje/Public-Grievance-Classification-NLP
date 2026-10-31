@@ -53,13 +53,13 @@ export default function Sidebar({ activeTab, onSelectTab, isOpen, onClose, onLog
 
               <div>
                 <h1 className="text-base font-extrabold tracking-tight text-slate-900 leading-tight">
-                  PGMS
+                  CiviQ
                 </h1>
                 <p className="text-[11px] text-slate-500 font-medium leading-tight">
-                  Public Grievance
+                  Civic Intelligence &amp;
                 </p>
                 <p className="text-[11px] text-slate-500 font-medium leading-tight">
-                  Management System
+                  Admin Portal
                 </p>
               </div>
             </div>

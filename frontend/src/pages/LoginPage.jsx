@@ -287,8 +287,11 @@ export default function LoginPage({
           🏛️
         </div>
         <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-white font-display">
-          Public Grievance Portal
+          CiviQ Portal
         </h1>
+        <p className="text-xs text-slate-300 font-medium mt-1">
+          Intelligent Civic Grievance &amp; Redressal Platform
+        </p>
       </div>
 
       {/* Main Login Card - Expanded Size (max-w-lg) */}
