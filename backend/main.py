@@ -557,11 +557,14 @@ async def create_complaint(request: Request):
                 "method": method,
                 "file_references": file_references
             }
-            ai_result = await asyncio.to_thread(
-                process_multilingual_complaint,
-                complaint_payload,
-                uploads_dir=Path(UPLOAD_DIR),
-                raw_files=in_memory_files if in_memory_files else None
+            ai_result = await asyncio.wait_for(
+                asyncio.to_thread(
+                    process_multilingual_complaint,
+                    complaint_payload,
+                    uploads_dir=Path(UPLOAD_DIR),
+                    raw_files=in_memory_files if in_memory_files else None
+                ),
+                timeout=7.0
             )
             if ai_result.get("success") and ai_result.get("extracted"):
                 ai_data = ai_result["extracted"]
@@ -574,8 +577,20 @@ async def create_complaint(request: Request):
                 priority = ai_data.get("priority", "Normal")
                 if not location and ai_data.get("incident_location"):
                     location = ai_data.get("incident_location")
-        except Exception as e:
-            logger.error(f"Multilingual intake processing notice: {e}")
+        except (asyncio.TimeoutError, Exception) as e:
+            logger.warning(f"Intake processing notice ({e}), applying fast NLP extraction")
+            from gemini_service import fallback_nlp_extraction
+            ai_data = fallback_nlp_extraction(complaint_payload)
+            if ai_data:
+                original_lang = ai_data.get("detected_language") or detected_script
+                original_text = ai_data.get("original_language_text") or original_text
+                english_translation = ai_data.get("english_sentence") or ai_data.get("structured_description") or english_translation
+                structured_title = ai_data.get("structured_title") or structured_title
+                structured_desc = ai_data.get("structured_description") or english_translation or structured_desc
+                suggested_dept = ai_data.get("detected_department")
+                priority = ai_data.get("priority", "Normal")
+                if not location and ai_data.get("incident_location"):
+                    location = ai_data.get("incident_location")
 
     # Fallback default values if still empty after media processing
     if not title:
@@ -983,29 +998,43 @@ async def get_officer_stats(department: str = "All"):
 async def get_user_stats(
     complaint_ids: Optional[str] = None,
     citizen_id: Optional[str] = None,
-    phone: Optional[str] = None
+    phone: Optional[str] = None,
+    email: Optional[str] = None
 ):
     """
     Computes live grievance counts and processing status for the Citizen / User Dashboard.
-    Supports filtering by citizen's submitted complaint IDs, citizen_id, or phone.
+    Supports filtering by citizen's submitted complaint IDs, citizen_id, phone, or email.
     If no filter provided, returns the global citizen statistics from MongoDB.
     """
     db = get_db()
-    query_filter = {}
+    query_conditions = []
 
     if complaint_ids and complaint_ids.strip():
         ids = [i.strip() for i in complaint_ids.split(",") if i.strip()]
         if ids:
-            query_filter = {
+            query_conditions.append({
                 "$or": [
                     {"complaint_id": {"$in": ids}},
                     {"complaint_id": {"$in": [i.upper() for i in ids]}}
                 ]
-            }
-    elif citizen_id and citizen_id.strip():
-        query_filter = {"citizen_id": citizen_id.strip()}
-    elif phone and phone.strip():
-        query_filter = {"phone": phone.strip()}
+            })
+    if citizen_id and citizen_id.strip():
+        query_conditions.append({"citizen_id": citizen_id.strip()})
+    if phone and phone.strip():
+        query_conditions.append({"phone": phone.strip()})
+    if email and email.strip():
+        em = email.strip()
+        query_conditions.append({
+            "$or": [
+                {"email": em},
+                {"email": em.lower()}
+            ]
+        })
+
+    if query_conditions:
+        query_filter = {"$or": query_conditions}
+    else:
+        query_filter = {}
 
     # Total complaints count for this citizen
     total_count = await db.complaints.count_documents(query_filter)

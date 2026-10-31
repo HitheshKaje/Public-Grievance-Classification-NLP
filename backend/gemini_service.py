@@ -24,11 +24,9 @@ DEPARTMENTS = [
 ]
 
 MODELS_CASCADE = [
-    "gemini-3.8-flash",
-    "gemini-3.5-flash",
     "gemini-2.5-flash",
-    "gemini-flash-latest",
-    "gemini-3.7-flash"
+    "gemini-2.5-flash-lite",
+    "gemini-flash-latest"
 ]
 
 def get_gemini_client():
@@ -296,7 +294,7 @@ Return ONLY a valid JSON object matching this schema:
                     logger.warning(f"Could not attach in-memory file {filename}: {e}")
 
     # Attach media files from uploads_dir if available
-    if uploads_dir and attachments:
+    if uploads_dir and attachments and not raw_files:
         for att in attachments:
             rel_path = att.get("path") or ""
             clean_path = rel_path.replace("uploads/", "").replace("uploads\\", "").lstrip("/\\")

@@ -24,6 +24,11 @@ export async function submitGrievance(formData, method = 'write') {
   if (formData.email?.trim()) {
     payload.append('email', formData.email.trim());
   }
+  if (formData.citizenId?.trim()) {
+    payload.append('citizen_id', formData.citizenId.trim());
+  } else if (formData.citizen_id?.trim()) {
+    payload.append('citizen_id', formData.citizen_id.trim());
+  }
   if (formData.englishTranslation?.trim()) {
     payload.append('english_translation', formData.englishTranslation.trim());
   }
@@ -351,7 +356,7 @@ export function saveLocalUserComplaintId(complaintId) {
 /**
  * Fetches real-time citizen dashboard statistics and processing counts from the backend MongoDB API.
  */
-export async function fetchUserStats({ complaintIds = '', citizenId = '', phone = '' } = {}) {
+export async function fetchUserStats({ complaintIds = '', citizenId = '', phone = '', email = '' } = {}) {
   try {
     const params = new URLSearchParams();
     if (complaintIds && complaintIds.trim()) {
@@ -362,6 +367,9 @@ export async function fetchUserStats({ complaintIds = '', citizenId = '', phone 
     }
     if (phone && phone.trim()) {
       params.append('phone', phone.trim());
+    }
+    if (email && email.trim()) {
+      params.append('email', email.trim());
     }
 
     const queryString = params.toString();
