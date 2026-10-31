@@ -24,7 +24,7 @@ async def run_tests():
     cid = generate_complaint_id()
     print(f"Generated sample Complaint ID: {cid}")
     today_str = datetime.utcnow().strftime("%Y%m%d")
-    assert cid.startswith(f"PGMS-{today_str}-"), f"ID must start with PGMS-{today_str}-"
+    assert cid.startswith(f"CIVIQ-{today_str}-"), f"ID must start with CIVIQ-{today_str}-"
     parts = cid.split("-")
     assert len(parts) == 3, "ID must have 3 hyphen-separated parts"
     assert len(parts[2]) == 6, "Random suffix must be 6 characters"
