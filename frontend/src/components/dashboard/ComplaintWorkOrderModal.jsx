@@ -176,7 +176,7 @@ export default function ComplaintWorkOrderModal({
   const selectedOfficer = officers.find((o) => o.officer_id === selectedOfficerId);
   const officerName = selectedOfficer ? selectedOfficer.name : (dispatchedOrder?.assigned_officer || 'Departmental Nodal Officer');
   const officerDesignation = selectedOfficer?.designation || 'Nodal Executive Officer';
-  const workOrderId = dispatchedOrder?.work_order_id || `PGMS-WO-${new Date().toISOString().slice(0,10).replace(/-/g,'')}-PENDING`;
+  const workOrderId = dispatchedOrder?.work_order_id || `CIVIQ-WO-${new Date().toISOString().slice(0,10).replace(/-/g,'')}-PENDING`;
 
   const getMethodBadge = (method) => {
     switch (method) {

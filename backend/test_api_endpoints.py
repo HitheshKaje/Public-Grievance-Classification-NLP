@@ -43,7 +43,7 @@ def test_api():
     assert result["success"] is True
     complaint_id = result["complaint_id"]
     print(f"[OK] Complaint registered successfully! ID: {complaint_id}")
-    assert complaint_id.startswith("PGMS-")
+    assert complaint_id.startswith(("CIVIQ-", "PGMS-"))
     
     complaint = result["complaint"]
     assert complaint["status"] == "Pending"

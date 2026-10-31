@@ -85,7 +85,7 @@ def run_tests():
     print("Detected Language:", complaint.get("detected_language"))
     print("English Translation:", complaint.get("english_translation"))
     assert complaint.get("detected_language") == "Hindi"
-    assert complaint["complaint_id"].startswith("PGMS-")
+    assert complaint["complaint_id"].startswith(("CIVIQ-", "PGMS-"))
     print("[PASS] Hindi complaint filed and auto-translated into English!\n")
 
     print("=" * 60)

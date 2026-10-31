@@ -419,7 +419,7 @@ export default function UserDashboard({ activeTab = 'dashboard', onNavigateTab, 
                       <span>Gmail:</span>
                     </span>
                     <a 
-                      href="mailto:ranjithgowda@gmail.com?subject=Grievance%20Support%20Request%20-%20PGMS" 
+                      href="mailto:ranjithgowda@gmail.com?subject=Grievance%20Support%20Request%20-%20CiviQ" 
                       className="font-mono text-[11px] font-semibold text-slate-800 hover:text-blue-600 hover:underline flex items-center gap-1 truncate max-w-[170px]"
                       title="Email Ranjith Gowda"
                     >
@@ -437,7 +437,7 @@ export default function UserDashboard({ activeTab = 'dashboard', onNavigateTab, 
                       <span>Call</span>
                     </a>
                     <a 
-                      href="mailto:ranjithgowda@gmail.com?subject=Grievance%20Support%20Request%20-%20PGMS"
+                      href="mailto:ranjithgowda@gmail.com?subject=Grievance%20Support%20Request%20-%20CiviQ"
                       className="flex-1 py-1 px-2 rounded-lg bg-white hover:bg-slate-100 text-slate-700 border border-slate-200 font-semibold text-[11px] flex items-center justify-center gap-1 transition-colors shadow-2xs"
                     >
                       <Mail className="h-3 w-3 text-rose-500" />
@@ -488,7 +488,7 @@ export default function UserDashboard({ activeTab = 'dashboard', onNavigateTab, 
                       <span>Gmail:</span>
                     </span>
                     <a 
-                      href="mailto:hitheshgowda@gmail.com?subject=Grievance%20Support%20Request%20-%20PGMS" 
+                      href="mailto:hitheshgowda@gmail.com?subject=Grievance%20Support%20Request%20-%20CiviQ" 
                       className="font-mono text-[11px] font-semibold text-slate-800 hover:text-emerald-600 hover:underline flex items-center gap-1 truncate max-w-[170px]"
                       title="Email Hithesh Gowda"
                     >
@@ -506,7 +506,7 @@ export default function UserDashboard({ activeTab = 'dashboard', onNavigateTab, 
                       <span>Call</span>
                     </a>
                     <a 
-                      href="mailto:hitheshgowda@gmail.com?subject=Grievance%20Support%20Request%20-%20PGMS"
+                      href="mailto:hitheshgowda@gmail.com?subject=Grievance%20Support%20Request%20-%20CiviQ"
                       className="flex-1 py-1 px-2 rounded-lg bg-white hover:bg-slate-100 text-slate-700 border border-slate-200 font-semibold text-[11px] flex items-center justify-center gap-1 transition-colors shadow-2xs"
                     >
                       <Mail className="h-3 w-3 text-rose-500" />
@@ -529,7 +529,7 @@ export default function UserDashboard({ activeTab = 'dashboard', onNavigateTab, 
               <div className="p-3 bg-slate-50 rounded-xl">
                 <p className="font-bold text-slate-800">How do I track my complaint?</p>
                 <p className="text-slate-500 mt-1 leading-relaxed text-[11px]">
-                  Use the <strong>Track Complaint</strong> tab with your Reference ID (e.g., PGMS-2026...).
+                  Use the <strong>Track Complaint</strong> tab with your Reference ID (e.g., CIVIQ-2026...).
                 </p>
               </div>
 

@@ -346,7 +346,7 @@ export const TRANSLATIONS = {
 
     // Track Card
     track_grievance: 'अपनी शिकायत ट्रैक करें',
-    track_placeholder: 'शिकायत संख्या दर्ज करें (उदा. PGMS-20261024-PUAVG2)...',
+    track_placeholder: 'शिकायत संख्या दर्ज करें (उदा. CIVIQ-20261024-PUAVG2)...',
     enter_valid_id: 'कृपया एक मान्य शिकायत आईडी दर्ज करें',
     track_status_title: 'शिकायत की स्थिति ट्रैक करें',
     track_status_desc: 'सत्यापित शिकायत विवरण, संबंधित विभाग और प्रक्रिया स्थिति को वास्तविक समय में ट्रैक करें।',

@@ -33,7 +33,7 @@ from models import (
 
 logger = logging.getLogger("uvicorn")
 
-app = FastAPI(title="PGMS - Public Grievance Classification API")
+app = FastAPI(title="CiviQ - Civic Intelligence & Grievance Classification API")
 
 # Setup CORS for frontend communication
 app.add_middleware(
@@ -61,7 +61,7 @@ def generate_complaint_id() -> str:
     date_str = datetime.utcnow().strftime("%Y%m%d")
     alphabet = string.ascii_uppercase + string.digits
     random_part = "".join(secrets.choice(alphabet) for _ in range(6))
-    return f"PGMS-{date_str}-{random_part}"
+    return f"CIVIQ-{date_str}-{random_part}"
 
 async def insert_complaint_with_unique_id(db, doc: dict, max_retries: int = 5) -> dict:
     """
@@ -1382,7 +1382,7 @@ async def forward_complaint_with_document(id: str, request: ComplaintForwardRequ
     complaint_ref = complaint.get("complaint_id", id)
     today_str = datetime.utcnow().strftime("%Y%m%d")
     rand_wo = "".join(secrets.choice(string.ascii_uppercase + string.digits) for _ in range(6))
-    work_order_id = f"PGMS-WO-{today_str}-{rand_wo}"
+    work_order_id = f"CIVIQ-WO-{today_str}-{rand_wo}"
 
     # Generate formal document structure
     directives_text = request.directives

@@ -256,7 +256,7 @@ export default function OfficerDashboard({
                       <span>Gmail:</span>
                     </span>
                     <a 
-                      href="mailto:ranjithgowda@gmail.com?subject=Officer%20Support%20Request%20-%20PGMS" 
+                      href="mailto:ranjithgowda@gmail.com?subject=Officer%20Support%20Request%20-%20CiviQ" 
                       className="font-mono text-[11px] font-semibold text-slate-800 hover:text-blue-600 hover:underline flex items-center gap-1 truncate max-w-[170px]"
                       title="Email Ranjith Gowda"
                     >
@@ -274,7 +274,7 @@ export default function OfficerDashboard({
                       <span>Call Admin</span>
                     </a>
                     <a 
-                      href="mailto:ranjithgowda@gmail.com?subject=Officer%20Support%20Request%20-%20PGMS"
+                      href="mailto:ranjithgowda@gmail.com?subject=Officer%20Support%20Request%20-%20CiviQ"
                       className="flex-1 py-1 px-2 rounded-lg bg-white hover:bg-slate-100 text-slate-700 border border-slate-200 font-semibold text-[11px] flex items-center justify-center gap-1 transition-colors shadow-2xs"
                     >
                       <Mail className="h-3 w-3 text-rose-500" />
@@ -325,7 +325,7 @@ export default function OfficerDashboard({
                       <span>Gmail:</span>
                     </span>
                     <a 
-                      href="mailto:hitheshgowda@gmail.com?subject=Officer%20Support%20Request%20-%20PGMS" 
+                      href="mailto:hitheshgowda@gmail.com?subject=Officer%20Support%20Request%20-%20CiviQ" 
                       className="font-mono text-[11px] font-semibold text-slate-800 hover:text-emerald-600 hover:underline flex items-center gap-1 truncate max-w-[170px]"
                       title="Email Hithesh Gowda"
                     >
@@ -343,7 +343,7 @@ export default function OfficerDashboard({
                       <span>Call Admin</span>
                     </a>
                     <a 
-                      href="mailto:hitheshgowda@gmail.com?subject=Officer%20Support%20Request%20-%20PGMS"
+                      href="mailto:hitheshgowda@gmail.com?subject=Officer%20Support%20Request%20-%20CiviQ"
                       className="flex-1 py-1 px-2 rounded-lg bg-white hover:bg-slate-100 text-slate-700 border border-slate-200 font-semibold text-[11px] flex items-center justify-center gap-1 transition-colors shadow-2xs"
                     >
                       <Mail className="h-3 w-3 text-rose-500" />
