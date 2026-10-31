@@ -46,15 +46,24 @@ export default function UserDashboard({ activeTab = 'dashboard', onNavigateTab, 
       const storedIds = getLocalUserComplaintIds();
 
       if (scope === 'my') {
+        const queryParams = {};
         if (storedIds.length > 0) {
-          const data = await fetchUserStats({ complaintIds: storedIds.join(',') });
-          if ((data.total ?? 0) === 0 && (data.recent_complaints || []).length === 0) {
-            try {
-              localStorage.removeItem('pgms_citizen_submitted_ids');
-            } catch (e) {
-              console.error('Failed to clear stored complaint IDs:', e);
-            }
-          }
+          queryParams.complaintIds = storedIds.join(',');
+        }
+        if (currentUser?.email) {
+          queryParams.email = currentUser.email;
+        }
+        if (currentUser?.phone) {
+          queryParams.phone = currentUser.phone;
+        }
+        if (currentUser?.id) {
+          queryParams.citizenId = currentUser.id;
+        }
+
+        const hasFilter = Boolean(queryParams.complaintIds || queryParams.email || queryParams.phone || queryParams.citizenId);
+
+        if (hasFilter) {
+          const data = await fetchUserStats(queryParams);
           setUserStats({
             total: data.total ?? 0,
             in_progress: data.in_progress ?? 0,
@@ -105,7 +114,7 @@ export default function UserDashboard({ activeTab = 'dashboard', onNavigateTab, 
     } finally {
       setLoadingStats(false);
     }
-  }, [scope]);
+  }, [scope, currentUser]);
 
   useEffect(() => {
     loadCitizenStats();
@@ -140,6 +149,7 @@ export default function UserDashboard({ activeTab = 'dashboard', onNavigateTab, 
       <ComplaintSubmissionContainer
         onNavigateTab={onNavigateTab}
         onTrackGrievance={handleTrack}
+        currentUser={currentUser}
         onGrievanceSubmitted={() => {
           setScope('my');
           loadCitizenStats();
