@@ -3,9 +3,11 @@ import {
   FileText, Search, Filter, ChevronDown, CheckCircle2, 
   Clock, AlertCircle, RefreshCw, Eye, X, Send, MapPin, 
   ExternalLink, User, Calendar, Tag, Building2, Check,
-  Printer
+  Phone, Mail, Image as ImageIcon, MessageSquare, AlertTriangle
 } from 'lucide-react';
-import ComplaintWorkOrderModal from '../dashboard/ComplaintWorkOrderModal';
+
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api';
+const BACKEND_URL = API_BASE_URL.replace('/api', '');
 
 export default function OfficerAssignedComplaintsCard({
   complaints = [],
@@ -22,11 +24,11 @@ export default function OfficerAssignedComplaintsCard({
   departmentName = "General Administration"
 }) {
   const [selectedComplaint, setSelectedComplaint] = useState(null);
-  const [pdfModalComplaint, setPdfModalComplaint] = useState(null);
   const [remarksText, setRemarksText] = useState('');
   const [updatingId, setUpdatingId] = useState(null);
   const [statusDropdownOpen, setStatusDropdownOpen] = useState(false);
   const [scopeDropdownOpen, setScopeDropdownOpen] = useState(false);
+  const [actionSuccess, setActionSuccess] = useState('');
 
   const statusOptions = ['All', 'Pending', 'In Progress', 'Resolved'];
   const scopeOptions = [
@@ -35,23 +37,29 @@ export default function OfficerAssignedComplaintsCard({
     { id: 'Unassigned', label: 'Unassigned Queue' }
   ];
 
-  const handleQuickStatus = async (complaintId, newStatus) => {
-    if (!onUpdateStatus) return;
-    setUpdatingId(complaintId);
-    try {
-      await onUpdateStatus(complaintId, newStatus);
-    } finally {
-      setUpdatingId(null);
-    }
+  const handleOpenReview = (complaint) => {
+    setSelectedComplaint(complaint);
+    setRemarksText(complaint.remarks || '');
+    setActionSuccess('');
   };
 
-  const handleSaveModalStatus = async (newStatus) => {
+  const handleCloseReview = () => {
+    setSelectedComplaint(null);
+    setRemarksText('');
+    setActionSuccess('');
+  };
+
+  const handleSaveStatus = async (newStatus) => {
     if (!selectedComplaint || !onUpdateStatus) return;
     setUpdatingId(selectedComplaint.complaint_id);
+    setActionSuccess('');
     try {
       await onUpdateStatus(selectedComplaint.complaint_id, newStatus, remarksText);
-      setSelectedComplaint((prev) => prev ? { ...prev, status: newStatus } : null);
-      setRemarksText('');
+      setSelectedComplaint((prev) => prev ? { ...prev, status: newStatus, remarks: remarksText } : null);
+      setActionSuccess(`Complaint marked as "${newStatus}" and message recorded successfully!`);
+      if (onRefresh) onRefresh();
+    } catch (err) {
+      alert(`Error updating complaint: ${err.message}`);
     } finally {
       setUpdatingId(null);
     }
@@ -105,21 +113,48 @@ export default function OfficerAssignedComplaintsCard({
               type="text"
               value={search}
               onChange={(e) => onSearchChange && onSearchChange(e.target.value)}
-              placeholder="Search by ID, title, location..."
-              className="pl-8 pr-7 py-1 text-xs bg-[#f4f7fa] border border-slate-200/80 rounded-lg text-slate-700 placeholder-slate-400 focus:outline-none focus:border-blue-500 w-44 sm:w-52 transition-all"
+              placeholder="Search by ID, keyword..."
+              className="pl-8 pr-3 py-1.5 text-xs rounded-xl border border-slate-200/90 text-slate-700 placeholder-slate-400 bg-slate-50/50 focus:bg-white focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 transition-all w-48 sm:w-56"
             />
-            {search && (
-              <button
-                type="button"
-                onClick={() => onSearchChange && onSearchChange('')}
-                className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
-              >
-                <X className="h-3 w-3" />
-              </button>
+          </div>
+
+          {/* Status Dropdown */}
+          <div className="relative">
+            <button
+              type="button"
+              onClick={() => {
+                setStatusDropdownOpen(!statusDropdownOpen);
+                setScopeDropdownOpen(false);
+              }}
+              className="flex items-center gap-1.5 px-3 py-1.5 text-xs rounded-xl border border-slate-200/90 bg-white hover:bg-slate-50 text-slate-700 font-semibold transition-colors cursor-pointer"
+            >
+              <Filter className="h-3 w-3 text-slate-500" />
+              <span>Status: {statusFilter}</span>
+              <ChevronDown className="h-3 w-3 text-slate-400" />
+            </button>
+
+            {statusDropdownOpen && (
+              <div className="absolute right-0 mt-1 w-36 bg-white border border-slate-200/90 rounded-xl shadow-lg py-1 z-30 animate-in fade-in zoom-in-95">
+                {statusOptions.map((opt) => (
+                  <button
+                    key={opt}
+                    type="button"
+                    onClick={() => {
+                      onStatusFilterChange && onStatusFilterChange(opt);
+                      setStatusDropdownOpen(false);
+                    }}
+                    className={`w-full text-left px-3 py-1.5 text-xs transition-colors cursor-pointer ${
+                      statusFilter === opt ? 'bg-blue-50 text-blue-600 font-bold' : 'text-slate-700 hover:bg-slate-50'
+                    }`}
+                  >
+                    {opt}
+                  </button>
+                ))}
+              </div>
             )}
           </div>
 
-          {/* Department Scope Filter */}
+          {/* Department Scope Dropdown */}
           <div className="relative">
             <button
               type="button"
@@ -127,14 +162,14 @@ export default function OfficerAssignedComplaintsCard({
                 setScopeDropdownOpen(!scopeDropdownOpen);
                 setStatusDropdownOpen(false);
               }}
-              className="flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium text-slate-700 bg-[#f4f7fa] hover:bg-slate-100 border border-slate-200/80 rounded-lg cursor-pointer transition-colors"
+              className="flex items-center gap-1.5 px-3 py-1.5 text-xs rounded-xl border border-slate-200/90 bg-white hover:bg-slate-50 text-slate-700 font-semibold transition-colors cursor-pointer"
             >
-              <span>{scopeOptions.find((o) => o.id === departmentFilter)?.label || departmentFilter}</span>
+              <span>Scope: {departmentFilter === 'All' ? 'All' : departmentFilter.split(' ')[0]}</span>
               <ChevronDown className="h-3 w-3 text-slate-400" />
             </button>
 
             {scopeDropdownOpen && (
-              <div className="absolute right-0 mt-1 w-48 bg-white border border-slate-200 rounded-xl shadow-lg z-30 py-1 text-xs">
+              <div className="absolute right-0 mt-1 w-48 bg-white border border-slate-200/90 rounded-xl shadow-lg py-1 z-30 animate-in fade-in zoom-in-95">
                 {scopeOptions.map((opt) => (
                   <button
                     key={opt.id}
@@ -143,49 +178,11 @@ export default function OfficerAssignedComplaintsCard({
                       onDepartmentFilterChange && onDepartmentFilterChange(opt.id);
                       setScopeDropdownOpen(false);
                     }}
-                    className={`w-full text-left px-3 py-1.5 hover:bg-slate-50 flex items-center justify-between cursor-pointer ${
-                      departmentFilter === opt.id ? 'font-bold text-blue-600 bg-blue-50/50' : 'text-slate-700'
+                    className={`w-full text-left px-3 py-1.5 text-xs transition-colors cursor-pointer ${
+                      departmentFilter === opt.id ? 'bg-blue-50 text-blue-600 font-bold' : 'text-slate-700 hover:bg-slate-50'
                     }`}
                   >
-                    <span>{opt.label}</span>
-                    {departmentFilter === opt.id && <Check className="h-3.5 w-3.5 text-blue-600" />}
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
-
-          {/* Status Filter */}
-          <div className="relative">
-            <button
-              type="button"
-              onClick={() => {
-                setStatusDropdownOpen(!statusDropdownOpen);
-                setScopeDropdownOpen(false);
-              }}
-              className="flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium text-slate-700 bg-[#f4f7fa] hover:bg-slate-100 border border-slate-200/80 rounded-lg cursor-pointer transition-colors"
-            >
-              <Filter className="h-3 w-3 text-slate-400" />
-              <span>{statusFilter === 'All' ? 'All Status' : statusFilter}</span>
-              <ChevronDown className="h-3 w-3 text-slate-400" />
-            </button>
-
-            {statusDropdownOpen && (
-              <div className="absolute right-0 mt-1 w-36 bg-white border border-slate-200 rounded-xl shadow-lg z-30 py-1 text-xs">
-                {statusOptions.map((st) => (
-                  <button
-                    key={st}
-                    type="button"
-                    onClick={() => {
-                      onStatusFilterChange && onStatusFilterChange(st);
-                      setStatusDropdownOpen(false);
-                    }}
-                    className={`w-full text-left px-3 py-1.5 hover:bg-slate-50 flex items-center justify-between cursor-pointer ${
-                      statusFilter === st ? 'font-bold text-blue-600 bg-blue-50/50' : 'text-slate-700'
-                    }`}
-                  >
-                    <span>{st === 'All' ? 'All Status' : st}</span>
-                    {statusFilter === st && <Check className="h-3.5 w-3.5 text-blue-600" />}
+                    {opt.label}
                   </button>
                 ))}
               </div>
@@ -268,7 +265,7 @@ export default function OfficerAssignedComplaintsCard({
                   <td className="py-3 px-3 font-mono font-bold text-blue-600 whitespace-nowrap">
                     {item.complaint_id}
                   </td>
-                  <td className="py-3 px-3 max-w-[260px]">
+                  <td className="py-3 px-3 max-w-[280px]">
                     <p className="font-semibold text-slate-800 truncate" title={item.title}>
                       {item.title}
                     </p>
@@ -279,7 +276,7 @@ export default function OfficerAssignedComplaintsCard({
                   <td className="py-3 px-3 text-slate-600 whitespace-nowrap">
                     <div className="flex items-center gap-1">
                       <MapPin className="h-3 w-3 text-rose-500 flex-shrink-0" />
-                      <span className="truncate max-w-[140px]">{item.location || 'Not specified'}</span>
+                      <span className="truncate max-w-[150px]">{item.location || 'Not specified'}</span>
                     </div>
                   </td>
                   <td className="py-3 px-3 text-slate-500 whitespace-nowrap">
@@ -292,48 +289,41 @@ export default function OfficerAssignedComplaintsCard({
                   </td>
                   <td className="py-3 px-3 text-center whitespace-nowrap">
                     <div className="flex items-center justify-center gap-1.5">
-                      {item.status !== 'In Progress' && item.status !== 'Resolved' && (
+                      {item.status === 'Pending' && (
                         <button
                           type="button"
-                          disabled={updatingId === item.complaint_id}
-                          onClick={() => handleQuickStatus(item.complaint_id, 'In Progress')}
-                          className="px-2 py-1 text-[10px] font-semibold bg-blue-50 hover:bg-blue-100 text-blue-700 rounded-lg border border-blue-200 transition-colors cursor-pointer"
-                          title="Start Review"
+                          onClick={() => handleOpenReview(item)}
+                          className="px-2.5 py-1 text-[11px] font-semibold bg-blue-50 hover:bg-blue-100 text-blue-700 rounded-lg border border-blue-200 transition-colors cursor-pointer flex items-center gap-1"
+                          title="Review Complaint & Start Working"
                         >
-                          Review
+                          <Eye className="h-3 w-3" />
+                          <span>Review &amp; Start</span>
                         </button>
                       )}
 
                       {item.status === 'In Progress' && (
                         <button
                           type="button"
-                          disabled={updatingId === item.complaint_id}
-                          onClick={() => handleQuickStatus(item.complaint_id, 'Resolved')}
-                          className="px-2 py-1 text-[10px] font-semibold bg-emerald-50 hover:bg-emerald-100 text-emerald-700 rounded-lg border border-emerald-200 transition-colors cursor-pointer"
-                          title="Mark as Resolved"
+                          onClick={() => handleOpenReview(item)}
+                          className="px-2.5 py-1 text-[11px] font-semibold bg-emerald-50 hover:bg-emerald-100 text-emerald-700 rounded-lg border border-emerald-200 transition-colors cursor-pointer flex items-center gap-1"
+                          title="Review & Mark as Resolved"
                         >
-                          Resolve
+                          <CheckCircle2 className="h-3 w-3" />
+                          <span>Resolve</span>
                         </button>
                       )}
 
-                      <button
-                        type="button"
-                        onClick={() => setPdfModalComplaint({ ...item, initialTab: 'pdf_preview' })}
-                        className="px-2 py-1 text-[10px] font-semibold bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg border border-slate-200/80 transition-colors cursor-pointer inline-flex items-center gap-1"
-                        title="View & Print Official Government PDF Work Order"
-                      >
-                        <Printer className="h-3 w-3 text-blue-600" />
-                        <span>PDF</span>
-                      </button>
-
-                      <button
-                        type="button"
-                        onClick={() => setSelectedComplaint(item)}
-                        className="p-1 rounded-lg text-slate-500 hover:text-slate-800 hover:bg-slate-100 transition-colors cursor-pointer"
-                        title="View Full Grievance Details"
-                      >
-                        <Eye className="h-3.5 w-3.5" />
-                      </button>
+                      {item.status === 'Resolved' && (
+                        <button
+                          type="button"
+                          onClick={() => handleOpenReview(item)}
+                          className="px-2 py-1 text-[11px] font-semibold bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg border border-slate-200 transition-colors cursor-pointer flex items-center gap-1"
+                          title="View Resolved Complaint Details"
+                        >
+                          <Eye className="h-3 w-3 text-slate-500" />
+                          <span>View</span>
+                        </button>
+                      )}
                     </div>
                   </td>
                 </tr>
@@ -343,145 +333,332 @@ export default function OfficerAssignedComplaintsCard({
         </table>
       </div>
 
-      {/* Detail & Status Modal */}
+      {/* Focused Officer Review & Message Modal */}
       {selectedComplaint && (
-        <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-xs flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl max-w-xl w-full max-h-[90vh] overflow-y-auto shadow-2xl border border-slate-200 p-6 space-y-5 animate-in fade-in zoom-in-95">
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl max-w-2xl w-full max-h-[92vh] overflow-y-auto shadow-2xl border border-slate-200 p-6 space-y-5 animate-in fade-in zoom-in-95">
+            
             {/* Modal Header */}
             <div className="flex items-start justify-between border-b border-slate-100 pb-4">
               <div>
-                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">
-                  Official Complaint Reference
-                </span>
+                <div className="flex items-center gap-2 mb-1">
+                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                    Officer Grievance Review
+                  </span>
+                  <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold border ${getStatusBadge(selectedComplaint.status)}`}>
+                    {selectedComplaint.status || 'Pending'}
+                  </span>
+                </div>
                 <h3 className="text-base font-extrabold text-blue-600 font-mono">
                   {selectedComplaint.complaint_id}
                 </h3>
               </div>
               <button
                 type="button"
-                onClick={() => setSelectedComplaint(null)}
-                className="p-1 text-slate-400 hover:text-slate-700 rounded-lg hover:bg-slate-100"
+                onClick={handleCloseReview}
+                className="p-1.5 text-slate-400 hover:text-slate-700 rounded-lg hover:bg-slate-100 transition-colors cursor-pointer"
+                title="Close"
               >
                 <X className="h-5 w-5" />
               </button>
             </div>
 
-            {/* Modal Content Grid */}
+            {/* Success Alert Banner */}
+            {actionSuccess && (
+              <div className="p-3.5 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-semibold flex items-center gap-2 animate-in fade-in">
+                <CheckCircle2 className="h-4 w-4 text-emerald-600 flex-shrink-0" />
+                <span>{actionSuccess}</span>
+              </div>
+            )}
+
+            {/* Grievance Details Review */}
             <div className="space-y-4 text-xs">
+              
+              {/* Subject Title */}
               <div>
-                <span className="text-[11px] font-semibold text-slate-400 uppercase">Title</span>
-                <p className="font-bold text-slate-800 text-sm mt-0.5">{selectedComplaint.title}</p>
-              </div>
-
-              <div className="grid grid-cols-2 gap-3 p-3 rounded-xl bg-slate-50 border border-slate-100">
-                <div>
-                  <span className="text-slate-400 block text-[10px]">Location</span>
-                  <span className="font-semibold text-slate-700">{selectedComplaint.location || 'N/A'}</span>
-                </div>
-                <div>
-                  <span className="text-slate-400 block text-[10px]">Filing Date</span>
-                  <span className="font-semibold text-slate-700">{formatDate(selectedComplaint.created_at)}</span>
-                </div>
-                <div>
-                  <span className="text-slate-400 block text-[10px]">Department</span>
-                  <span className="font-semibold text-slate-700">{selectedComplaint.assigned_department || selectedComplaint.department || 'Unassigned'}</span>
-                </div>
-                <div>
-                  <span className="text-slate-400 block text-[10px]">Current Status</span>
-                  <span className={`inline-block px-2 py-0.5 rounded-full text-[10px] font-semibold border mt-0.5 ${getStatusBadge(selectedComplaint.status)}`}>
-                    {selectedComplaint.status}
-                  </span>
-                </div>
-              </div>
-
-              <div>
-                <span className="text-[11px] font-semibold text-slate-400 uppercase">Grievance Description</span>
-                <p className="p-3 bg-slate-50/80 rounded-xl border border-slate-100 text-slate-700 mt-1 leading-relaxed whitespace-pre-wrap">
-                  {selectedComplaint.description || selectedComplaint.text || 'No description recorded'}
+                <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider block mb-1">
+                  Complaint Subject
+                </span>
+                <p className="font-bold text-slate-900 text-sm bg-slate-50 p-3 rounded-xl border border-slate-100">
+                  {selectedComplaint.title}
                 </p>
               </div>
 
-              {/* Attachments if any */}
+              {/* Citizen Statement */}
+              <div>
+                <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider block mb-1">
+                  Citizen Statement
+                </span>
+                <p className="p-3.5 bg-slate-50 rounded-xl border border-slate-100 text-slate-800 leading-relaxed whitespace-pre-wrap font-sans">
+                  {selectedComplaint.description || selectedComplaint.text || 'No description provided.'}
+                </p>
+              </div>
+
+              {/* Location & Metadata Info Grid */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 p-3.5 rounded-xl bg-slate-50 border border-slate-100">
+                <div>
+                  <span className="text-slate-400 block text-[10px] uppercase font-semibold">Incident Location</span>
+                  <div className="flex items-center gap-1.5 mt-0.5 text-slate-800 font-medium">
+                    <MapPin className="h-3.5 w-3.5 text-rose-500 flex-shrink-0" />
+                    <span>{selectedComplaint.location || 'Location Pending'}</span>
+                  </div>
+                </div>
+
+                <div>
+                  <span className="text-slate-400 block text-[10px] uppercase font-semibold">Citizen Contact</span>
+                  <div className="mt-0.5 text-slate-800 font-medium">
+                    <p className="font-bold">{selectedComplaint.citizen_name || 'Citizen'}</p>
+                    <div className="flex items-center gap-3 text-[11px] text-slate-500 mt-0.5">
+                      {selectedComplaint.phone && (
+                        <a href={`tel:${selectedComplaint.phone}`} className="hover:text-blue-600 flex items-center gap-1">
+                          <Phone className="h-3 w-3 text-blue-500" />
+                          <span>{selectedComplaint.phone}</span>
+                        </a>
+                      )}
+                      {selectedComplaint.email && (
+                        <a href={`mailto:${selectedComplaint.email}`} className="hover:text-blue-600 flex items-center gap-1">
+                          <Mail className="h-3 w-3 text-rose-500" />
+                          <span className="truncate max-w-[140px]">{selectedComplaint.email}</span>
+                        </a>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                <div>
+                  <span className="text-slate-400 block text-[10px] uppercase font-semibold">Assigned Department</span>
+                  <span className="font-semibold text-slate-700 mt-0.5 block">
+                    {selectedComplaint.assigned_department || selectedComplaint.department || 'General Administration'}
+                  </span>
+                </div>
+
+                <div>
+                  <span className="text-slate-400 block text-[10px] uppercase font-semibold">Date Filed</span>
+                  <span className="font-semibold text-slate-700 mt-0.5 block">
+                    {formatDate(selectedComplaint.created_at)}
+                  </span>
+                </div>
+              </div>
+
+              {/* Attached Evidence & Photos */}
               {selectedComplaint.file_references && selectedComplaint.file_references.length > 0 && (
                 <div>
-                  <span className="text-[11px] font-semibold text-slate-400 uppercase block mb-1.5">
-                    Attached Files ({selectedComplaint.file_references.length})
+                  <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider block mb-2">
+                    Attached Evidence &amp; Documents ({selectedComplaint.file_references.length})
                   </span>
-                  <div className="space-y-1.5">
-                    {selectedComplaint.file_references.map((f, i) => (
-                      <a
-                        key={i}
-                        href={f.file_path ? `http://localhost:8000${f.file_path}` : '#'}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="flex items-center justify-between p-2.5 bg-slate-50 hover:bg-blue-50 border border-slate-200 rounded-lg transition-colors group"
-                      >
-                        <span className="font-medium text-slate-700 group-hover:text-blue-600 truncate">{f.original_name}</span>
-                        <ExternalLink className="h-3.5 w-3.5 text-slate-400 group-hover:text-blue-600 flex-shrink-0" />
-                      </a>
-                    ))}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    {selectedComplaint.file_references.map((f, i) => {
+                      const filePath = f.path || f.file_path || '';
+                      const fileName = f.filename || f.original_name || 'Attached File';
+                      const isImg = Boolean(
+                        filePath.match(/\.(jpeg|jpg|png|webp|gif)$/i) || 
+                        f.content_type?.startsWith('image') ||
+                        fileName.match(/\.(jpeg|jpg|png|webp|gif)$/i)
+                      );
+                      const fileUrl = filePath.startsWith('http') ? filePath : `${BACKEND_URL}${filePath}`;
+
+                      return (
+                        <div key={i} className="p-3 bg-slate-50 border border-slate-200/90 rounded-xl flex items-center gap-3 group hover:border-blue-300 transition-all">
+                          {isImg ? (
+                            <div className="h-14 w-14 rounded-lg bg-slate-900 overflow-hidden flex-shrink-0 border border-slate-300 shadow-xs relative">
+                              <img 
+                                src={fileUrl} 
+                                alt={fileName} 
+                                className="h-full w-full object-cover group-hover:scale-105 transition-transform" 
+                                onError={(e) => { e.target.style.display = 'none'; }}
+                              />
+                            </div>
+                          ) : (
+                            <div className="h-14 w-14 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center flex-shrink-0 border border-blue-100">
+                              <FileText className="h-6 w-6 stroke-[1.8]" />
+                            </div>
+                          )}
+
+                          <div className="min-w-0 flex-1">
+                            <p className="font-bold text-slate-800 text-xs truncate" title={fileName}>
+                              {fileName}
+                            </p>
+                            <p className="text-[11px] text-slate-400 mt-0.5">
+                              {isImg ? 'Photo evidence' : 'Attached document'}
+                            </p>
+                            <a 
+                              href={fileUrl} 
+                              target="_blank" 
+                              rel="noreferrer" 
+                              className="inline-flex items-center gap-1 text-[11px] font-semibold text-blue-600 hover:text-blue-800 hover:underline mt-1"
+                            >
+                              <span>View Full Size</span>
+                              <ExternalLink className="h-3 w-3" />
+                            </a>
+                          </div>
+                        </div>
+                      );
+                    })}
                   </div>
                 </div>
               )}
 
-              {/* Status Update Actions */}
-              <div className="pt-3 border-t border-slate-100 space-y-3">
-                <span className="text-[11px] font-semibold text-slate-700 block">
-                  Update Official Status in MongoDB
-                </span>
-                <div className="flex items-center gap-2">
-                  <button
-                    type="button"
-                    disabled={updatingId === selectedComplaint.complaint_id}
-                    onClick={() => handleSaveModalStatus('Pending')}
-                    className={`px-3 py-1.5 rounded-lg font-semibold border cursor-pointer transition-all ${
-                      selectedComplaint.status === 'Pending'
-                        ? 'bg-amber-500 text-white border-amber-600'
-                        : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-50'
-                    }`}
-                  >
-                    Pending
-                  </button>
+              {/* Officer Status Update & Messaging Section */}
+              <div className="pt-4 border-t border-slate-200/80 space-y-4">
+                
+                {/* Pending State -> Officer can send message & mark In Progress */}
+                {selectedComplaint.status === 'Pending' && (
+                  <div className="p-4 rounded-2xl bg-blue-50/70 border border-blue-200/80 space-y-3">
+                    <div className="flex items-center gap-2 text-blue-800 font-bold text-xs">
+                      <Clock className="h-4 w-4 text-blue-600" />
+                      <span>Action Step 1: Start Review &amp; Mark as In Progress</span>
+                    </div>
+                    <p className="text-[11px] text-slate-600">
+                      Type an update message to the citizen (e.g. site inspection assigned, work started) and change status to <strong>In Progress</strong>.
+                    </p>
 
-                  <button
-                    type="button"
-                    disabled={updatingId === selectedComplaint.complaint_id}
-                    onClick={() => handleSaveModalStatus('In Progress')}
-                    className={`px-3 py-1.5 rounded-lg font-semibold border cursor-pointer transition-all ${
-                      selectedComplaint.status === 'In Progress'
-                        ? 'bg-blue-600 text-white border-blue-700'
-                        : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-50'
-                    }`}
-                  >
-                    In Progress
-                  </button>
+                    <div>
+                      <label className="text-[11px] font-semibold text-slate-700 block mb-1">
+                        Officer Message / Notes (Optional):
+                      </label>
+                      <textarea
+                        rows={3}
+                        value={remarksText}
+                        onChange={(e) => setRemarksText(e.target.value)}
+                        placeholder="e.g., Complaint accepted. Deputing field technician to inspect site today..."
+                        className="w-full p-3 text-xs bg-white border border-slate-200 rounded-xl focus:outline-none focus:ring-1 focus:ring-blue-500 text-slate-800 placeholder-slate-400 shadow-xs"
+                      />
+                    </div>
 
-                  <button
-                    type="button"
-                    disabled={updatingId === selectedComplaint.complaint_id}
-                    onClick={() => handleSaveModalStatus('Resolved')}
-                    className={`px-3 py-1.5 rounded-lg font-semibold border cursor-pointer transition-all ${
-                      selectedComplaint.status === 'Resolved'
-                        ? 'bg-emerald-600 text-white border-emerald-700'
-                        : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-50'
-                    }`}
-                  >
-                    Resolved
-                  </button>
-                </div>
+                    <div className="flex items-center justify-end gap-2 pt-1">
+                      <button
+                        type="button"
+                        onClick={handleCloseReview}
+                        className="px-4 py-2 text-xs font-semibold text-slate-600 hover:text-slate-800 hover:bg-white rounded-xl transition-colors cursor-pointer"
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        type="button"
+                        disabled={updatingId === selectedComplaint.complaint_id}
+                        onClick={() => handleSaveStatus('In Progress')}
+                        className="px-5 py-2 text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 rounded-xl shadow-md shadow-blue-600/25 flex items-center gap-2 transition-all cursor-pointer disabled:opacity-50"
+                      >
+                        <Send className="h-3.5 w-3.5" />
+                        <span>{updatingId === selectedComplaint.complaint_id ? 'Saving...' : 'Send Message & Mark In Progress'}</span>
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+                {/* In Progress State -> Officer can send message & mark Resolved */}
+                {selectedComplaint.status === 'In Progress' && (
+                  <div className="p-4 rounded-2xl bg-emerald-50/70 border border-emerald-200/80 space-y-3">
+                    <div className="flex items-center gap-2 text-emerald-800 font-bold text-xs">
+                      <CheckCircle2 className="h-4 w-4 text-emerald-600" />
+                      <span>Action Step 2: Send Resolution Note &amp; Mark as Resolved</span>
+                    </div>
+                    <p className="text-[11px] text-slate-600">
+                      This grievance is currently <strong>In Progress</strong>. Once work is completed, type your resolution note and mark the case as <strong>Resolved</strong>.
+                    </p>
+
+                    {selectedComplaint.remarks && (
+                      <div className="p-2.5 bg-white/80 rounded-xl border border-emerald-100 text-[11px] text-slate-700">
+                        <span className="font-bold text-emerald-700 block mb-0.5">Previous Officer Update:</span>
+                        <span>{selectedComplaint.remarks}</span>
+                      </div>
+                    )}
+
+                    <div>
+                      <label className="text-[11px] font-semibold text-slate-700 block mb-1">
+                        Resolution Message to Citizen:
+                      </label>
+                      <textarea
+                        rows={3}
+                        value={remarksText}
+                        onChange={(e) => setRemarksText(e.target.value)}
+                        placeholder="e.g., Issue has been inspected and rectified on site. Water pipeline repaired and pressure restored..."
+                        className="w-full p-3 text-xs bg-white border border-slate-200 rounded-xl focus:outline-none focus:ring-1 focus:ring-emerald-500 text-slate-800 placeholder-slate-400 shadow-xs"
+                      />
+                    </div>
+
+                    <div className="flex items-center justify-between pt-1">
+                      <button
+                        type="button"
+                        onClick={() => handleSaveStatus('In Progress')}
+                        disabled={updatingId === selectedComplaint.complaint_id}
+                        className="px-3 py-1.5 text-xs font-semibold text-slate-600 hover:text-slate-800 hover:bg-slate-100 rounded-xl transition-colors cursor-pointer"
+                        title="Update message while keeping In Progress"
+                      >
+                        Update Note Only
+                      </button>
+
+                      <div className="flex items-center gap-2">
+                        <button
+                          type="button"
+                          onClick={handleCloseReview}
+                          className="px-4 py-2 text-xs font-semibold text-slate-600 hover:text-slate-800 hover:bg-white rounded-xl transition-colors cursor-pointer"
+                        >
+                          Close
+                        </button>
+                        <button
+                          type="button"
+                          disabled={updatingId === selectedComplaint.complaint_id}
+                          onClick={() => handleSaveStatus('Resolved')}
+                          className="px-5 py-2 text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-700 rounded-xl shadow-md shadow-emerald-600/25 flex items-center gap-2 transition-all cursor-pointer disabled:opacity-50"
+                        >
+                          <CheckCircle2 className="h-3.5 w-3.5" />
+                          <span>{updatingId === selectedComplaint.complaint_id ? 'Resolving...' : 'Send Message & Mark Resolved'}</span>
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Resolved State -> Case Closed */}
+                {selectedComplaint.status === 'Resolved' && (
+                  <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200/90 space-y-3">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2 text-emerald-700 font-bold text-xs">
+                        <CheckCircle2 className="h-4.5 w-4.5 text-emerald-600" />
+                        <span>Case Resolved &amp; Closed</span>
+                      </div>
+                      <span className="text-[10px] font-semibold text-slate-400">
+                        Official Closure
+                      </span>
+                    </div>
+
+                    {selectedComplaint.remarks ? (
+                      <div className="p-3 bg-white rounded-xl border border-slate-200 text-xs text-slate-800">
+                        <span className="font-bold text-slate-500 text-[10px] uppercase block mb-1">
+                          Officer Resolution Note:
+                        </span>
+                        <p className="leading-relaxed">{selectedComplaint.remarks}</p>
+                      </div>
+                    ) : (
+                      <p className="text-xs text-slate-500 italic">No resolution remarks were added.</p>
+                    )}
+
+                    <div className="flex items-center justify-between pt-2">
+                      <button
+                        type="button"
+                        disabled={updatingId === selectedComplaint.complaint_id}
+                        onClick={() => handleSaveStatus('In Progress')}
+                        className="text-[11px] font-semibold text-slate-500 hover:text-blue-600 underline cursor-pointer"
+                      >
+                        Re-open case to In Progress
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={handleCloseReview}
+                        className="px-4 py-2 text-xs font-semibold text-slate-700 bg-white hover:bg-slate-100 border border-slate-200 rounded-xl transition-colors cursor-pointer"
+                      >
+                        Close Window
+                      </button>
+                    </div>
+                  </div>
+                )}
+
               </div>
             </div>
           </div>
         </div>
-      )}
-
-      {/* Structured Government PDF Work Order Modal */}
-      {pdfModalComplaint && (
-        <ComplaintWorkOrderModal
-          complaint={pdfModalComplaint}
-          onClose={() => setPdfModalComplaint(null)}
-          onForwardSuccess={onRefresh}
-        />
       )}
     </div>
   );

@@ -244,6 +244,18 @@ export default function UserTrackingView({ initialTrackedId = null }) {
               </div>
             )}
 
+            {/* Official Officer Message / Status Remarks */}
+            {complaint.remarks && (
+              <div className="p-4 rounded-xl bg-blue-50/70 border border-blue-200/80 space-y-1">
+                <span className="text-[10px] font-bold text-blue-700 uppercase tracking-wider block">
+                  Official Officer Update
+                </span>
+                <p className="text-xs text-slate-800 font-medium leading-relaxed">
+                  {complaint.remarks}
+                </p>
+              </div>
+            )}
+
             {/* Official Lifecycle Status Timeline */}
             <div className="space-y-3 pt-2">
               <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider block">
