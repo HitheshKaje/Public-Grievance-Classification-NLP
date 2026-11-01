@@ -10,6 +10,7 @@ import DepartmentInfoCard from '../components/officer/DepartmentInfoCard';
 import OfficerQuickActionsCard from '../components/officer/OfficerQuickActionsCard';
 import OfficerRecentUpdatesCard from '../components/officer/OfficerRecentUpdatesCard';
 import OfficerWorkloadCard from '../components/officer/OfficerWorkloadCard';
+import DepartmentReportsVisualization from '../components/officer/DepartmentReportsVisualization';
 import EmptyState from '../components/common/EmptyState';
 import { 
   fetchOfficerStats, 
@@ -739,106 +740,14 @@ export default function OfficerDashboard({
 
   // Reports Tab View
   if (activeTab === 'reports') {
-    const resolutionRate = stats.total_assigned > 0 
-      ? Math.round((stats.resolved / stats.total_assigned) * 100) 
-      : 100;
-    const slaCompliance = stats.total_assigned > 0 
-      ? Math.max(0, Math.round(((stats.total_assigned - stats.overdue) / stats.total_assigned) * 100)) 
-      : 100;
-
     return (
-      <div className="space-y-6">
-        <div className="bg-white rounded-2xl border border-slate-100 p-6 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <div>
-            <h2 className="text-base font-bold text-slate-800 flex items-center gap-2">
-              <BarChart3 className="h-5 w-5 text-blue-600" />
-              <span>Department Resolution Performance Reports</span>
-            </h2>
-            <p className="text-xs text-slate-500 mt-1">
-              Live SLA closure metrics and resolution performance for {effectiveDept}.
-            </p>
-          </div>
-          <button
-            type="button"
-            onClick={() => { loadStats(); loadComplaints(); }}
-            className="px-3.5 py-1.5 text-xs font-semibold text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-xl border border-blue-200 flex items-center gap-1.5 transition-colors self-start sm:self-auto cursor-pointer"
-          >
-            <RefreshCw className={`h-3.5 w-3.5 ${loadingStats ? 'animate-spin' : ''}`} />
-            <span>Sync Live MongoDB Stats</span>
-          </button>
-        </div>
-
-        {/* 4 Performance KPI Cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          <div className="bg-white rounded-2xl border border-slate-100 p-5 shadow-sm">
-            <span className="text-xs font-semibold text-slate-500">Total Grievances Received</span>
-            <div className="text-2xl font-extrabold text-slate-900 font-mono mt-2">
-              {stats.total_assigned}
-            </div>
-            <p className="text-[11px] text-slate-400 mt-1">Assigned to {effectiveDept}</p>
-          </div>
-
-          <div className="bg-white rounded-2xl border border-slate-100 p-5 shadow-sm">
-            <span className="text-xs font-semibold text-slate-500">Resolution Rate</span>
-            <div className="text-2xl font-extrabold text-emerald-600 font-mono mt-2">
-              {resolutionRate}%
-            </div>
-            <p className="text-[11px] text-emerald-600/80 mt-1">{stats.resolved} of {stats.total_assigned} cases resolved</p>
-          </div>
-
-          <div className="bg-white rounded-2xl border border-slate-100 p-5 shadow-sm">
-            <span className="text-xs font-semibold text-slate-500">SLA Compliance</span>
-            <div className="text-2xl font-extrabold text-blue-600 font-mono mt-2">
-              {slaCompliance}%
-            </div>
-            <p className="text-[11px] text-blue-600/80 mt-1">{stats.overdue} cases exceeded 72h SLA</p>
-          </div>
-
-          <div className="bg-white rounded-2xl border border-slate-100 p-5 shadow-sm">
-            <span className="text-xs font-semibold text-slate-500">Under Active Triage</span>
-            <div className="text-2xl font-extrabold text-amber-600 font-mono mt-2">
-              {stats.in_progress + stats.pending}
-            </div>
-            <p className="text-[11px] text-amber-600/80 mt-1">{stats.in_progress} in progress, {stats.pending} pending</p>
-          </div>
-        </div>
-
-        {/* Breakdown Card */}
-        <div className="bg-white rounded-2xl border border-slate-100 p-6 shadow-sm space-y-4">
-          <h3 className="text-sm font-bold text-slate-800">Department Status Distribution</h3>
-          <div className="space-y-3">
-            <div>
-              <div className="flex justify-between text-xs font-semibold text-slate-700 mb-1">
-                <span>Resolved Cases ({stats.resolved})</span>
-                <span>{resolutionRate}%</span>
-              </div>
-              <div className="h-2.5 w-full bg-slate-100 rounded-full overflow-hidden">
-                <div className="h-full bg-emerald-500 rounded-full" style={{ width: `${resolutionRate}%` }} />
-              </div>
-            </div>
-
-            <div>
-              <div className="flex justify-between text-xs font-semibold text-slate-700 mb-1">
-                <span>In Progress Review ({stats.in_progress})</span>
-                <span>{stats.total_assigned > 0 ? Math.round((stats.in_progress / stats.total_assigned) * 100) : 0}%</span>
-              </div>
-              <div className="h-2.5 w-full bg-slate-100 rounded-full overflow-hidden">
-                <div className="h-full bg-amber-500 rounded-full" style={{ width: `${stats.total_assigned > 0 ? (stats.in_progress / stats.total_assigned) * 100 : 0}%` }} />
-              </div>
-            </div>
-
-            <div>
-              <div className="flex justify-between text-xs font-semibold text-slate-700 mb-1">
-                <span>Pending Initial Triage ({stats.pending})</span>
-                <span>{stats.total_assigned > 0 ? Math.round((stats.pending / stats.total_assigned) * 100) : 0}%</span>
-              </div>
-              <div className="h-2.5 w-full bg-slate-100 rounded-full overflow-hidden">
-                <div className="h-full bg-blue-500 rounded-full" style={{ width: `${stats.total_assigned > 0 ? (stats.pending / stats.total_assigned) * 100 : 0}%` }} />
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
+      <DepartmentReportsVisualization
+        stats={stats}
+        complaints={complaints}
+        effectiveDept={effectiveDept}
+        loadingStats={loadingStats}
+        onSync={() => { loadStats(); loadComplaints(); }}
+      />
     );
   }
 
