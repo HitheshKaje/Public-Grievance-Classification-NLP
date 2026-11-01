@@ -167,14 +167,18 @@ export async function fetchComplaints({
 /**
  * Updates a complaint's status in MongoDB (e.g., 'Pending', 'In Progress', 'Resolved').
  */
-export async function updateComplaintStatus(complaintId, status, remarks = '') {
+export async function updateComplaintStatus(complaintId, status, remarks = '', officerDetails = {}) {
   try {
     const response = await fetch(`${API_BASE_URL}/complaints/${encodeURIComponent(complaintId)}/status`, {
       method: 'PATCH',
       headers: {
         'Content-Type': 'application/json'
       },
-      body: JSON.stringify({ status, remarks })
+      body: JSON.stringify({ 
+        status, 
+        remarks,
+        ...officerDetails 
+      })
     });
 
     const data = await response.json().catch(() => null);
@@ -472,3 +476,58 @@ export async function processMultimodalComplaint(formData, method = 'voice') {
   return data;
 }
 
+
+
+/**
+ * Fetches direct officer notifications for a citizen from MongoDB.
+ */
+export async function fetchUserNotifications(params = {}) {
+  try {
+    const query = new URLSearchParams();
+    if (params.complaintIds) query.append('complaint_ids', params.complaintIds);
+    if (params.citizenId) query.append('citizen_id', params.citizenId);
+    if (params.email) query.append('email', params.email);
+    if (params.phone) query.append('phone', params.phone);
+
+    const response = await fetch(`${API_BASE_URL}/notifications?${query.toString()}`);
+    if (!response.ok) {
+      return { notifications: [], unread_count: 0, total: 0 };
+    }
+    return await response.json();
+  } catch (err) {
+    console.error('Error fetching notifications:', err);
+    return { notifications: [], unread_count: 0, total: 0 };
+  }
+}
+
+/**
+ * Marks a single citizen notification as read.
+ */
+export async function markNotificationRead(id) {
+  try {
+    const response = await fetch(`${API_BASE_URL}/notifications/${encodeURIComponent(id)}/read`, {
+      method: 'PATCH'
+    });
+    return await response.json();
+  } catch (err) {
+    console.error('Error marking notification read:', err);
+    return null;
+  }
+}
+
+/**
+ * Marks all citizen notifications as read.
+ */
+export async function markAllNotificationsRead(params = {}) {
+  try {
+    const response = await fetch(`${API_BASE_URL}/notifications/mark-all-read`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(params)
+    });
+    return await response.json();
+  } catch (err) {
+    console.error('Error marking all notifications read:', err);
+    return null;
+  }
+}

@@ -890,6 +890,10 @@ async def classify_complaint(request: ClassifyRequest):
 class StatusUpdate(BaseModel):
     status: str
     remarks: Optional[str] = None
+    officer_name: Optional[str] = None
+    officer_id: Optional[str] = None
+    officer_designation: Optional[str] = None
+    officer_department: Optional[str] = None
 
 class AssignUpdate(BaseModel):
     department: str
@@ -1091,32 +1095,191 @@ async def get_user_stats(
 async def update_complaint_status(id: str, update: StatusUpdate):
     """
     Updates the complaint status and optional remarks in MongoDB.
+    Directly routes officer updates to the citizen without requiring admin intervention.
     """
     db = get_db()
     query = [{"complaint_id": id}, {"complaint_id": id.upper()}]
     if ObjectId.is_valid(id):
         query.append({"_id": ObjectId(id)})
 
-    update_doc = {
+    update_fields = {
         "status": update.status,
         "updated_at": datetime.utcnow()
     }
     if update.remarks:
-        update_doc["remarks"] = update.remarks
+        update_fields["remarks"] = update.remarks
+        update_fields["last_officer_message"] = update.remarks
+        update_fields["last_officer_update"] = datetime.utcnow()
+    if update.officer_name:
+        update_fields["officer_name"] = update.officer_name
+    if update.officer_department:
+        update_fields["officer_department"] = update.officer_department
+    if update.officer_designation:
+        update_fields["officer_designation"] = update.officer_designation
+
+    message_entry = {
+        "id": str(ObjectId()),
+        "status": update.status,
+        "message": update.remarks or f"Complaint status updated to {update.status}",
+        "officer_name": update.officer_name or "Departmental Officer",
+        "department": update.officer_department or "Assigned Department",
+        "designation": update.officer_designation or "Nodal Officer",
+        "created_at": datetime.utcnow().isoformat()
+    }
 
     result = await db.complaints.update_one(
         {"$or": query},
-        {"$set": update_doc}
+        {
+            "$set": update_fields,
+            "$push": {"direct_officer_messages": message_entry}
+        }
     )
     if result.matched_count == 0:
         raise HTTPException(status_code=404, detail="Complaint not found")
 
     updated_record = await db.complaints.find_one({"$or": query})
+
+    # Direct Notification for Citizen (Delivered directly, bypasses admin)
+    if updated_record:
+        notification_doc = {
+            "recipient_type": "citizen",
+            "citizen_id": updated_record.get("citizen_id"),
+            "email": updated_record.get("email"),
+            "phone": updated_record.get("phone"),
+            "complaint_id": updated_record.get("complaint_id"),
+            "complaint_title": updated_record.get("title") or updated_record.get("text") or "Public Grievance",
+            "title": f"Officer Update: {update.status}",
+            "status": update.status,
+            "message": update.remarks or f"Status changed to {update.status}",
+            "officer_name": update.officer_name or "Departmental Officer",
+            "officer_department": update.officer_department or updated_record.get("assigned_department", "Department"),
+            "officer_designation": update.officer_designation or "Nodal Officer",
+            "read": False,
+            "created_at": datetime.utcnow()
+        }
+        await db.notifications.insert_one(notification_doc)
+
     return {
-        "message": f"Complaint status updated to {update.status}",
+        "message": f"Complaint status updated to {update.status} and sent directly to citizen",
         "status": update.status,
         "complaint": format_complaint(updated_record)
     }
+
+@app.get("/api/notifications")
+async def get_citizen_notifications(
+    complaint_ids: Optional[str] = None,
+    citizen_id: Optional[str] = None,
+    phone: Optional[str] = None,
+    email: Optional[str] = None,
+    limit: int = 25
+):
+    """
+    Returns live direct officer notifications for a citizen.
+    Matches notifications by citizen_id, email, phone, or submitted complaint IDs.
+    """
+    db = get_db()
+    query_conditions = []
+
+    if complaint_ids and complaint_ids.strip():
+        ids = [i.strip() for i in complaint_ids.split(",") if i.strip()]
+        if ids:
+            query_conditions.append({
+                "$or": [
+                    {"complaint_id": {"$in": ids}},
+                    {"complaint_id": {"$in": [i.upper() for i in ids]}}
+                ]
+            })
+    if citizen_id and citizen_id.strip():
+        query_conditions.append({"citizen_id": citizen_id.strip()})
+    if phone and phone.strip():
+        query_conditions.append({"phone": phone.strip()})
+    if email and email.strip():
+        em = email.strip()
+        query_conditions.append({
+            "$or": [
+                {"email": em},
+                {"email": em.lower()}
+            ]
+        })
+
+    if query_conditions:
+        query_filter = {
+            "recipient_type": "citizen",
+            "$or": query_conditions
+        }
+    else:
+        query_filter = {"recipient_type": "citizen"}
+
+    cursor = db.notifications.find(query_filter).sort([("created_at", -1)]).limit(limit)
+    docs = await cursor.to_list(length=limit)
+
+    unread_count = await db.notifications.count_documents({
+        **query_filter,
+        "read": False
+    })
+
+    formatted = []
+    for d in docs:
+        item = dict(d)
+        item["id"] = str(item.get("_id", ""))
+        item["_id"] = str(item.get("_id", ""))
+        if isinstance(item.get("created_at"), datetime):
+            item["created_at"] = item["created_at"].isoformat()
+        formatted.append(item)
+
+    return {
+        "notifications": formatted,
+        "unread_count": unread_count,
+        "total": len(formatted)
+    }
+
+@app.patch("/api/notifications/{id}/read")
+async def mark_notification_read(id: str):
+    """Marks a single citizen notification as read."""
+    db = get_db()
+    query = {}
+    if ObjectId.is_valid(id):
+        query["_id"] = ObjectId(id)
+    else:
+        query["id"] = id
+
+    result = await db.notifications.update_one(query, {"$set": {"read": True}})
+    return {"success": True, "id": id, "modified": result.modified_count}
+
+@app.post("/api/notifications/mark-all-read")
+async def mark_all_notifications_read(request: Request):
+    """Marks all citizen notifications as read for current user."""
+    db = get_db()
+    try:
+        body = await request.json()
+    except Exception:
+        body = {}
+
+    complaint_ids = body.get("complaint_ids") or body.get("complaintIds")
+    citizen_id = body.get("citizen_id") or body.get("citizenId")
+    email = body.get("email")
+
+    query_conditions = []
+    if complaint_ids:
+        if isinstance(complaint_ids, str):
+            ids = [i.strip() for i in complaint_ids.split(",") if i.strip()]
+        else:
+            ids = [i for i in complaint_ids if isinstance(i, str)]
+        if ids:
+            query_conditions.append({"complaint_id": {"$in": ids}})
+    if citizen_id:
+        query_conditions.append({"citizen_id": citizen_id})
+    if email:
+        query_conditions.append({
+            "$or": [{"email": email}, {"email": email.lower()}]
+        })
+
+    query_filter = {"recipient_type": "citizen"}
+    if query_conditions:
+        query_filter["$or"] = query_conditions
+
+    result = await db.notifications.update_many(query_filter, {"$set": {"read": True}})
+    return {"success": True, "modified": result.modified_count}
 
 @app.patch("/api/complaints/{id}/assign")
 async def assign_complaint(id: str, update: AssignUpdate):

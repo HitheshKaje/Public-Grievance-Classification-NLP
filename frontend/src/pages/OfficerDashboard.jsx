@@ -110,7 +110,12 @@ export default function OfficerDashboard({
   // Handle status update
   const handleUpdateStatus = async (complaintId, newStatus, remarks = '') => {
     try {
-      await updateComplaintStatus(complaintId, newStatus, remarks);
+      await updateComplaintStatus(complaintId, newStatus, remarks, {
+        officer_name: currentUser?.name || 'Er. Rajesh Kumar',
+        officer_id: currentUser?.officer_id || currentUser?.id || 'OFF-01',
+        officer_department: effectiveDept || currentUser?.department || 'Department',
+        officer_designation: currentUser?.designation || 'Nodal Executive Officer'
+      });
       // Immediately refresh list & stats
       await Promise.all([loadComplaints(), loadStats()]);
     } catch (err) {

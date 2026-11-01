@@ -244,15 +244,25 @@ export default function UserTrackingView({ initialTrackedId = null }) {
               </div>
             )}
 
-            {/* Official Officer Message / Status Remarks */}
-            {complaint.remarks && (
-              <div className="p-4 rounded-xl bg-blue-50/70 border border-blue-200/80 space-y-1">
-                <span className="text-[10px] font-bold text-blue-700 uppercase tracking-wider block">
-                  Official Officer Update
-                </span>
-                <p className="text-xs text-slate-800 font-medium leading-relaxed">
-                  {complaint.remarks}
-                </p>
+            {/* Direct Communication from Department Officer */}
+            {(complaint.remarks || complaint.last_officer_message) && (
+              <div className="p-4 rounded-2xl bg-gradient-to-r from-blue-50 to-indigo-50/80 border border-blue-200 space-y-2 shadow-xs">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <span className="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-blue-600 text-white shadow-2xs">
+                      Direct Officer Message
+                    </span>
+                    <span className="text-[11px] font-semibold text-slate-700">
+                      From: {complaint.officer_name || 'Field Officer'} ({complaint.assigned_department || complaint.department || 'Department'})
+                    </span>
+                  </div>
+                  <span className="text-[10px] font-medium text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">
+                    Direct to Citizen
+                  </span>
+                </div>
+                <div className="p-3 bg-white/90 rounded-xl border border-blue-100 text-xs text-slate-800 font-medium leading-relaxed">
+                  "{complaint.remarks || complaint.last_officer_message}"
+                </div>
               </div>
             )}
 

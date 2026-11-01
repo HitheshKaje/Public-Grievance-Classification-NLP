@@ -56,7 +56,7 @@ export default function OfficerAssignedComplaintsCard({
     try {
       await onUpdateStatus(selectedComplaint.complaint_id, newStatus, remarksText);
       setSelectedComplaint((prev) => prev ? { ...prev, status: newStatus, remarks: remarksText } : null);
-      setActionSuccess(`Complaint marked as "${newStatus}" and message recorded successfully!`);
+      setActionSuccess(`Status updated to "${newStatus}" and direct message delivered to the citizen successfully!`);
       if (onRefresh) onRefresh();
     } catch (err) {
       alert(`Error updating complaint: ${err.message}`);
@@ -506,10 +506,10 @@ export default function OfficerAssignedComplaintsCard({
                   <div className="p-4 rounded-2xl bg-blue-50/70 border border-blue-200/80 space-y-3">
                     <div className="flex items-center gap-2 text-blue-800 font-bold text-xs">
                       <Clock className="h-4 w-4 text-blue-600" />
-                      <span>Action Step 1: Start Review &amp; Mark as In Progress</span>
+                      <span>Action Step 1: Send Direct Message to Citizen &amp; Mark In Progress</span>
                     </div>
                     <p className="text-[11px] text-slate-600">
-                      Type an update message to the citizen (e.g. site inspection assigned, work started) and change status to <strong>In Progress</strong>.
+                      Type an update message directly to the citizen (e.g. site inspection assigned, work started). This message goes <strong>directly to the citizen</strong> in real-time, bypassing admin review.
                     </p>
 
                     <div>
@@ -540,7 +540,7 @@ export default function OfficerAssignedComplaintsCard({
                         className="px-5 py-2 text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 rounded-xl shadow-md shadow-blue-600/25 flex items-center gap-2 transition-all cursor-pointer disabled:opacity-50"
                       >
                         <Send className="h-3.5 w-3.5" />
-                        <span>{updatingId === selectedComplaint.complaint_id ? 'Saving...' : 'Send Message & Mark In Progress'}</span>
+                        <span>{updatingId === selectedComplaint.complaint_id ? 'Sending to Citizen...' : 'Send Direct to Citizen & Mark In Progress'}</span>
                       </button>
                     </div>
                   </div>
@@ -551,10 +551,10 @@ export default function OfficerAssignedComplaintsCard({
                   <div className="p-4 rounded-2xl bg-emerald-50/70 border border-emerald-200/80 space-y-3">
                     <div className="flex items-center gap-2 text-emerald-800 font-bold text-xs">
                       <CheckCircle2 className="h-4 w-4 text-emerald-600" />
-                      <span>Action Step 2: Send Resolution Note &amp; Mark as Resolved</span>
+                      <span>Action Step 2: Send Direct Resolution Note to Citizen &amp; Mark Resolved</span>
                     </div>
                     <p className="text-[11px] text-slate-600">
-                      This grievance is currently <strong>In Progress</strong>. Once work is completed, type your resolution note and mark the case as <strong>Resolved</strong>.
+                      Type your resolution note directly to the citizen and close the grievance as <strong>Resolved</strong>. This resolution notice will be dispatched <strong>straight to the citizen</strong>.
                     </p>
 
                     {selectedComplaint.remarks && (
@@ -603,7 +603,7 @@ export default function OfficerAssignedComplaintsCard({
                           className="px-5 py-2 text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-700 rounded-xl shadow-md shadow-emerald-600/25 flex items-center gap-2 transition-all cursor-pointer disabled:opacity-50"
                         >
                           <CheckCircle2 className="h-3.5 w-3.5" />
-                          <span>{updatingId === selectedComplaint.complaint_id ? 'Resolving...' : 'Send Message & Mark Resolved'}</span>
+                          <span>{updatingId === selectedComplaint.complaint_id ? 'Resolving & Notifying...' : 'Send Direct to Citizen & Mark Resolved'}</span>
                         </button>
                       </div>
                     </div>

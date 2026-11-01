@@ -16,7 +16,7 @@ import {
 import { 
   RefreshCw, Globe, User, Mail, Phone, ShieldCheck, 
   Calendar, CheckCircle2, Clock, AlertCircle, Headphones, 
-  PhoneCall, MapPin, ExternalLink, HelpCircle, Send, FileText, ArrowRight
+  PhoneCall, MapPin, ExternalLink, HelpCircle, Send, FileText, ArrowRight, MessageSquare
 } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
 
@@ -137,6 +137,20 @@ export default function UserDashboard({ activeTab = 'dashboard', onNavigateTab, 
     setTrackedId(id);
     if (onNavigateTab) onNavigateTab('track');
   };
+
+  // Listener for direct track events from header notifications
+  useEffect(() => {
+    const handleDirectTrack = (e) => {
+      const cid = e.detail?.complaintId;
+      if (cid) {
+        handleTrack(cid);
+      } else {
+        if (onNavigateTab) onNavigateTab('track');
+      }
+    };
+    window.addEventListener('civiq_track_complaint', handleDirectTrack);
+    return () => window.removeEventListener('civiq_track_complaint', handleDirectTrack);
+  }, [onNavigateTab]);
 
   const handleComplaintDeleted = (deletedId) => {
     setComplaints(prev => prev.filter(c => (c.complaint_id || c.id) !== deletedId));
@@ -620,6 +634,35 @@ export default function UserDashboard({ activeTab = 'dashboard', onNavigateTab, 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
         {/* Left Column */}
         <div className="lg:col-span-8 space-y-5">
+          {/* Direct Officer Updates Highlight Card for Citizen */}
+          {complaints.filter(c => c.remarks || c.last_officer_message).length > 0 && (
+            <div className="bg-gradient-to-r from-blue-700 via-indigo-700 to-blue-800 rounded-2xl p-4 text-white shadow-md border border-blue-500/30 flex flex-col sm:flex-row sm:items-center justify-between gap-3 animate-in fade-in">
+              <div className="flex items-center gap-3">
+                <div className="p-2.5 rounded-xl bg-white/20 backdrop-blur-xs flex-shrink-0">
+                  <MessageSquare className="h-5 w-5 text-white" />
+                </div>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full bg-white/20 text-white">
+                      Direct Officer Channel
+                    </span>
+                    <span className="text-[11px] text-blue-200">Directly from field officer</span>
+                  </div>
+                  <h4 className="text-xs font-bold text-white mt-1">
+                    Department officers have sent direct updates on your registered grievances.
+                  </h4>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => onNavigateTab && onNavigateTab('my_complaints')}
+                className="px-3.5 py-1.5 text-xs font-bold bg-white text-blue-800 hover:bg-blue-50 rounded-xl transition-all shadow-xs cursor-pointer self-start sm:self-auto flex-shrink-0"
+              >
+                View Updates &rarr;
+              </button>
+            </div>
+          )}
+
           {/* Hero Banner */}
           <ReportProblemHero onSubmitClick={() => onNavigateTab && onNavigateTab('submit')} />
 

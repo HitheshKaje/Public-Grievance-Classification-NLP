@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { 
   FileText, ArrowRight, Search, Copy, Check, Plus, 
-  Loader2, Trash2, AlertTriangle, X 
+  Loader2, Trash2, AlertTriangle, X, MessageSquare, CheckCircle2, Clock 
 } from 'lucide-react';
 import { deleteComplaint } from '../../services/complaintService';
 import { useLanguage } from '../../context/LanguageContext';
@@ -225,13 +225,29 @@ export default function UserRecentComplaintsCard({
                     </td>
 
                     {/* Complaint Title & Details */}
-                    <td className="py-3 px-4 max-w-xs">
+                    <td className="py-3 px-4 max-w-sm">
                       <div className="font-semibold text-slate-800 truncate" title={c.title || c.text}>
                         {c.title || c.text || 'Grievance Petition'}
                       </div>
                       {c.location && (
                         <div className="text-[11px] text-slate-400 truncate mt-0.5">
                           📍 {c.location}
+                        </div>
+                      )}
+
+                      {/* Direct Message from Field Officer */}
+                      {(c.remarks || c.last_officer_message) && (
+                        <div className="mt-2 p-2 rounded-xl bg-blue-50/80 border border-blue-200/80 text-[11px] text-slate-700 shadow-2xs">
+                          <div className="flex items-center gap-1.5 font-bold text-blue-700 mb-0.5">
+                            <MessageSquare className="h-3 w-3 text-blue-600 flex-shrink-0" />
+                            <span>
+                              {c.status === 'Resolved' ? 'Direct Officer Resolution' : 'Direct Message from Officer'}
+                              {c.officer_name ? ` (${c.officer_name})` : ''}:
+                            </span>
+                          </div>
+                          <p className="text-slate-800 font-medium italic">
+                            "{c.remarks || c.last_officer_message}"
+                          </p>
                         </div>
                       )}
                     </td>

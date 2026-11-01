@@ -22,6 +22,7 @@ export default function UserLayout({ children, activeTab, onSelectTab, onSelectP
           onOpenSidebar={() => setSidebarOpen(true)}
           currentUser={currentUser}
           onLogout={onLogout}
+          onTrackComplaint={(id) => onSelectTab && onSelectTab('track')}
         />
 
         <main className="flex-1 px-6 pb-8 pt-2 max-w-[1600px] w-full">
