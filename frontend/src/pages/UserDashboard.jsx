@@ -8,15 +8,15 @@ import UserQuickActionsCard from '../components/user/UserQuickActionsCard';
 import CommonCategoriesCard from '../components/user/CommonCategoriesCard';
 import ComplaintSubmissionContainer from '../components/user/submission/ComplaintSubmissionContainer';
 import UserTrackingView from '../components/user/UserTrackingView';
-import { 
-  fetchUserStats, 
+import {
+  fetchUserStats,
   getLocalUserComplaintIds,
-  saveLocalUserComplaintId 
+  saveLocalUserComplaintId
 } from '../services/complaintService';
-import { 
-  RefreshCw, Globe, User, Mail, Phone, ShieldCheck, 
-  Calendar, CheckCircle2, Clock, AlertCircle, Headphones, 
-  PhoneCall, MapPin, ExternalLink, HelpCircle, Send, FileText, ArrowRight, MessageSquare
+import {
+  RefreshCw, Globe, User, Mail, Phone, ShieldCheck,
+  Calendar, CheckCircle2, Clock, AlertCircle, Headphones,
+  PhoneCall, MapPin, ExternalLink, HelpCircle, Send, FileText, ArrowRight
 } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
 
@@ -46,24 +46,15 @@ export default function UserDashboard({ activeTab = 'dashboard', onNavigateTab, 
       const storedIds = getLocalUserComplaintIds();
 
       if (scope === 'my') {
-        const queryParams = {};
         if (storedIds.length > 0) {
-          queryParams.complaintIds = storedIds.join(',');
-        }
-        if (currentUser?.email) {
-          queryParams.email = currentUser.email;
-        }
-        if (currentUser?.phone) {
-          queryParams.phone = currentUser.phone;
-        }
-        if (currentUser?.id) {
-          queryParams.citizenId = currentUser.id;
-        }
-
-        const hasFilter = Boolean(queryParams.complaintIds || queryParams.email || queryParams.phone || queryParams.citizenId);
-
-        if (hasFilter) {
-          const data = await fetchUserStats(queryParams);
+          const data = await fetchUserStats({ complaintIds: storedIds.join(',') });
+          if ((data.total ?? 0) === 0 && (data.recent_complaints || []).length === 0) {
+            try {
+              localStorage.removeItem('pgms_citizen_submitted_ids');
+            } catch (e) {
+              console.error('Failed to clear stored complaint IDs:', e);
+            }
+          }
           setUserStats({
             total: data.total ?? 0,
             in_progress: data.in_progress ?? 0,
@@ -114,7 +105,7 @@ export default function UserDashboard({ activeTab = 'dashboard', onNavigateTab, 
     } finally {
       setLoadingStats(false);
     }
-  }, [scope, currentUser]);
+  }, [scope]);
 
   useEffect(() => {
     loadCitizenStats();
@@ -138,20 +129,6 @@ export default function UserDashboard({ activeTab = 'dashboard', onNavigateTab, 
     if (onNavigateTab) onNavigateTab('track');
   };
 
-  // Listener for direct track events from header notifications
-  useEffect(() => {
-    const handleDirectTrack = (e) => {
-      const cid = e.detail?.complaintId;
-      if (cid) {
-        handleTrack(cid);
-      } else {
-        if (onNavigateTab) onNavigateTab('track');
-      }
-    };
-    window.addEventListener('civiq_track_complaint', handleDirectTrack);
-    return () => window.removeEventListener('civiq_track_complaint', handleDirectTrack);
-  }, [onNavigateTab]);
-
   const handleComplaintDeleted = (deletedId) => {
     setComplaints(prev => prev.filter(c => (c.complaint_id || c.id) !== deletedId));
     loadCitizenStats();
@@ -163,7 +140,6 @@ export default function UserDashboard({ activeTab = 'dashboard', onNavigateTab, 
       <ComplaintSubmissionContainer
         onNavigateTab={onNavigateTab}
         onTrackGrievance={handleTrack}
-        currentUser={currentUser}
         onGrievanceSubmitted={() => {
           setScope('my');
           loadCitizenStats();
@@ -232,7 +208,7 @@ export default function UserDashboard({ activeTab = 'dashboard', onNavigateTab, 
         {/* Profile Header Banner */}
         <div className="bg-gradient-to-r from-emerald-600 to-teal-700 rounded-3xl p-6 sm:p-8 text-white shadow-xl relative overflow-hidden">
           <div className="absolute top-0 right-0 w-80 h-80 bg-white/10 rounded-full blur-3xl pointer-events-none" />
-          
+
           <div className="flex flex-col sm:flex-row sm:items-center gap-5 relative z-10">
             <div className="h-20 w-20 rounded-2xl bg-white text-emerald-800 flex items-center justify-center font-extrabold text-2xl shadow-lg border-2 border-white/30 flex-shrink-0">
               {initials}
@@ -369,7 +345,7 @@ export default function UserDashboard({ activeTab = 'dashboard', onNavigateTab, 
         {/* Support Header */}
         <div className="bg-gradient-to-r from-blue-700 to-indigo-800 rounded-3xl p-6 sm:p-8 text-white shadow-xl relative overflow-hidden">
           <div className="absolute top-0 right-0 w-80 h-80 bg-white/10 rounded-full blur-3xl pointer-events-none" />
-          
+
           <div className="relative z-10 max-w-2xl">
             <span className="text-[11px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-white/20 border border-white/25">
               Citizen Support & Administrative Directory
@@ -427,8 +403,8 @@ export default function UserDashboard({ activeTab = 'dashboard', onNavigateTab, 
                       <Phone className="h-3 w-3 text-blue-600" />
                       <span>Phone:</span>
                     </span>
-                    <a 
-                      href="tel:8861731029" 
+                    <a
+                      href="tel:8861731029"
                       className="font-mono font-bold text-blue-600 hover:text-blue-800 hover:underline flex items-center gap-1"
                       title="Call Ranjith Gowda"
                     >
@@ -442,8 +418,8 @@ export default function UserDashboard({ activeTab = 'dashboard', onNavigateTab, 
                       <Mail className="h-3 w-3 text-rose-500" />
                       <span>Gmail:</span>
                     </span>
-                    <a 
-                      href="mailto:ranjithgowda@gmail.com?subject=Grievance%20Support%20Request%20-%20CiviQ" 
+                    <a
+                      href="mailto:ranjithgowda@gmail.com?subject=Grievance%20Support%20Request%20-%20CiviQ"
                       className="font-mono text-[11px] font-semibold text-slate-800 hover:text-blue-600 hover:underline flex items-center gap-1 truncate max-w-[170px]"
                       title="Email Ranjith Gowda"
                     >
@@ -453,14 +429,14 @@ export default function UserDashboard({ activeTab = 'dashboard', onNavigateTab, 
                   </div>
 
                   <div className="pt-2 flex gap-1.5">
-                    <a 
+                    <a
                       href="tel:8861731029"
                       className="flex-1 py-1 px-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-semibold text-[11px] flex items-center justify-center gap-1 transition-colors shadow-2xs"
                     >
                       <PhoneCall className="h-3 w-3" />
                       <span>Call</span>
                     </a>
-                    <a 
+                    <a
                       href="mailto:ranjithgowda@gmail.com?subject=Grievance%20Support%20Request%20-%20CiviQ"
                       className="flex-1 py-1 px-2 rounded-lg bg-white hover:bg-slate-100 text-slate-700 border border-slate-200 font-semibold text-[11px] flex items-center justify-center gap-1 transition-colors shadow-2xs"
                     >
@@ -496,8 +472,8 @@ export default function UserDashboard({ activeTab = 'dashboard', onNavigateTab, 
                       <Phone className="h-3 w-3 text-emerald-600" />
                       <span>Phone:</span>
                     </span>
-                    <a 
-                      href="tel:8877665544" 
+                    <a
+                      href="tel:8877665544"
                       className="font-mono font-bold text-emerald-600 hover:text-emerald-800 hover:underline flex items-center gap-1"
                       title="Call Hithesh Gowda"
                     >
@@ -511,8 +487,8 @@ export default function UserDashboard({ activeTab = 'dashboard', onNavigateTab, 
                       <Mail className="h-3 w-3 text-rose-500" />
                       <span>Gmail:</span>
                     </span>
-                    <a 
-                      href="mailto:hitheshgowda@gmail.com?subject=Grievance%20Support%20Request%20-%20CiviQ" 
+                    <a
+                      href="mailto:hitheshgowda@gmail.com?subject=Grievance%20Support%20Request%20-%20CiviQ"
                       className="font-mono text-[11px] font-semibold text-slate-800 hover:text-emerald-600 hover:underline flex items-center gap-1 truncate max-w-[170px]"
                       title="Email Hithesh Gowda"
                     >
@@ -522,14 +498,14 @@ export default function UserDashboard({ activeTab = 'dashboard', onNavigateTab, 
                   </div>
 
                   <div className="pt-2 flex gap-1.5">
-                    <a 
+                    <a
                       href="tel:8877665544"
                       className="flex-1 py-1 px-2 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-[11px] flex items-center justify-center gap-1 transition-colors shadow-2xs"
                     >
                       <PhoneCall className="h-3 w-3" />
                       <span>Call</span>
                     </a>
-                    <a 
+                    <a
                       href="mailto:hitheshgowda@gmail.com?subject=Grievance%20Support%20Request%20-%20CiviQ"
                       className="flex-1 py-1 px-2 rounded-lg bg-white hover:bg-slate-100 text-slate-700 border border-slate-200 font-semibold text-[11px] flex items-center justify-center gap-1 transition-colors shadow-2xs"
                     >
@@ -590,11 +566,10 @@ export default function UserDashboard({ activeTab = 'dashboard', onNavigateTab, 
             <button
               type="button"
               onClick={() => setScope('my')}
-              className={`flex items-center gap-1.5 px-3 py-1 rounded-lg transition-all cursor-pointer ${
-                scope === 'my'
-                  ? 'bg-white text-blue-700 shadow-xs font-bold'
-                  : 'text-slate-600 hover:text-slate-900'
-              }`}
+              className={`flex items-center gap-1.5 px-3 py-1 rounded-lg transition-all cursor-pointer ${scope === 'my'
+                ? 'bg-white text-blue-700 shadow-xs font-bold'
+                : 'text-slate-600 hover:text-slate-900'
+                }`}
             >
               <User className="h-3.5 w-3.5" />
               <span>{t('filter_my', 'My Complaints')} ({storedUserIds.length})</span>
@@ -602,11 +577,10 @@ export default function UserDashboard({ activeTab = 'dashboard', onNavigateTab, 
             <button
               type="button"
               onClick={() => setScope('all')}
-              className={`flex items-center gap-1.5 px-3 py-1 rounded-lg transition-all cursor-pointer ${
-                scope === 'all'
-                  ? 'bg-white text-blue-700 shadow-xs font-bold'
-                  : 'text-slate-600 hover:text-slate-900'
-              }`}
+              className={`flex items-center gap-1.5 px-3 py-1 rounded-lg transition-all cursor-pointer ${scope === 'all'
+                ? 'bg-white text-blue-700 shadow-xs font-bold'
+                : 'text-slate-600 hover:text-slate-900'
+                }`}
             >
               <Globe className="h-3.5 w-3.5" />
               <span>{t('filter_all', 'All Portal Cases')} ({systemStats.total || 'Live'})</span>
@@ -634,35 +608,6 @@ export default function UserDashboard({ activeTab = 'dashboard', onNavigateTab, 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
         {/* Left Column */}
         <div className="lg:col-span-8 space-y-5">
-          {/* Direct Officer Updates Highlight Card for Citizen */}
-          {complaints.filter(c => c.remarks || c.last_officer_message).length > 0 && (
-            <div className="bg-gradient-to-r from-blue-700 via-indigo-700 to-blue-800 rounded-2xl p-4 text-white shadow-md border border-blue-500/30 flex flex-col sm:flex-row sm:items-center justify-between gap-3 animate-in fade-in">
-              <div className="flex items-center gap-3">
-                <div className="p-2.5 rounded-xl bg-white/20 backdrop-blur-xs flex-shrink-0">
-                  <MessageSquare className="h-5 w-5 text-white" />
-                </div>
-                <div>
-                  <div className="flex items-center gap-2">
-                    <span className="text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full bg-white/20 text-white">
-                      Direct Officer Channel
-                    </span>
-                    <span className="text-[11px] text-blue-200">Directly from field officer</span>
-                  </div>
-                  <h4 className="text-xs font-bold text-white mt-1">
-                    Department officers have sent direct updates on your registered grievances.
-                  </h4>
-                </div>
-              </div>
-              <button
-                type="button"
-                onClick={() => onNavigateTab && onNavigateTab('my_complaints')}
-                className="px-3.5 py-1.5 text-xs font-bold bg-white text-blue-800 hover:bg-blue-50 rounded-xl transition-all shadow-xs cursor-pointer self-start sm:self-auto flex-shrink-0"
-              >
-                View Updates &rarr;
-              </button>
-            </div>
-          )}
-
           {/* Hero Banner */}
           <ReportProblemHero onSubmitClick={() => onNavigateTab && onNavigateTab('submit')} />
 
@@ -703,7 +648,7 @@ export default function UserDashboard({ activeTab = 'dashboard', onNavigateTab, 
       </div>
 
       {/* Bottom Full-Width Row: Common Complaint Categories */}
-      <CommonCategoriesCard 
+      <CommonCategoriesCard
         onViewAll={() => onNavigateTab && onNavigateTab('submit')}
         onSelectCategory={() => onNavigateTab && onNavigateTab('submit')}
       />
